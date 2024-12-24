@@ -12,7 +12,7 @@ type Handler struct {
 	service Service
 }
 
-func NewHandler(service Service, log am.Logger) *Handler {
+func NewWebHandler(service Service, log am.Logger) *Handler {
 	handler := am.NewHandler(log)
 	return &Handler{
 		base:    handler,

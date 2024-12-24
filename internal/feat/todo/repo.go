@@ -22,7 +22,7 @@ type BaseRepo struct {
 	lists map[uuid.UUID]List
 }
 
-func NewBaseRepo() *BaseRepo {
+func NewRepo() *BaseRepo {
 	return &BaseRepo{
 		lists: make(map[uuid.UUID]List),
 	}
