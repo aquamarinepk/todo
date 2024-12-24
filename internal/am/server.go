@@ -14,13 +14,29 @@ type Server struct {
 	server *http.Server
 }
 
-// NewServer creates a new Server instance with the provided opts.
-// TODO: port should be removed from the arguments and be set in the config.
-func NewServer(port string, handler http.Handler, opts ...Option) *Server {
+// NewServer creates a new Server instance with the provided options.
+//
+// Parameters:
+// - hostKey: The configuration key for the server host (e.g., "server.web.host").
+// - portKey: The configuration key for the server port (e.g., "server.web.port").
+// - handler: The HTTP handler to use for the server.
+// - opts: Variadic options to configure the server.
+//
+// Example usage:
+//
+//	webServer := am.NewServer("server.web.host", "server.web.port", webRouter, opts...)
+//	apiServer := am.NewServer("server.api.host", "server.api.port", apiRouter, opts...)
+//
+// Note: This is a WIP and an improved way of configuring the server will be provided in future updates.
+func NewServer(hostKey, portKey string, handler http.Handler, opts ...Option) *Server {
 	core := NewCore(opts...)
+	cfg := core.Cfg()
+
+	host := cfg.StrValOrDef(hostKey, "localhost")
+	port := cfg.StrValOrDef(portKey, "8080")
 
 	server := &http.Server{
-		Addr:    ":" + port,
+		Addr:    host + ":" + port,
 		Handler: handler,
 	}
 	return &Server{

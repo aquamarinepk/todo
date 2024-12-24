@@ -5,13 +5,22 @@ import (
 	"github.com/aquamarinepk/todo/internal/feat/todo"
 )
 
+const (
+	WebHostKey = "server.web.host"
+	WebPortKey = "server.web.port"
+	APIHostKey = "server.api.host"
+	AIPortKey  = "server.api.port"
+)
+
 func main() {
 	log := am.NewLogger("info")
-	flagDefs := map[string]interface{}{
-		"port": "8080",
-		// TODO: Add any other required flags.
+	flags := map[string]interface{}{
+		WebPortKey: "8080",
+		AIPortKey:  "8081",
+		WebHostKey: "localhost",
+		APIHostKey: "localhost",
 	}
-	cfg := am.LoadCfg("TODO", flagDefs)
+	cfg := am.LoadCfg("TODO", flags)
 
 	repo := todo.NewRepo()
 	service := todo.NewService(repo)
@@ -27,8 +36,8 @@ func main() {
 	apiRouter := am.NewRouter(opts...)
 	apiRouter.Mount("/api/todo", todo.NewAPIRouter(apiHandler))
 
-	webServer := am.NewServer(cfg.StrValOrDef("port", "8080"), webRouter, opts...)
-	apiServer := am.NewServer(cfg.StrValOrDef("api_port", "8081"), apiRouter, opts...)
+	webServer := am.NewServer(WebHostKey, WebPortKey, webRouter, opts...)
+	apiServer := am.NewServer(APIHostKey, AIPortKey, apiRouter, opts...)
 
 	go webServer.Start()
 	apiServer.Start()

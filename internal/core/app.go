@@ -12,10 +12,28 @@ type App struct {
 	apiServer *http.Server
 }
 
-func NewApp(log am.Logger) *App {
-	base := am.NewApp(log)
-	return &App{
+type Option func(*App)
+
+func NewApp(options ...Option) *App {
+	base := am.NewApp()
+	app := &App{
 		base: base,
+	}
+	for _, option := range options {
+		option(app)
+	}
+	return app
+}
+
+func WithWebServer(server *http.Server) Option {
+	return func(app *App) {
+		app.webServer = server
+	}
+}
+
+func WithAPIServer(server *http.Server) Option {
+	return func(app *App) {
+		app.apiServer = server
 	}
 }
 
