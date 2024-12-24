@@ -11,6 +11,7 @@ import (
 type Repo interface {
 	GetAll(ctx context.Context) ([]List, error)
 	GetByID(ctx context.Context, id uuid.UUID) (List, error)
+	GetBySlug(ctx context.Context, slug string) (List, error)
 	Create(ctx context.Context, list List) error
 	Update(ctx context.Context, list List) error
 	Delete(ctx context.Context, id uuid.UUID) error
@@ -47,6 +48,18 @@ func (r *BaseRepo) GetByID(ctx context.Context, id uuid.UUID) (List, error) {
 		return List{}, errors.New("list not found")
 	}
 	return list, nil
+}
+
+func (r *BaseRepo) GetBySlug(ctx context.Context, slug string) (List, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	for _, list := range r.lists {
+		if list.Slug() == slug {
+			return list, nil
+		}
+	}
+	return List{}, errors.New("list not found")
 }
 
 func (r *BaseRepo) Create(ctx context.Context, list List) error {

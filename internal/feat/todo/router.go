@@ -4,8 +4,8 @@ import (
 	chi "github.com/go-chi/chi/v5"
 )
 
-// NewRouter creates a new router for the todo feature.
-func NewRouter(handler *Handler) chi.Router {
+// NewWebRouter creates a new router for the todo feature.
+func NewWebRouter(handler *Handler) chi.Router {
 	r := chi.NewRouter()
 
 	r.Get("/", handler.List)          // GET /todo
