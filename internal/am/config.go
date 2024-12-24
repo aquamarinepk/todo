@@ -64,9 +64,9 @@ func (c *Config) get(reload bool) map[string]string {
 	return merged
 }
 
-// Val retrieves the value of a specific namespaced environment variable or CLI flag.
+// StrVal retrieves the value of a specific namespaced environment variable or CLI flag.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) Val(key string, reload ...bool) (value string, ok bool) {
+func (c *Config) StrVal(key string, reload ...bool) (value string, ok bool) {
 	vals := c.get(false)
 	if len(reload) > 0 && reload[0] {
 		vals = c.get(true)
@@ -75,10 +75,10 @@ func (c *Config) Val(key string, reload ...bool) (value string, ok bool) {
 	return val, ok
 }
 
-// ValOrDef retrieves the value of a specific namespaced environment variable or CLI flag.
+// StrValOrDef retrieves the value of a specific namespaced environment variable or CLI flag.
 // If the key is not found, it returns the provided default value.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) ValOrDef(key string, defVal string, reload ...bool) (value string) {
+func (c *Config) StrValOrDef(key string, defVal string, reload ...bool) (value string) {
 	vals := c.get(false)
 	if len(reload) > 0 && reload[0] {
 		vals = c.get(true)
@@ -90,10 +90,10 @@ func (c *Config) ValOrDef(key string, defVal string, reload ...bool) (value stri
 	return val
 }
 
-// ValAsInt retrieves the value of a specific namespaced environment variable or CLI flag as an int.
+// IntVal retrieves the value of a specific namespaced environment variable or CLI flag as an int.
 // If the key is not found or cannot be parsed as an int, it returns the provided default value.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) ValAsInt(key string, defVal int64, reload ...bool) (value int64) {
+func (c *Config) IntVal(key string, defVal int64, reload ...bool) (value int64) {
 	vals := c.get(false)
 	if len(reload) > 0 && reload[0] {
 		vals = c.get(true)
@@ -109,10 +109,10 @@ func (c *Config) ValAsInt(key string, defVal int64, reload ...bool) (value int64
 	return i
 }
 
-// ValAsFloat retrieves the value of a specific namespaced environment variable or CLI flag as a float.
+// FloatVal retrieves the value of a specific namespaced environment variable or CLI flag as a float.
 // If the key is not found or cannot be parsed as a float, it returns the provided default value.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) ValAsFloat(key string, defVal float64, reload ...bool) (value float64) {
+func (c *Config) FloatVal(key string, defVal float64, reload ...bool) (value float64) {
 	vals := c.get(false)
 	if len(reload) > 0 && reload[0] {
 		vals = c.get(true)
@@ -128,10 +128,10 @@ func (c *Config) ValAsFloat(key string, defVal float64, reload ...bool) (value f
 	return f
 }
 
-// ValAsBool retrieves the value of a specific namespaced environment variable or CLI flag as a bool.
+// BoolVal retrieves the value of a specific namespaced environment variable or CLI flag as a bool.
 // If the key is not found or cannot be parsed as a bool, it returns the provided default value.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) ValAsBool(key string, defVal bool, reload ...bool) (value bool) {
+func (c *Config) BoolVal(key string, defVal bool, reload ...bool) (value bool) {
 	vals := c.get(false)
 	if len(reload) > 0 && reload[0] {
 		vals = c.get(true)

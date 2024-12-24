@@ -27,8 +27,8 @@ func main() {
 	apiRouter := am.NewRouter(opts...)
 	apiRouter.Mount("/api/todo", todo.NewAPIRouter(apiHandler))
 
-	webServer := am.NewServer(cfg.ValOrDef("port", "8080"), webRouter, opts...)
-	apiServer := am.NewServer(cfg.ValOrDef("api_port", "8081"), apiRouter, opts...)
+	webServer := am.NewServer(cfg.StrValOrDef("port", "8080"), webRouter, opts...)
+	apiServer := am.NewServer(cfg.StrValOrDef("api_port", "8081"), apiRouter, opts...)
 
 	go webServer.Start()
 	apiServer.Start()
