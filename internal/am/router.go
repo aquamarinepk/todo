@@ -8,17 +8,22 @@ import (
 
 type Router struct {
 	chi.Router
-	log Logger
+	Core Core
 }
 
-func NewRouter(logger Logger) *Router {
+func NewRouter(log Logger) *Router {
+	core := NewCore(log)
 	return &Router{
 		Router: chi.NewRouter(),
-		log:    logger,
+		Core:   core,
 	}
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r.log.Info(req.Method, " ", req.URL.Path)
+	r.Log().Info(req.Method, " ", req.URL.Path)
 	r.Router.ServeHTTP(w, req)
+}
+
+func (r *Router) Log() Logger {
+	return r.Core.Log()
 }

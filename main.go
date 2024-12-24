@@ -13,13 +13,12 @@ import (
 )
 
 func main() {
+	log := am.NewLogger("info")
 	repo := todo.NewBaseRepo()
 	service := todo.NewBaseService(repo)
 
-	webHandler := todo.NewHandler(service)
+	webHandler := todo.NewHandler(service, log)
 	apiHandler := todo.NewAPIHandler(service)
-
-	log := am.NewLogger("info")
 
 	webRouter := am.NewRouter(log)
 	webRouter.Mount("/todo", todo.NewWebRouter(webHandler))
