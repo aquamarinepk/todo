@@ -11,8 +11,8 @@ type Router struct {
 	Core Core
 }
 
-func NewRouter(log Logger) *Router {
-	core := NewCore(log)
+func NewRouter(opts ...Option) *Router {
+	core := NewCore(opts...)
 	return &Router{
 		Router: chi.NewRouter(),
 		Core:   core,
@@ -26,4 +26,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 func (r *Router) Log() Logger {
 	return r.Core.Log()
+}
+
+func (r *Router) Cfg() *Config {
+	return r.Core.Cfg()
 }

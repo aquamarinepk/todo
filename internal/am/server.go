@@ -14,8 +14,10 @@ type Server struct {
 	server *http.Server
 }
 
-func NewServer(port string, handler http.Handler, log Logger) *Server {
-	core := NewCore(log)
+// NewServer creates a new Server instance with the provided opts.
+// TODO: port should be removed from the arguments and be set in the config.
+func NewServer(port string, handler http.Handler, opts ...Option) *Server {
+	core := NewCore(opts...)
 
 	server := &http.Server{
 		Addr:    ":" + port,
@@ -55,4 +57,8 @@ func (s *Server) Start() {
 
 func (s *Server) Log() Logger {
 	return s.Core.Log()
+}
+
+func (s *Server) Cfg() *Config {
+	return s.Core.Cfg()
 }

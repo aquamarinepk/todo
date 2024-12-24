@@ -12,8 +12,8 @@ type Handler struct {
 	service Service
 }
 
-func NewWebHandler(service Service, log am.Logger) *Handler {
-	handler := am.NewHandler(log)
+func NewWebHandler(service Service, options ...am.Option) *Handler {
+	handler := am.NewHandler(options...)
 	return &Handler{
 		base:    handler,
 		service: service,

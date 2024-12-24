@@ -7,22 +7,36 @@ import (
 
 func main() {
 	log := am.NewLogger("info")
+	flagDefs := map[string]interface{}{
+		"port": "8080",
+		// TODO: Add any other required flags.
+	}
+	cfg := am.LoadCfg("TODO", flagDefs)
 
 	repo := todo.NewRepo()
 	service := todo.NewService(repo)
 
-	webHandler := todo.NewWebHandler(service, log)
-	apiHandler := todo.NewAPIHandler(service)
+	opts := opts(log, cfg)
 
-	webRouter := am.NewRouter(log)
+	webHandler := todo.NewWebHandler(service, opts...)
+	apiHandler := todo.NewAPIHandler(service, opts...)
+
+	webRouter := am.NewRouter(opts...)
 	webRouter.Mount("/todo", todo.NewWebRouter(webHandler))
 
-	apiRouter := am.NewRouter(log)
+	apiRouter := am.NewRouter(opts...)
 	apiRouter.Mount("/api/todo", todo.NewAPIRouter(apiHandler))
 
-	webServer := am.NewServer("8080", webRouter, log)
-	apiServer := am.NewServer("8081", apiRouter, log)
+	webServer := am.NewServer(cfg.ValOrDef("port", "8080"), webRouter, opts...)
+	apiServer := am.NewServer(cfg.ValOrDef("api_port", "8081"), apiRouter, opts...)
 
 	go webServer.Start()
 	apiServer.Start()
+}
+
+func opts(log am.Logger, cfg *am.Config) []am.Option {
+	return []am.Option{
+		am.WithLog(log),
+		am.WithCfg(cfg),
+	}
 }

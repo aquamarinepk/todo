@@ -13,8 +13,8 @@ type App struct {
 	Core Core
 }
 
-func NewApp(log Logger) *App {
-	core := NewCore(log)
+func NewApp(opts ...Option) *App {
+	core := NewCore(opts...)
 	return &App{
 		Core: core,
 	}
@@ -48,4 +48,8 @@ func (a *App) StartServer(server *http.Server, addr string) {
 
 func (a *App) Log() Logger {
 	return a.Core.Log()
+}
+
+func (a *App) Cfg() *Config {
+	return a.Core.Cfg()
 }

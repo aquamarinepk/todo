@@ -4,16 +4,22 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 )
 
 type APIHandler struct {
+	base    *am.Handler
 	service Service
 }
 
-func NewAPIHandler(service Service) *APIHandler {
-	return &APIHandler{service: service}
+func NewAPIHandler(service Service, options ...am.Option) *APIHandler {
+	handler := am.NewHandler(options...)
+	return &APIHandler{
+		base:    handler,
+		service: service,
+	}
 }
 
 func (h *APIHandler) List(w http.ResponseWriter, r *http.Request) {
@@ -82,4 +88,8 @@ func (h *APIHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *APIHandler) Log() am.Logger {
+	return h.base.Log()
 }
