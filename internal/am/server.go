@@ -29,7 +29,7 @@ type Server struct {
 //
 // Note: This is a WIP and an improved way of configuring the server will be provided in future updates.
 func NewServer(hostKey, portKey string, handler http.Handler, opts ...Option) *Server {
-	core := NewCore(opts...)
+	core := NewCore("", opts...)
 	cfg := core.Cfg()
 
 	host := cfg.StrValOrDef(hostKey, "localhost")

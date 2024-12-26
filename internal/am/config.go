@@ -27,38 +27,38 @@ func LoadCfg(namespace string, flagDefs map[string]interface{}) *Config {
 }
 
 // SetNamespace sets the namespace for the configuration, converting it to uppercase.
-func (c *Config) SetNamespace(namespace string) {
-	c.namespace = strings.ToUpper(namespace)
+func (cfg *Config) SetNamespace(namespace string) {
+	cfg.namespace = strings.ToUpper(namespace)
 }
 
 // namespacePrefix returns the namespace prefix used for environment variables.
-func (c *Config) namespacePrefix() string {
-	return fmt.Sprintf("%s_", c.namespace)
+func (cfg *Config) namespacePrefix() string {
+	return fmt.Sprintf("%s_", cfg.namespace)
 }
 
 // SetValues sets the configuration values directly.
-func (c *Config) SetValues(values map[string]string) {
-	c.values = values
+func (cfg *Config) SetValues(values map[string]string) {
+	cfg.values = values
 }
 
 // Get retrieves all environment variables that belong to the namespace.
 // If reload is true, it re-reads the values from the environment.
-func (c *Config) Get(reload ...bool) map[string]string {
+func (cfg *Config) Get(reload ...bool) map[string]string {
 	if len(reload) > 0 && reload[0] {
-		return c.get(true)
+		return cfg.get(true)
 	}
-	return c.get(false)
+	return cfg.get(false)
 }
 
-func (c *Config) get(reload bool) map[string]string {
-	if reload || len(c.values) == 0 {
-		c.values = c.readNamespaceEnvVars()
+func (cfg *Config) get(reload bool) map[string]string {
+	if reload || len(cfg.values) == 0 {
+		cfg.values = cfg.readNamespaceEnvVars()
 	}
 	merged := make(map[string]string)
-	for k, v := range c.values {
+	for k, v := range cfg.values {
 		merged[k] = v
 	}
-	for k, v := range c.flags {
+	for k, v := range cfg.flags {
 		merged[k] = v
 	}
 	return merged
@@ -66,10 +66,10 @@ func (c *Config) get(reload bool) map[string]string {
 
 // StrVal retrieves the value of a specific namespaced environment variable or CLI flag.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) StrVal(key string, reload ...bool) (value string, ok bool) {
-	vals := c.get(false)
+func (cfg *Config) StrVal(key string, reload ...bool) (value string, ok bool) {
+	vals := cfg.get(false)
 	if len(reload) > 0 && reload[0] {
-		vals = c.get(true)
+		vals = cfg.get(true)
 	}
 	val, ok := vals[key]
 	return val, ok
@@ -78,10 +78,10 @@ func (c *Config) StrVal(key string, reload ...bool) (value string, ok bool) {
 // StrValOrDef retrieves the value of a specific namespaced environment variable or CLI flag.
 // If the key is not found, it returns the provided default value.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) StrValOrDef(key string, defVal string, reload ...bool) (value string) {
-	vals := c.get(false)
+func (cfg *Config) StrValOrDef(key string, defVal string, reload ...bool) (value string) {
+	vals := cfg.get(false)
 	if len(reload) > 0 && reload[0] {
-		vals = c.get(true)
+		vals = cfg.get(true)
 	}
 	val, ok := vals[key]
 	if !ok {
@@ -93,10 +93,10 @@ func (c *Config) StrValOrDef(key string, defVal string, reload ...bool) (value s
 // IntVal retrieves the value of a specific namespaced environment variable or CLI flag as an int.
 // If the key is not found or cannot be parsed as an int, it returns the provided default value.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) IntVal(key string, defVal int64, reload ...bool) (value int64) {
-	vals := c.get(false)
+func (cfg *Config) IntVal(key string, defVal int64, reload ...bool) (value int64) {
+	vals := cfg.get(false)
 	if len(reload) > 0 && reload[0] {
-		vals = c.get(true)
+		vals = cfg.get(true)
 	}
 	val, ok := vals[key]
 	if !ok {
@@ -112,10 +112,10 @@ func (c *Config) IntVal(key string, defVal int64, reload ...bool) (value int64) 
 // FloatVal retrieves the value of a specific namespaced environment variable or CLI flag as a float.
 // If the key is not found or cannot be parsed as a float, it returns the provided default value.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) FloatVal(key string, defVal float64, reload ...bool) (value float64) {
-	vals := c.get(false)
+func (cfg *Config) FloatVal(key string, defVal float64, reload ...bool) (value float64) {
+	vals := cfg.get(false)
 	if len(reload) > 0 && reload[0] {
-		vals = c.get(true)
+		vals = cfg.get(true)
 	}
 	val, ok := vals[key]
 	if !ok {
@@ -131,10 +131,10 @@ func (c *Config) FloatVal(key string, defVal float64, reload ...bool) (value flo
 // BoolVal retrieves the value of a specific namespaced environment variable or CLI flag as a bool.
 // If the key is not found or cannot be parsed as a bool, it returns the provided default value.
 // If reload is true, it re-reads the values from the environment and CLI flags.
-func (c *Config) BoolVal(key string, defVal bool, reload ...bool) (value bool) {
-	vals := c.get(false)
+func (cfg *Config) BoolVal(key string, defVal bool, reload ...bool) (value bool) {
+	vals := cfg.get(false)
 	if len(reload) > 0 && reload[0] {
-		vals = c.get(true)
+		vals = cfg.get(true)
 	}
 	val, ok := vals[key]
 	if !ok {
@@ -148,14 +148,14 @@ func (c *Config) BoolVal(key string, defVal bool, reload ...bool) (value bool) {
 }
 
 // loadNamespaceEnvVars loads all visible environment variables that belong to the namespace.
-func (c *Config) loadNamespaceEnvVars() {
-	c.values = c.readNamespaceEnvVars()
+func (cfg *Config) loadNamespaceEnvVars() {
+	cfg.values = cfg.readNamespaceEnvVars()
 }
 
 // readNamespaceEnvVars reads all visible environment variables that belong to the namespace.
-func (c *Config) readNamespaceEnvVars() map[string]string {
+func (cfg *Config) readNamespaceEnvVars() map[string]string {
 	nevs := make(map[string]string)
-	np := c.namespacePrefix()
+	np := cfg.namespacePrefix()
 
 	for _, ev := range os.Environ() {
 		if strings.HasPrefix(ev, np) {
@@ -165,7 +165,7 @@ func (c *Config) readNamespaceEnvVars() map[string]string {
 				continue
 			}
 
-			key := c.keyify(varval[0])
+			key := cfg.keyify(varval[0])
 			nevs[key] = varval[1]
 		}
 	}
@@ -175,7 +175,7 @@ func (c *Config) readNamespaceEnvVars() map[string]string {
 
 // keyify converts environment variable names to a dot-separated, lowercase format.
 // For example, NAMESPACE_CONFIG_VALUE becomes config.value.
-func (c *Config) keyify(name string) string {
+func (cfg *Config) keyify(name string) string {
 	split := strings.Split(name, "_")
 	if len(split) < 1 {
 		return ""
@@ -201,15 +201,15 @@ func getEnvOrDef(envar string, def ...string) string {
 }
 
 // loadFlags parses CLI flags and stores them in the Config struct.
-func (c *Config) loadFlags() {
-	c.flags = make(map[string]string)
+func (cfg *Config) loadFlags() {
+	cfg.flags = make(map[string]string)
 	flag.VisitAll(func(f *flag.Flag) {
-		c.flags[f.Name] = f.Value.String()
+		cfg.flags[f.Name] = f.Value.String()
 	})
 }
 
 // defineFlags defines the CLI flags used by the application.
-func (c *Config) defineFlags(flagDefs map[string]interface{}) {
+func (cfg *Config) defineFlags(flagDefs map[string]interface{}) {
 	for name, defVal := range flagDefs {
 		switch v := defVal.(type) {
 		case string:
@@ -220,4 +220,16 @@ func (c *Config) defineFlags(flagDefs map[string]interface{}) {
 			flag.Bool(name, v, "")
 		}
 	}
+}
+
+func (cfg *Config) WebAddr() string {
+	host := cfg.StrValOrDef(Keys.WebHostKey, "localhost")
+	port := cfg.StrValOrDef(Keys.WebPortKey, "8080")
+	return host + ":" + port
+}
+
+func (cfg *Config) APIAddr() string {
+	host := cfg.StrValOrDef(Keys.APIHostKey, "localhost")
+	port := cfg.StrValOrDef(Keys.APIPortKey, "8081")
+	return host + ":" + port
 }

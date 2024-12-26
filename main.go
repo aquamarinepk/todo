@@ -1,51 +1,54 @@
 package main
 
 import (
+	"context"
+
 	"github.com/aquamarinepk/todo/internal/am"
+	"github.com/aquamarinepk/todo/internal/core"
 	"github.com/aquamarinepk/todo/internal/feat/todo"
 )
 
 const (
-	WebHostKey = "server.web.host"
-	WebPortKey = "server.web.port"
-	APIHostKey = "server.api.host"
-	AIPortKey  = "server.api.port"
+	name      = "Todo"
+	version   = "v1"
+	namespace = "todo"
 )
 
 func main() {
 	log := am.NewLogger("info")
-	flags := map[string]interface{}{
-		WebPortKey: "8080",
-		AIPortKey:  "8081",
-		WebHostKey: "localhost",
-		APIHostKey: "localhost",
+	cfg := am.LoadCfg(namespace, am.Flags)
+	opts := am.DefOpts(log, cfg)
+
+	app := core.NewApp(name, version, opts...)
+
+	todoRepo := todo.NewRepo()
+	todoService := todo.NewService(todoRepo)
+
+	todoWebHandler := todo.NewWebHandler(todoService, opts...)
+	todoAPIHandler := todo.NewAPIHandler(todoService, opts...)
+
+	webRouter := todo.NewWebRouter(todoWebHandler)
+	apiRouter := todo.NewAPIRouter(todoAPIHandler)
+
+	app.MountWeb("/todo", webRouter)
+	app.MountAPI(version, "/todo", apiRouter)
+
+	app.Add(todoRepo)
+	app.Add(todoService)
+	app.Add(todoWebHandler)
+	app.Add(todoAPIHandler)
+	app.Add(webRouter)
+	app.Add(apiRouter)
+
+	ctx := context.Background()
+	err := app.Setup(ctx)
+	if err != nil {
+		log.Error("Failed to setup the app: ", err)
+		return
 	}
-	cfg := am.LoadCfg("TODO", flags)
 
-	repo := todo.NewRepo()
-	service := todo.NewService(repo)
-
-	opts := opts(log, cfg)
-
-	webHandler := todo.NewWebHandler(service, opts...)
-	apiHandler := todo.NewAPIHandler(service, opts...)
-
-	webRouter := am.NewRouter(opts...)
-	webRouter.Mount("/todo", todo.NewWebRouter(webHandler))
-
-	apiRouter := am.NewRouter(opts...)
-	apiRouter.Mount("/api/todo", todo.NewAPIRouter(apiHandler))
-
-	webServer := am.NewServer(WebHostKey, WebPortKey, webRouter, opts...)
-	apiServer := am.NewServer(APIHostKey, AIPortKey, apiRouter, opts...)
-
-	go webServer.Start()
-	apiServer.Start()
-}
-
-func opts(log am.Logger, cfg *am.Config) []am.Option {
-	return []am.Option{
-		am.WithLog(log),
-		am.WithCfg(cfg),
+	err = app.Start(ctx)
+	if err != nil {
+		log.Error("Failed to start the app: ", err)
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/google/uuid"
 )
 
@@ -18,79 +19,120 @@ type Repo interface {
 }
 
 type BaseRepo struct {
+	core  *am.BaseCore
 	mu    sync.Mutex
-	lists map[uuid.UUID]List
+	lists map[uuid.UUID]ListDA
 }
 
-func NewRepo() *BaseRepo {
+func NewRepo(opts ...am.Option) *BaseRepo {
 	return &BaseRepo{
-		lists: make(map[uuid.UUID]List),
+		core:  am.NewCore("todo-repo", opts...),
+		lists: make(map[uuid.UUID]ListDA),
 	}
 }
 
-func (r *BaseRepo) GetAll(ctx context.Context) ([]List, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repo *BaseRepo) GetAll(ctx context.Context) ([]List, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
 
 	var result []List
-	for _, list := range r.lists {
-		result = append(result, list)
+	for _, listDA := range repo.lists {
+		result = append(result, toList(listDA))
 	}
 	return result, nil
 }
 
-func (r *BaseRepo) GetByID(ctx context.Context, id uuid.UUID) (List, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repo *BaseRepo) GetByID(ctx context.Context, id uuid.UUID) (List, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
 
-	list, exists := r.lists[id]
+	listDA, exists := repo.lists[id]
 	if !exists {
 		return List{}, errors.New("list not found")
 	}
-	return list, nil
+	return toList(listDA), nil
 }
 
-func (r *BaseRepo) GetBySlug(ctx context.Context, slug string) (List, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repo *BaseRepo) GetBySlug(ctx context.Context, slug string) (List, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
 
-	for _, list := range r.lists {
-		if list.Slug() == slug {
-			return list, nil
+	for _, listDA := range repo.lists {
+		if listDA.Slug.String == slug {
+			return toList(listDA), nil
 		}
 	}
 	return List{}, errors.New("list not found")
 }
 
-func (r *BaseRepo) Create(ctx context.Context, list List) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repo *BaseRepo) Create(ctx context.Context, list List) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
 
-	if _, exists := r.lists[list.ID()]; exists {
+	listDA := toListDA(list)
+	if _, exists := repo.lists[listDA.ID]; exists {
 		return errors.New("list already exists")
 	}
-	r.lists[list.ID()] = list
+	repo.lists[listDA.ID] = listDA
 	return nil
 }
 
-func (r *BaseRepo) Update(ctx context.Context, list List) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repo *BaseRepo) Update(ctx context.Context, list List) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
 
-	if _, exists := r.lists[list.ID()]; !exists {
+	listDA := toListDA(list)
+	if _, exists := repo.lists[listDA.ID]; !exists {
 		return errors.New("list not found")
 	}
-	r.lists[list.ID()] = list
+	repo.lists[listDA.ID] = listDA
 	return nil
 }
 
-func (r *BaseRepo) Delete(ctx context.Context, id uuid.UUID) error {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+func (repo *BaseRepo) Delete(ctx context.Context, id uuid.UUID) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
 
-	if _, exists := r.lists[id]; !exists {
+	if _, exists := repo.lists[id]; !exists {
 		return errors.New("list not found")
 	}
-	delete(r.lists, id)
+	delete(repo.lists, id)
 	return nil
+}
+
+// Implementing the am.Core interface methods by delegating to the core field
+func (repo *BaseRepo) Name() string {
+	return repo.core.Name()
+}
+
+func (repo *BaseRepo) SetName(name string) {
+	repo.core.SetName(name)
+}
+
+func (repo *BaseRepo) Log() am.Logger {
+	return repo.core.Log()
+}
+
+func (repo *BaseRepo) SetLog(log am.Logger) {
+	repo.core.SetLog(log)
+}
+
+func (repo *BaseRepo) Cfg() *am.Config {
+	return repo.core.Cfg()
+}
+
+func (repo *BaseRepo) SetCfg(cfg *am.Config) {
+	repo.core.SetCfg(cfg)
+}
+
+func (repo *BaseRepo) Setup(ctx context.Context) error {
+	return repo.core.Setup(ctx)
+}
+
+func (repo *BaseRepo) Start(ctx context.Context) error {
+	return repo.core.Start(ctx)
+}
+
+func (repo *BaseRepo) Stop(ctx context.Context) error {
+	return repo.core.Stop(ctx)
 }

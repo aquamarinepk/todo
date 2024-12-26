@@ -1,12 +1,12 @@
 package todo
 
 import (
-	chi "github.com/go-chi/chi/v5"
+	"github.com/aquamarinepk/todo/internal/am"
 )
 
 // NewAPIRouter creates a new API router for the todo feature.
-func NewAPIRouter(handler *APIHandler) chi.Router {
-	r := chi.NewRouter()
+func NewAPIRouter(handler *APIHandler, opts ...am.Option) *am.Router {
+	r := am.NewRouter("api-router", opts...)
 
 	r.Get("/", handler.List)          // GET /api/todo
 	r.Post("/", handler.Create)       // POST /api/todo

@@ -1,51 +1,98 @@
+// internal/core/app.go
 package core
 
 import (
+	"context"
 	"net/http"
+	"os"
+	"os/signal"
 
 	"github.com/aquamarinepk/todo/internal/am"
+	"github.com/aquamarinepk/todo/internal/feat/todo"
 )
 
 type App struct {
-	base      *am.App
-	webServer *http.Server
-	apiServer *http.Server
+	core      *am.App
+	router    *am.Router
+	webRouter *am.Router
+	apiRouter *am.Router
+	repo      todo.Repo
+	service   todo.Service
 }
 
-type Option func(*App)
-
-func NewApp(options ...Option) *App {
-	base := am.NewApp()
+func NewApp(name, version string, opts ...am.Option) *App {
+	core := am.NewApp(name, version, opts...)
 	app := &App{
-		base: base,
-	}
-	for _, option := range options {
-		option(app)
+		core: core,
 	}
 	return app
 }
 
-func WithWebServer(server *http.Server) Option {
-	return func(app *App) {
-		app.webServer = server
+func (app *App) Setup(ctx context.Context) error {
+	// Perform any preliminary setup using the configuration
+	return nil
+}
+
+func (app *App) Start(ctx context.Context) error {
+	err := app.core.Start(ctx)
+	if err != nil {
+		return err
 	}
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+	<-stop
+
+	return app.Stop(ctx)
 }
 
-func WithAPIServer(server *http.Server) Option {
-	return func(app *App) {
-		app.apiServer = server
-	}
+func (a *App) Add(dep am.Core) {
+	a.core.Add(dep)
 }
 
-func (app *App) SetWebServer(server *http.Server) {
-	app.webServer = server
+func (a *App) Dep(name string) (*am.Dep, bool) {
+	return a.core.Dep(name)
 }
 
-func (app *App) SetAPIServer(server *http.Server) {
-	app.apiServer = server
+func (app *App) Stop(ctx context.Context) error {
+	return nil
 }
 
-func (app *App) Start() {
-	app.base.StartServer(app.webServer, ":8080")
-	app.base.StartServer(app.apiServer, ":8081")
+func (app *App) SetRepo(repo todo.Repo) {
+	app.repo = repo
+}
+
+func (app *App) SetService(service todo.Service) {
+	app.service = service
+}
+
+func (app *App) SetWebRouter(router *am.Router) {
+	app.webRouter = router
+}
+
+func (app *App) SetAPIRouter(router *am.Router) {
+	app.apiRouter = router
+}
+
+func (app *App) MountWeb(path string, router *am.Router) {
+	app.mount(path, router)
+}
+
+func (app *App) MountAPI(version, path string, router *am.Router) {
+	app.core.MountAPI(version, path, router)
+}
+
+func (app *App) mount(path string, handler http.Handler) {
+	app.core.Mount(path, handler)
+}
+
+func (app *App) mountAPIRouter(version, path string, router http.Handler) {
+}
+
+func (app *App) Log() am.Logger {
+	return app.core.Log()
+}
+
+func (app *App) Cfg() *am.Config {
+	return app.core.Cfg()
 }
