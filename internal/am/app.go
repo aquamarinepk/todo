@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/signal"
@@ -58,6 +59,8 @@ func (a *App) Add(dep Core) {
 	dep.SetLog(a.Log())
 	dep.SetCfg(a.Cfg())
 
+	a.Log().Infof("Adding dependency: %s", dep.Name())
+
 	a.depsMutex.Lock()
 	defer a.depsMutex.Unlock()
 
@@ -73,6 +76,35 @@ func (a *App) Dep(name string) (*Dep, bool) {
 		return nil, false
 	}
 	return value.(*Dep), true
+}
+
+func (a *App) Setup(ctx context.Context) error {
+	var errs []string
+
+	// Debug the content of deps
+	a.deps.Range(func(key, value interface{}) bool {
+		dep := value.(*Dep)
+		a.Log().Infof("Dependency key: %s, Dependency name: %s, Status: %s", key, dep.core.Name(), dep.Status)
+		return true
+	})
+
+	a.deps.Range(func(key, value interface{}) bool {
+		dep := value.(*Dep)
+		if coreDep, ok := dep.core.(Core); ok {
+			err := coreDep.Setup(ctx)
+			if err != nil {
+				msg := fmt.Sprintf("failed to setup %s: %v", coreDep.Name(), err)
+				errs = append(errs, msg)
+			}
+		}
+		return true
+	})
+
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, "; "))
+	}
+
+	return nil
 }
 
 func (a *App) Start(ctx context.Context) error {
@@ -179,9 +211,10 @@ func (a *App) SetCfg(cfg *Config) {
 func genName() string {
 	u := uuid.New()
 	segments := strings.Split(u.String(), "-")
+	rand.Seed(time.Now().UnixNano())
 	firstPart := make([]rune, 8)
-	for i := 0; i < 8; i++ {
-		firstPart[i] = 'a' + rune(i%26)
+	for i := range firstPart {
+		firstPart[i] = 'a' + rune(rand.Intn(26))
 	}
 	return fmt.Sprintf("%s-%s", string(firstPart), segments[len(segments)-1])
 }

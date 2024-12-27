@@ -28,7 +28,10 @@ func main() {
 
 	app := core.NewApp(name, version, opts...)
 
-	todoRepo := todo.NewRepo()
+	queryManager := am.NewQueryManager(assetsFS, opts...)
+	templateManager := am.NewTemplateManager(assetsFS, opts...)
+
+	todoRepo := todo.NewRepo(queryManager, opts...)
 	todoService := todo.NewService(todoRepo)
 
 	todoWebHandler := todo.NewWebHandler(todoService, opts...)
@@ -36,12 +39,6 @@ func main() {
 
 	webRouter := todo.NewWebRouter(todoWebHandler)
 	apiRouter := todo.NewAPIRouter(todoAPIHandler)
-
-	queryManager := am.NewQueryManager(assetsFS, opts...)
-	_ = queryManager.Setup(context.Background())
-
-	templateManager := am.NewTemplateManager(assetsFS, opts...)
-	_ = templateManager.Setup(context.Background())
 
 	app.MountWeb("/todo", webRouter)
 	app.MountAPI(version, "/todo", apiRouter)

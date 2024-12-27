@@ -19,14 +19,14 @@ type Repo interface {
 }
 
 type BaseRepo struct {
-	core  *am.BaseCore
+	core  *am.Repo
 	mu    sync.Mutex
 	lists map[uuid.UUID]ListDA
 }
 
-func NewRepo(opts ...am.Option) *BaseRepo {
+func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	return &BaseRepo{
-		core:  am.NewCore("todo-repo", opts...),
+		core:  am.NewRepo("todo-repo", qm, opts...),
 		lists: make(map[uuid.UUID]ListDA),
 	}
 }
@@ -100,7 +100,6 @@ func (repo *BaseRepo) Delete(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-// Implementing the am.Core interface methods by delegating to the core field
 func (repo *BaseRepo) Name() string {
 	return repo.core.Name()
 }

@@ -14,7 +14,7 @@ type WebHandler struct {
 }
 
 func NewWebHandler(service Service, options ...am.Option) *WebHandler {
-	handler := am.NewHandler("api-handler", options...)
+	handler := am.NewHandler("web-handler", options...)
 	return &WebHandler{
 		core:    handler,
 		service: service,

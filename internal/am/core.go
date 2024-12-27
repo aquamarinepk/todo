@@ -47,7 +47,7 @@ func NewCore(name string, opts ...Option) *BaseCore {
 
 // Name returns the name in BaseCore.
 func (c *BaseCore) Name() string {
-	return "base"
+	return c.name
 }
 
 // SetName sets the name in BaseCore.

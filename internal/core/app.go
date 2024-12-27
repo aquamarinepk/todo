@@ -29,8 +29,7 @@ func NewApp(name, version string, opts ...am.Option) *App {
 }
 
 func (app *App) Setup(ctx context.Context) error {
-	// Perform any preliminary setup using the configuration
-	return nil
+	return app.core.Setup(ctx)
 }
 
 func (app *App) Start(ctx context.Context) error {
