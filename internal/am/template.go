@@ -10,10 +10,17 @@ import (
 	"sync"
 )
 
+const (
+	layoutDir    = "assets/template/layout"
+	handlerDir   = "assets/template/handler"
+	layoutPrefix = layoutDir + "/"
+)
+
 type TemplateManager struct {
 	core      Core
-	templates sync.Map
 	assetsFS  embed.FS
+	layouts   sync.Map
+	templates sync.Map
 }
 
 func NewTemplateManager(assetsFS embed.FS, opts ...Option) *TemplateManager {
@@ -27,28 +34,49 @@ func NewTemplateManager(assetsFS embed.FS, opts ...Option) *TemplateManager {
 }
 
 func (tm *TemplateManager) Load() {
-	tm.loadTemplate("layout", "assets/layout/layout.html")
+	tm.loadLayoutTemplates()
+	tm.loadHandlerTemplates()
+}
 
-	entries, err := tm.assetsFS.ReadDir("assets/layout")
+func (tm *TemplateManager) loadLayoutTemplates() {
+	tm.loadLayoutTemplatesFromDir(layoutDir)
+}
+
+func (tm *TemplateManager) loadLayoutTemplatesFromDir(path string) {
+	entries, err := tm.assetsFS.ReadDir(path)
 	if err != nil {
-		tm.Log().Error("Failed to read assets/layout directory: ", err)
+		tm.Log().Error("Failed to read layout subdirectory: ", err)
+		return
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			tm.loadLayoutTemplatesFromDir(filepath.Join(path, entry.Name()))
+		} else {
+			key := strings.TrimPrefix(filepath.ToSlash(filepath.Join(path, entry.Name())), layoutPrefix)
+			key = strings.TrimSuffix(key, filepath.Ext(key))
+			key = strings.ReplaceAll(key, "/", ":")
+			tm.loadTemplate(key, filepath.Join(path, entry.Name()))
+		}
+	}
+}
+
+func (tm *TemplateManager) loadHandlerTemplates() {
+	entries, err := tm.assetsFS.ReadDir(handlerDir)
+	if err != nil {
+		tm.Log().Error("Failed to read handler directory: ", err)
 		return
 	}
 
 	for _, entry := range entries {
 		if entry.IsDir() {
 			handler := strings.ToLower(entry.Name())
-			tm.loadHandlerTemplates(handler, filepath.Join("assets/layout", handler))
-		} else {
-			name := strings.ToLower(strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name())))
-			if name != "layout" {
-				tm.loadTemplate(name, filepath.Join("assets/layout", entry.Name()))
-			}
+			tm.loadHandlerTemplatesFromDir(handler, filepath.Join(handlerDir, handler))
 		}
 	}
 }
 
-func (tm *TemplateManager) loadHandlerTemplates(handler, path string) {
+func (tm *TemplateManager) loadHandlerTemplatesFromDir(handler, path string) {
 	entries, err := tm.assetsFS.ReadDir(path)
 	if err != nil {
 		tm.Log().Error("Failed to read handler directory: ", err)
@@ -68,8 +96,14 @@ func (tm *TemplateManager) loadTemplate(key, path string) {
 		tm.Log().Error("Failed to load template: ", err)
 		return
 	}
+	if strings.HasPrefix(path, layoutDir) {
+		if _, loaded := tm.layouts.LoadOrStore(key, tmpl); loaded {
+			tm.Log().Infof("Layout template key %s already exists, skipping", key)
+		}
+		return
+	}
 	if _, loaded := tm.templates.LoadOrStore(key, tmpl); loaded {
-		tm.Log().Info("Template key %s already exists, skipping", key)
+		tm.Log().Infof("Handler template key %s already exists, skipping", key)
 	}
 }
 
@@ -78,19 +112,24 @@ func (tm *TemplateManager) Get(handler, action string) (*template.Template, erro
 	if tmpl, ok := tm.templates.Load(key); ok {
 		return tmpl.(*template.Template), nil
 	}
-	if tmpl, ok := tm.templates.Load(handler + ":layout"); ok {
+	if tmpl, ok := tm.layouts.Load(handler + ":layout"); ok {
 		return tmpl.(*template.Template), nil
 	}
-	if tmpl, ok := tm.templates.Load("layout"); ok {
+	if tmpl, ok := tm.layouts.Load("layout"); ok {
 		return tmpl.(*template.Template), nil
 	}
 	return nil, errors.New("template not found")
 }
 
 func (tm *TemplateManager) Debug() {
-	tm.templates.Range(func(key, value interface{}) bool {
+	tm.debugTemplates(&tm.layouts, "Layout template key")
+	tm.debugTemplates(&tm.templates, "Handler template key")
+}
+
+func (tm *TemplateManager) debugTemplates(store *sync.Map, keyPrefix string) {
+	store.Range(func(key, value interface{}) bool {
 		tmpl := value.(*template.Template)
-		tm.Log().Infof("Template key: %s, Template name: %s, Defined templates: %v", key, tmpl.Name(), tmpl.DefinedTemplates())
+		tm.Log().Infof("%s: %s, Template name: %s, Defined templates: %v", keyPrefix, key, tmpl.Name(), tmpl.DefinedTemplates())
 		return true
 	})
 }

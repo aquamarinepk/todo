@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	name      = "Todo"
+	name      = "todo"
 	version   = "v1"
 	namespace = "todo"
 )
 
 var (
-	//go:embed assets/*
+	//go:embed assets/**/*
 	assetsFS embed.FS
 )
 
@@ -35,9 +35,9 @@ func main() {
 	todoService := todo.NewService(todoRepo)
 
 	todoWebHandler := todo.NewWebHandler(todoService, opts...)
-	todoAPIHandler := todo.NewAPIHandler(todoService, opts...)
-
 	webRouter := todo.NewWebRouter(todoWebHandler)
+
+	todoAPIHandler := todo.NewAPIHandler(todoService, opts...)
 	apiRouter := todo.NewAPIRouter(todoAPIHandler)
 
 	app.MountWeb("/todo", webRouter)
