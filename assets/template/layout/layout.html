@@ -1,0 +1,21 @@
+{{ define "layout" }}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ block "title" . }}Title{{ end }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-900">
+<header class="bg-blue-600 text-white p-4">
+    {{ block "header" . }}Header{{ end }}
+</header>
+<main class="p-4">
+    {{ block "content" . }}Content{{ end }}
+</main>
+<footer class="bg-gray-200 text-center p-4 mt-4">
+    <p>&copy; 2024 Todo Application</p>
+</footer>
+</body>
+</html>
+{{ end }}

@@ -1,6 +1,7 @@
 package todo
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 
@@ -11,13 +12,15 @@ import (
 type WebHandler struct {
 	core    *am.Handler
 	service Service
+	tm      *am.TemplateManager
 }
 
-func NewWebHandler(service Service, options ...am.Option) *WebHandler {
+func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option) *WebHandler {
 	handler := am.NewHandler("web-handler", options...)
 	return &WebHandler{
 		core:    handler,
 		service: service,
+		tm:      tm,
 	}
 }
 
@@ -28,7 +31,36 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 
 func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New todo form")
-	w.Write([]byte("New todo form"))
+	tmpl, err := h.tm.Get("todo", "new")
+	if err != nil {
+		http.Error(w, "Template not found", http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, nil)
+	if err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) New2(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("New todo form")
+	tmpl, err := h.tm.Get("todo", "new")
+	if err != nil {
+		http.Error(w, "Template not found", http.StatusInternalServerError)
+		return
+	}
+	err = tmpl.Execute(w, nil)
+	if err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) Create(w http.ResponseWriter, r *http.Request) {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"embed"
 	"errors"
+	"fmt"
 	"html/template"
 	"path/filepath"
 	"strings"
@@ -11,15 +12,16 @@ import (
 )
 
 const (
-	layoutDir    = "assets/template/layout"
-	handlerDir   = "assets/template/handler"
-	layoutPrefix = layoutDir + "/"
+	layoutPath    = "assets/template/layout"
+	handlerPath   = "assets/template/handler"
+	partialDir    = "partial"
+	defaultLayout = "layout.html"
+	mainTemplate  = "page"
 )
 
 type TemplateManager struct {
 	core      Core
 	assetsFS  embed.FS
-	layouts   sync.Map
 	templates sync.Map
 }
 
@@ -34,35 +36,11 @@ func NewTemplateManager(assetsFS embed.FS, opts ...Option) *TemplateManager {
 }
 
 func (tm *TemplateManager) Load() {
-	tm.loadLayoutTemplates()
-	tm.loadHandlerTemplates()
+	tm.loadTemplates()
 }
 
-func (tm *TemplateManager) loadLayoutTemplates() {
-	tm.loadLayoutTemplatesFromDir(layoutDir)
-}
-
-func (tm *TemplateManager) loadLayoutTemplatesFromDir(path string) {
-	entries, err := tm.assetsFS.ReadDir(path)
-	if err != nil {
-		tm.Log().Error("Failed to read layout subdirectory: ", err)
-		return
-	}
-
-	for _, entry := range entries {
-		if entry.IsDir() {
-			tm.loadLayoutTemplatesFromDir(filepath.Join(path, entry.Name()))
-		} else {
-			key := strings.TrimPrefix(filepath.ToSlash(filepath.Join(path, entry.Name())), layoutPrefix)
-			key = strings.TrimSuffix(key, filepath.Ext(key))
-			key = strings.ReplaceAll(key, "/", ":")
-			tm.loadTemplate(key, filepath.Join(path, entry.Name()))
-		}
-	}
-}
-
-func (tm *TemplateManager) loadHandlerTemplates() {
-	entries, err := tm.assetsFS.ReadDir(handlerDir)
+func (tm *TemplateManager) loadTemplates() {
+	entries, err := tm.assetsFS.ReadDir(handlerPath)
 	if err != nil {
 		tm.Log().Error("Failed to read handler directory: ", err)
 		return
@@ -71,12 +49,12 @@ func (tm *TemplateManager) loadHandlerTemplates() {
 	for _, entry := range entries {
 		if entry.IsDir() {
 			handler := strings.ToLower(entry.Name())
-			tm.loadHandlerTemplatesFromDir(handler, filepath.Join(handlerDir, handler))
+			tm.loadTemplatesFromDir(handler, filepath.Join(handlerPath, handler))
 		}
 	}
 }
 
-func (tm *TemplateManager) loadHandlerTemplatesFromDir(handler, path string) {
+func (tm *TemplateManager) loadTemplatesFromDir(handler, path string) {
 	entries, err := tm.assetsFS.ReadDir(path)
 	if err != nil {
 		tm.Log().Error("Failed to read handler directory: ", err)
@@ -84,27 +62,90 @@ func (tm *TemplateManager) loadHandlerTemplatesFromDir(handler, path string) {
 	}
 
 	for _, entry := range entries {
+		if entry.IsDir() && entry.Name() == partialDir {
+			continue
+		}
 		name := strings.ToLower(strings.TrimSuffix(entry.Name(), filepath.Ext(entry.Name())))
 		key := handler + ":" + name
-		tm.loadTemplate(key, filepath.Join(path, entry.Name()))
+		tm.loadTemplate(key, filepath.Join(path, entry.Name()), handler)
 	}
 }
 
-func (tm *TemplateManager) loadTemplate(key, path string) {
-	tmpl, err := template.ParseFS(tm.assetsFS, path)
+func (tm *TemplateManager) loadTemplate(key, path, handler string) {
+	tm.Log().Info(header("=", 120))
+	defer tm.Log().Info(header("=", 120))
+
+	tm.Log().Infof("Loading template: key=%s, path=%s, handler=%s", key, path, handler)
+
+	partials, err := tm.assetsFS.ReadDir(filepath.Join(handlerPath, handler, partialDir))
+	if err != nil {
+		tm.Log().Error("Failed to read partials directory: ", err)
+		return
+	}
+
+	partialPaths := []string{}
+	for _, partial := range partials {
+		partialPath := filepath.Join(handlerPath, handler, partialDir, partial.Name())
+		partialPaths = append(partialPaths, partialPath)
+		tm.Log().Infof("Found partial: %s", partialPath)
+	}
+
+	layoutPath := tm.findLayoutPath(handler, filepath.Base(path))
+	tm.Log().Infof("Using layout: %s", layoutPath)
+
+	allPaths := append([]string{layoutPath, path}, partialPaths...)
+	tm.Log().Infof("All template paths: %v", allPaths)
+
+	tmpl, err := template.New(mainTemplate).ParseFS(tm.assetsFS, allPaths...)
 	if err != nil {
 		tm.Log().Error("Failed to load template: ", err)
 		return
 	}
-	if strings.HasPrefix(path, layoutDir) {
-		if _, loaded := tm.layouts.LoadOrStore(key, tmpl); loaded {
-			tm.Log().Infof("Layout template key %s already exists, skipping", key)
-		}
-		return
-	}
+
+	tm.Log().Infof("Successfully loaded template: %s", key)
 	if _, loaded := tm.templates.LoadOrStore(key, tmpl); loaded {
-		tm.Log().Infof("Handler template key %s already exists, skipping", key)
+		tm.Log().Infof("Template key %s already exists, skipping", key)
 	}
+}
+
+func (tm *TemplateManager) findLayoutPath(handler, action string) string {
+	actionLayout := filepath.Join(layoutPath, handler, action)
+	tm.Log().Infof("Evaluating specific action layout path: %s", actionLayout)
+	if _, err := tm.assetsFS.Open(actionLayout); err == nil {
+		tm.Log().Infof("Found specific action layout: %s", actionLayout)
+		return actionLayout
+	}
+
+	handlerLayout := filepath.Join(layoutPath, handler, defaultLayout)
+	tm.Log().Infof("Evaluating handler layout path: %s", handlerLayout)
+	if _, err := tm.assetsFS.Open(handlerLayout); err == nil {
+		tm.Log().Infof("Found handler layout: %s", handlerLayout)
+		return handlerLayout
+	}
+
+	globalLayout := filepath.Join(layoutPath, defaultLayout)
+	tm.Log().Infof("Evaluating global layout path: %s", globalLayout)
+	if _, err := tm.assetsFS.Open(globalLayout); err == nil {
+		tm.Log().Infof("Found global layout: %s", globalLayout)
+		return globalLayout
+	}
+
+	tm.Log().Info("No specific, handler, or global layout found")
+	return ""
+}
+
+func (tm *TemplateManager) findLayoutPath2(handler, action string) string {
+	specificActionLayout := filepath.Join(layoutPath, handler, action)
+	if _, err := tm.assetsFS.Open(specificActionLayout); err == nil {
+		return specificActionLayout
+	}
+
+	handlerLayout := filepath.Join(layoutPath, handler, defaultLayout)
+	if _, err := tm.assetsFS.Open(handlerLayout); err == nil {
+		return handlerLayout
+	}
+
+	return ""
 }
 
 func (tm *TemplateManager) Get(handler, action string) (*template.Template, error) {
@@ -112,26 +153,30 @@ func (tm *TemplateManager) Get(handler, action string) (*template.Template, erro
 	if tmpl, ok := tm.templates.Load(key); ok {
 		return tmpl.(*template.Template), nil
 	}
-	if tmpl, ok := tm.layouts.Load(handler + ":layout"); ok {
-		return tmpl.(*template.Template), nil
-	}
-	if tmpl, ok := tm.layouts.Load("layout"); ok {
-		return tmpl.(*template.Template), nil
-	}
 	return nil, errors.New("template not found")
 }
 
 func (tm *TemplateManager) Debug() {
-	tm.debugTemplates(&tm.layouts, "Layout template key")
-	tm.debugTemplates(&tm.templates, "Handler template key")
-}
-
-func (tm *TemplateManager) debugTemplates(store *sync.Map, keyPrefix string) {
-	store.Range(func(key, value interface{}) bool {
+	tm.templates.Range(func(key, value interface{}) bool {
 		tmpl := value.(*template.Template)
-		tm.Log().Infof("%s: %s, Template name: %s, Defined templates: %v", keyPrefix, key, tmpl.Name(), tmpl.DefinedTemplates())
+		fmt.Println(debugTemplate(key.(string), tmpl))
 		return true
 	})
+}
+
+func debugTemplate(key string, tmpl *template.Template) string {
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Template key: %s\n", key))
+	sb.WriteString(fmt.Sprintf("  Template name: %s\n", tmpl.Name()))
+	sb.WriteString("  Defined templates:\n")
+	for _, tmpl := range tmpl.Templates() {
+		sb.WriteString(fmt.Sprintf("    %s\n", tmpl.Name()))
+	}
+	return sb.String()
+}
+
+func header(char string, count int) string {
+	return strings.Repeat(char, count)
 }
 
 func (tm *TemplateManager) Name() string {

@@ -16,7 +16,7 @@ const (
 )
 
 var (
-	//go:embed assets/**/*
+	//go:embed assets
 	assetsFS embed.FS
 )
 
@@ -34,7 +34,7 @@ func main() {
 	todoRepo := todo.NewRepo(queryManager, opts...)
 	todoService := todo.NewService(todoRepo)
 
-	todoWebHandler := todo.NewWebHandler(todoService, opts...)
+	todoWebHandler := todo.NewWebHandler(templateManager, todoService, opts...)
 	webRouter := todo.NewWebRouter(todoWebHandler)
 
 	todoAPIHandler := todo.NewAPIHandler(todoService, opts...)
