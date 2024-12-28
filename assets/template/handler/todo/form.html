@@ -1,0 +1,11 @@
+{{ define "form" }}
+<form action="/todo" method="post">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name" required>
+    <br>
+    <label for="description">Description:</label>
+    <textarea id="description" name="description" required></textarea>
+    <br>
+    <button type="submit">Create</button>
+</form>
+{{ end }}
