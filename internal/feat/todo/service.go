@@ -8,11 +8,13 @@ import (
 )
 
 type Service interface {
-	GetAllLists(ctx context.Context) ([]List, error)
+	GetLists(ctx context.Context) ([]List, error)
 	GetListByID(ctx context.Context, id uuid.UUID) (List, error)
+	GetListBySlug(ctx context.Context, slug string) (List, error)
 	CreateList(ctx context.Context, list List) error
 	UpdateList(ctx context.Context, list List) error
 	DeleteList(ctx context.Context, id uuid.UUID) error
+	DeleteListBySlug(ctx context.Context, slug string) error
 }
 
 type BaseService struct {
@@ -27,7 +29,7 @@ func NewService(repo Repo, opts ...am.Option) *BaseService {
 	}
 }
 
-func (svc *BaseService) GetAllLists(ctx context.Context) ([]List, error) {
+func (svc *BaseService) GetLists(ctx context.Context) ([]List, error) {
 	return svc.repo.GetAll(ctx)
 }
 
@@ -35,8 +37,16 @@ func (svc *BaseService) GetListByID(ctx context.Context, id uuid.UUID) (List, er
 	return svc.repo.GetByID(ctx, id)
 }
 
+func (svc *BaseService) GetListBySlug(ctx context.Context, slug string) (List, error) {
+	return svc.repo.GetBySlug(ctx, slug)
+}
+
 func (svc *BaseService) CreateList(ctx context.Context, list List) error {
-	return svc.repo.Create(ctx, list)
+	list.GenSlug()
+	list.SetCreateValues()
+	err := svc.repo.Create(ctx, list) // NOTE: Remove assignment to err and return the function call directly.
+	svc.repo.Debug()
+	return err
 }
 
 func (svc *BaseService) UpdateList(ctx context.Context, list List) error {
@@ -45,6 +55,14 @@ func (svc *BaseService) UpdateList(ctx context.Context, list List) error {
 
 func (svc *BaseService) DeleteList(ctx context.Context, id uuid.UUID) error {
 	return svc.repo.Delete(ctx, id)
+}
+
+func (svc *BaseService) DeleteListBySlug(ctx context.Context, slug string) error {
+	list, err := svc.repo.GetBySlug(ctx, slug)
+	if err != nil {
+		return err
+	}
+	return svc.repo.Delete(ctx, list.ID())
 }
 
 func (svc *BaseService) Name() string {

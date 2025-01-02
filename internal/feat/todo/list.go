@@ -5,6 +5,10 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	listType = "list"
+)
+
 type List struct {
 	Model       am.Model
 	Name        string `json:"name"`
@@ -14,7 +18,7 @@ type List struct {
 // NewList creates a new list.
 func NewList(name, description string) List {
 	return List{
-		Model:       am.NewModel(),
+		Model:       am.NewModel(am.WithType(listType)),
 		Name:        name,
 		Description: description,
 	}
@@ -26,8 +30,8 @@ func (l *List) ID() uuid.UUID {
 }
 
 // SetID sets the unique identifier of the list.
-func (l *List) SetID(id uuid.UUID) {
-	l.Model.GenID(id)
+func (l *List) SetID(id uuid.UUID, force ...bool) {
+	l.Model.SetID(id, force...)
 }
 
 // Slug returns the slug of the list.
@@ -35,7 +39,15 @@ func (l *List) Slug() string {
 	return l.Model.Slug()
 }
 
-// SetSlug generates and sets the slug of the list.
-func (l *List) SetSlug(slug string) {
-	l.Model.GenSlug(slug)
+// GenSlug generates and sets the slug of the list.
+func (l *List) GenSlug() {
+	l.Model.GenSlug(l.Name)
+}
+
+func (l *List) GetNameID() {
+	l.Model.GenNameID()
+}
+
+func (l *List) SetCreateValues() {
+	l.Model.GenCreationValues()
 }

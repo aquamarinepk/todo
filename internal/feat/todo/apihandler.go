@@ -24,7 +24,7 @@ func NewAPIHandler(service Service, options ...am.Option) *APIHandler {
 }
 
 func (h *APIHandler) List(w http.ResponseWriter, r *http.Request) {
-	lists, err := h.service.GetAllLists(r.Context())
+	lists, err := h.service.GetLists(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

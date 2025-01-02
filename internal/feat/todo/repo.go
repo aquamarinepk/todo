@@ -3,6 +3,7 @@ package todo
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 
 	"github.com/aquamarinepk/todo/internal/am"
@@ -16,18 +17,40 @@ type Repo interface {
 	Create(ctx context.Context, list List) error
 	Update(ctx context.Context, list List) error
 	Delete(ctx context.Context, id uuid.UUID) error
+	Debug()
 }
 
 type BaseRepo struct {
 	core  *am.Repo
 	mu    sync.Mutex
 	lists map[uuid.UUID]ListDA
+	order []uuid.UUID
 }
 
 func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
+	repo := &BaseRepo{
+		core:  am.NewRepo("todo-repo", qm, opts...),
+		lists: make(map[uuid.UUID]ListDA),
+		order: []uuid.UUID{},
+	}
+
+	for i := 1; i <= 5; i++ {
+		id := uuid.New()
+		list := NewList(fmt.Sprintf("Sample List %d", i), fmt.Sprintf("This is the description for sample list %d", i))
+		list.GenSlug()
+		list.SetCreateValues()
+		repo.lists[id] = toListDA(list)
+		repo.order = append(repo.order, id)
+	}
+
+	return repo
+}
+
+func NewRepoDef(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	return &BaseRepo{
 		core:  am.NewRepo("todo-repo", qm, opts...),
 		lists: make(map[uuid.UUID]ListDA),
+		order: []uuid.UUID{},
 	}
 }
 
@@ -36,8 +59,8 @@ func (repo *BaseRepo) GetAll(ctx context.Context) ([]List, error) {
 	defer repo.mu.Unlock()
 
 	var result []List
-	for _, listDA := range repo.lists {
-		result = append(result, toList(listDA))
+	for _, id := range repo.order {
+		result = append(result, toList(repo.lists[id]))
 	}
 	return result, nil
 }
@@ -74,6 +97,7 @@ func (repo *BaseRepo) Create(ctx context.Context, list List) error {
 		return errors.New("list already exists")
 	}
 	repo.lists[listDA.ID] = listDA
+	repo.order = append(repo.order, listDA.ID)
 	return nil
 }
 
@@ -97,7 +121,28 @@ func (repo *BaseRepo) Delete(ctx context.Context, id uuid.UUID) error {
 		return errors.New("list not found")
 	}
 	delete(repo.lists, id)
+	for i, oid := range repo.order {
+		if oid == id {
+			repo.order = append(repo.order[:i], repo.order[i+1:]...)
+			break
+		}
+	}
 	return nil
+}
+
+func (repo *BaseRepo) Debug() {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var result string
+	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n", "Type", "ID", "NameID", "Slug", "Name", "Description")
+	for _, id := range repo.order {
+		listDA := repo.lists[id]
+		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n",
+			listDA.Type, listDA.ID.String(), listDA.NameID.String, listDA.Slug.String, listDA.Name.String, listDA.Description.String)
+	}
+	result = fmt.Sprintf("%s state:\n%s", repo.Name(), result)
+	repo.Log().Info(result)
 }
 
 func (repo *BaseRepo) Name() string {

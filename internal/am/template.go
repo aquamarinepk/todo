@@ -134,34 +134,12 @@ func (tm *TemplateManager) findLayoutPath(handler, action string) string {
 	return ""
 }
 
-func (tm *TemplateManager) findLayoutPath2(handler, action string) string {
-	specificActionLayout := filepath.Join(layoutPath, handler, action)
-	if _, err := tm.assetsFS.Open(specificActionLayout); err == nil {
-		return specificActionLayout
-	}
-
-	handlerLayout := filepath.Join(layoutPath, handler, defaultLayout)
-	if _, err := tm.assetsFS.Open(handlerLayout); err == nil {
-		return handlerLayout
-	}
-
-	return ""
-}
-
 func (tm *TemplateManager) Get(handler, action string) (*template.Template, error) {
 	key := handler + ":" + action
 	if tmpl, ok := tm.templates.Load(key); ok {
 		return tmpl.(*template.Template), nil
 	}
 	return nil, errors.New("template not found")
-}
-
-func (tm *TemplateManager) Debug() {
-	tm.templates.Range(func(key, value interface{}) bool {
-		tmpl := value.(*template.Template)
-		fmt.Println(debugTemplate(key.(string), tmpl))
-		return true
-	})
 }
 
 func debugTemplate(key string, tmpl *template.Template) string {
@@ -177,6 +155,14 @@ func debugTemplate(key string, tmpl *template.Template) string {
 
 func header(char string, count int) string {
 	return strings.Repeat(char, count)
+}
+
+func (tm *TemplateManager) Debug() {
+	tm.templates.Range(func(key, value interface{}) bool {
+		tmpl := value.(*template.Template)
+		tm.Log().Info(debugTemplate(key.(string), tmpl))
+		return true
+	})
 }
 
 func (tm *TemplateManager) Name() string {
@@ -205,7 +191,7 @@ func (tm *TemplateManager) SetCfg(cfg *Config) {
 
 func (tm *TemplateManager) Setup(ctx context.Context) error {
 	tm.Load()
-	return tm.core.Setup(ctx)
+	return nil
 }
 
 func (tm *TemplateManager) Start(ctx context.Context) error {

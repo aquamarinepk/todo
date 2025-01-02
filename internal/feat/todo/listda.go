@@ -9,6 +9,7 @@ import (
 
 // ListDA represents the data access layer for the List model.
 type ListDA struct {
+	Type        string
 	ID          uuid.UUID      `db:"id"`
 	Slug        sql.NullString `db:"slug"`
 	NameID      sql.NullString `db:"name_id"`
@@ -26,7 +27,6 @@ func toList(da ListDA) List {
 		Model: am.NewModel(
 			am.WithID(da.ID),
 			am.WithSlug(da.Slug.String),
-			am.WithNameID(da.NameID.String),
 			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
 			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
 			am.WithCreatedAt(da.CreatedAt.Time),

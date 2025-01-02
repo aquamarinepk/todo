@@ -1,0 +1,15 @@
+{{ define "contextual" }}
+<div class="max-w-2xl mx-auto p-4">
+    <div class="flex space-x-4">
+        {{ range .Actions }}
+        {{ if .IsForm }}
+        <form action="{{ .URL }}" method="POST" class="inline">
+            <button type="submit" class="bg-{{ .Color }}-600 text-white px-4 py-2 rounded">{{ .Text }}</button>
+        </form>
+        {{ else }}
+        <a href="{{ .URL }}" class="bg-{{ .Color }}-600 text-white px-4 py-2 rounded">{{ .Text }}</a>
+        {{ end }}
+        {{ end }}
+    </div>
+</div>
+{{ end }}

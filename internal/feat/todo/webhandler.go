@@ -3,6 +3,7 @@ package todo
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/aquamarinepk/todo/internal/am"
@@ -26,19 +27,25 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 
 func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("List of lists")
-	w.Write([]byte("List of lists"))
-}
+	ctx := r.Context()
 
-func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("New todo form")
-	tmpl, err := h.tm.Get("todo", "new")
+	lists, err := h.service.GetLists(ctx)
+	if err != nil {
+		http.Error(w, "Failed to get lists", http.StatusInternalServerError)
+		return
+	}
+
+	page := am.NewPage(lists)
+	page.SetFormAction("/todo")
+
+	tmpl, err := h.tm.Get("todo", "list")
 	if err != nil {
 		http.Error(w, "Template not found", http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, nil)
+	err = tmpl.Execute(&buf, page)
 	if err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
 		return
@@ -50,46 +57,155 @@ func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *WebHandler) New2(w http.ResponseWriter, r *http.Request) {
+func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New todo form")
+
+	page := am.NewPage(List{})
+	page.SetFormAction("/todo")
+
 	tmpl, err := h.tm.Get("todo", "new")
 	if err != nil {
 		http.Error(w, "Template not found", http.StatusInternalServerError)
 		return
 	}
-	err = tmpl.Execute(w, nil)
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
 	if err != nil {
 		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
 	}
 }
 
 func (h *WebHandler) Create(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Create todo")
-	w.Write([]byte("Create todo"))
+	ctx := r.Context()
+
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+	list := NewList(name, description)
+
+	err := h.service.CreateList(ctx, list)
+	if err != nil {
+		http.Error(w, "Failed to create list", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/todo", http.StatusSeeOther)
 }
 
 func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	h.Log().Info("Show todo ", id)
-	w.Write([]byte("Show todo " + id))
+	slug := chi.URLParam(r, "slug")
+	h.Log().Info("Show todo ", slug)
+	ctx := r.Context()
+
+	list, err := h.service.GetListBySlug(ctx, slug)
+	if err != nil {
+		http.Error(w, "List not found", http.StatusNotFound)
+		return
+	}
+
+	page := am.NewPage(list)
+	page.SetActions([]am.Action{ // NOTE: This is a WIP, it will be improved.
+		{URL: "/todo", Text: "Back to List", Color: "gray", IsForm: false},
+		{URL: fmt.Sprintf("/todo/%s/edit", slug), Text: "Edit", Color: "blue", IsForm: false},
+		{URL: fmt.Sprintf("/todo/%s/delete", slug), Text: "Delete", Color: "red", IsForm: true},
+	})
+
+	tmpl, err := h.tm.Get("todo", "show")
+	if err != nil {
+		http.Error(w, "Template not found", http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	h.Log().Info("Edit todo ", id)
-	w.Write([]byte("Edit todo " + id))
+	slug := chi.URLParam(r, "slug")
+	h.Log().Info("Edit todo ", slug)
+	ctx := r.Context()
+
+	list, err := h.service.GetListBySlug(ctx, slug)
+	if err != nil {
+		http.Error(w, "List not found", http.StatusNotFound)
+		return
+	}
+
+	page := am.NewPage(list)
+	page.SetFormAction(fmt.Sprintf("/todo/%s", slug))
+
+	tmpl, err := h.tm.Get("todo", "edit")
+	if err != nil {
+		http.Error(w, "Template not found", http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	h.Log().Info("Update todo ", id)
-	w.Write([]byte("Update todo " + id))
+	slug := chi.URLParam(r, "slug")
+	h.Log().Info("Update todo ", slug)
+	ctx := r.Context()
+
+	list, err := h.service.GetListBySlug(ctx, slug)
+	if err != nil {
+		http.Error(w, "List not found", http.StatusNotFound)
+		return
+	}
+
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+	list.Name = name
+	list.Description = description
+
+	err = h.service.UpdateList(ctx, list)
+	if err != nil {
+		http.Error(w, "Failed to update list", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func (h *WebHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	h.Log().Info("Delete todo ", id)
-	w.Write([]byte("Delete todo " + id))
+	slug := chi.URLParam(r, "slug")
+	h.Log().Info("Delete todo ", slug)
+	ctx := r.Context()
+
+	err := h.service.DeleteListBySlug(ctx, slug)
+	if err != nil {
+		http.Error(w, "Failed to delete list", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 // Name returns the name in WebHandler.
