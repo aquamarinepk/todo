@@ -18,6 +18,7 @@ Todo List
   </tr>
   </thead>
   <tbody>
+  {{ $csrf := .Form.CSRF }}
   {{ range .Data }}
   <tr>
     <td class="py-2 px-4 border-b">
@@ -29,6 +30,7 @@ Todo List
       <a href="/todo/{{ .Slug }}/edit" class="inline-block bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</a>
       <form action="/todo/{{ .Slug }}" method="POST" class="inline-block">
         <input type="hidden" name="_method" value="DELETE">
+        <input type="hidden" name="aquamarine.csrf.token" value="{{ $csrf }}">
         <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
       </form>
     </td>

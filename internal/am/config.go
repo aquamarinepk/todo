@@ -233,3 +233,11 @@ func (cfg *Config) APIAddr() string {
 	port := cfg.StrValOrDef(Key.ServerAPIPort, "8081")
 	return host + ":" + port
 }
+
+// Debug prints the configuration values in a readable format.
+func (cfg *Config) Debug() {
+	fmt.Println("Configuration values:")
+	for k, v := range cfg.Get() {
+		fmt.Printf("%s: %s\n", k, v)
+	}
+}

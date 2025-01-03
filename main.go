@@ -35,10 +35,10 @@ func main() {
 	todoService := todo.NewService(todoRepo)
 
 	todoWebHandler := todo.NewWebHandler(templateManager, todoService, opts...)
-	webRouter := todo.NewWebRouter(todoWebHandler)
+	webRouter := todo.NewWebRouter(todoWebHandler, opts...)
 
 	todoAPIHandler := todo.NewAPIHandler(todoService, opts...)
-	apiRouter := todo.NewAPIRouter(todoAPIHandler)
+	apiRouter := todo.NewAPIRouter(todoAPIHandler, opts...)
 
 	app.MountWeb("/todo", webRouter)
 	app.MountAPI(version, "/todo", apiRouter)
@@ -57,8 +57,8 @@ func main() {
 		return
 	}
 
-	queryManager.Debug()
-	templateManager.Debug()
+	//queryManager.Debug()
+	//templateManager.Debug()
 
 	err = app.Start(ctx)
 	if err != nil {

@@ -43,6 +43,7 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(lists)
 	page.SetFormAction(todoResPath)
+	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("todo", "list")
 	if err != nil {
@@ -70,6 +71,7 @@ func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(todoResPath)
 	page.SetFormMethod(method.POST)
 	page.SetFormButtonText("Create")
+	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("todo", "new")
 	if err != nil {
@@ -164,6 +166,7 @@ func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(fmt.Sprintf("%s/%s", todoResPath, slug))
 	page.SetFormMethod(method.PUT)
 	page.SetFormButtonText("Update")
+	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("todo", "edit")
 	if err != nil {

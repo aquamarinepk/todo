@@ -25,6 +25,16 @@ runflags: build
 	@echo "Running $(APP_NAME) with command-line flags..."
 	@$(BINARY) -server.web.host=localhost -server.web.port=9080 -server.api.host=localhost -server.api.port=9081
 
+gencsrfkey:
+	@if command -v openssl >/dev/null 2>&1; then \
+		echo "CSRF Key: $$(openssl rand -base64 32)"; \
+	elif command -v dd >/dev/null 2>&1; then \
+		echo "CSRF Key: $$(dd if=/dev/urandom bs=32 count=1 2>/dev/null | base64)"; \
+	else \
+		echo "Neither openssl nor dd are available. Please install one of them."; \
+		exit 1; \
+	fi
+
 # Set environment variables
 # WIP: This is a workaround to be able to assoiciate some styles to notifications and buttons but probably another approach will be used at the end.
 setenv:
@@ -33,6 +43,8 @@ setenv:
 	@export TODO_SERVER_WEB_PORT=8080
 	@export TODO_SERVER_API_HOST=localhost
 	@export TODO_SERVER_API_PORT=8081
+	@echo "Setting a CSRF key..."
+	@export TODO_SEC_CSRF_KEY="NdZ7ULOe+NJ1bs5TzS51K+U4azOYQ6Wtv4CXlF6gJNM="
 	@echo "Setting notification styles..."
 	@export TODO_NOTIFICATION_SUCCESS_STYLE="bg-green-600 text-white px-4 py-2 rounded"
 	@export TODO_NOTIFICATION_INFO_STYLE="bg-blue-600 text-white px-4 py-2 rounded"
@@ -55,3 +67,4 @@ clean:
 
 # Phony targets
 .PHONY: all build run run_flags setenv clean
+

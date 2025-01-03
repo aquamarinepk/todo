@@ -1,5 +1,11 @@
 package am
 
+import (
+	"net/http"
+
+	"github.com/gorilla/csrf"
+)
+
 // Page functionally should be moved to `am` package
 type Page struct {
 	Data    interface{}
@@ -11,6 +17,7 @@ type Page struct {
 type Form struct {
 	Action string
 	Method string
+	CSRF   string
 	Button Button
 }
 
@@ -59,4 +66,9 @@ func (p *Page) SetFormButtonStyle(style string) {
 
 func (p *Page) SetActions(actions []Action) {
 	p.Actions = actions
+}
+
+// GenCSRFToken generates a CSRF token and sets it in the form
+func (p *Page) GenCSRFToken(r *http.Request) {
+	p.Form.CSRF = csrf.Token(r)
 }

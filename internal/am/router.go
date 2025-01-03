@@ -14,12 +14,16 @@ type Router struct {
 
 func NewRouter(name string, opts ...Option) *Router {
 	core := NewCore(name, opts...)
+
 	r := &Router{
 		Router: chi.NewRouter(),
 		Core:   core,
 	}
 
-	r.Use(MethodOverride)
+	csrf := CSRFMw(core.Cfg())
+
+	r.Use(MethodOverrideMw)
+	r.Use(csrf)
 
 	return r
 }

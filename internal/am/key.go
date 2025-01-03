@@ -8,6 +8,9 @@ type Keys struct {
 	ServerAPIPort    string
 	ServerAPIEnabled string
 
+	SecCSRFKey      string
+	SecCSRFRedirect string
+
 	ButtonStyleGray   string
 	ButtonStyleBlue   string
 	ButtonStyleRed    string
@@ -28,6 +31,9 @@ var Key = Keys{
 	ServerAPIHost:    "server.api.host",
 	ServerAPIPort:    "server.api.port",
 	ServerAPIEnabled: "server.api.enabled",
+
+	SecCSRFKey:      "sec.csrf.key",
+	SecCSRFRedirect: "sec.csrf.redirect",
 
 	ButtonStyleGray:   "button.style.gray",
 	ButtonStyleBlue:   "button.style.blue",
