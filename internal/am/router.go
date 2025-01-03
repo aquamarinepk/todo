@@ -14,10 +14,14 @@ type Router struct {
 
 func NewRouter(name string, opts ...Option) *Router {
 	core := NewCore(name, opts...)
-	return &Router{
+	r := &Router{
 		Router: chi.NewRouter(),
 		Core:   core,
 	}
+
+	r.Use(MethodOverride)
+
+	return r
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {

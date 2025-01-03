@@ -11,7 +11,9 @@ import (
 )
 
 var (
-	key = am.Key
+	todoResPath = "/todo"
+	key         = am.Key
+	method      = am.HTTPMethod
 )
 
 type WebHandler struct {
@@ -40,7 +42,7 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(lists)
-	page.SetFormAction("/todo")
+	page.SetFormAction(todoResPath)
 
 	tmpl, err := h.tm.Get("todo", "list")
 	if err != nil {
@@ -65,7 +67,9 @@ func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New todo form")
 
 	page := am.NewPage(List{})
-	page.SetFormAction("/todo")
+	page.SetFormAction(todoResPath)
+	page.SetFormMethod(method.POST)
+	page.SetFormButtonText("Create")
 
 	tmpl, err := h.tm.Get("todo", "new")
 	if err != nil {
@@ -100,7 +104,7 @@ func (h *WebHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/todo", http.StatusSeeOther)
+	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
@@ -121,9 +125,9 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(list)
 	page.SetActions([]am.Action{ // NOTE: This is a WIP, it will be improved.
-		{URL: "/todo", Text: "Back to List", Style: gray, IsForm: false},
-		{URL: fmt.Sprintf("/todo/%s/edit", slug), Text: "Edit", Style: blue, IsForm: false},
-		{URL: fmt.Sprintf("/todo/%s/delete", slug), Text: "Delete", Style: red, IsForm: true},
+		{URL: todoResPath, Text: "Back to List", Style: gray},
+		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "Edit", Style: blue},
+		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "Delete", Style: red},
 	})
 
 	tmpl, err := h.tm.Get("todo", "show")
@@ -157,7 +161,9 @@ func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(list)
-	page.SetFormAction(fmt.Sprintf("/todo/%s", slug))
+	page.SetFormAction(fmt.Sprintf("%s/%s", todoResPath, slug))
+	page.SetFormMethod(method.PUT)
+	page.SetFormButtonText("Update")
 
 	tmpl, err := h.tm.Get("todo", "edit")
 	if err != nil {
@@ -200,7 +206,7 @@ func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -214,7 +220,7 @@ func (h *WebHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
 }
 
 // Name returns the name in WebHandler.

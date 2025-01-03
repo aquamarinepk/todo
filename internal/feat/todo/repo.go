@@ -34,23 +34,22 @@ func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 		order: []uuid.UUID{},
 	}
 
+	repo.addSampleData() // NOTE: Used for testing purposes only.
+
+	return repo
+}
+
+func (repo *BaseRepo) addSampleData() {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New()
 		list := NewList(fmt.Sprintf("Sample List %d", i), fmt.Sprintf("This is the description for sample list %d", i))
 		list.GenSlug()
 		list.SetCreateValues()
-		repo.lists[id] = toListDA(list)
+		listDA := toListDA(list)
+		listDA.ID = id
+		repo.lists[id] = listDA
 		repo.order = append(repo.order, id)
-	}
-
-	return repo
-}
-
-func NewRepoDef(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
-	return &BaseRepo{
-		core:  am.NewRepo("todo-repo", qm, opts...),
-		lists: make(map[uuid.UUID]ListDA),
-		order: []uuid.UUID{},
+		repo.Log().Info("Created list with ID: ", id)
 	}
 }
 
@@ -107,7 +106,8 @@ func (repo *BaseRepo) Update(ctx context.Context, list List) error {
 
 	listDA := toListDA(list)
 	if _, exists := repo.lists[listDA.ID]; !exists {
-		return errors.New("list not found")
+		msg := fmt.Sprintf("list not found for ID: %s", listDA.ID)
+		return errors.New(msg)
 	}
 	repo.lists[listDA.ID] = listDA
 	return nil
