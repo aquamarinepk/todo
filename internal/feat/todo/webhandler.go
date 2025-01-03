@@ -37,7 +37,7 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	lists, err := h.service.GetLists(ctx)
 	if err != nil {
-		http.Error(w, "Failed to get lists", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
 	}
 
@@ -47,20 +47,20 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.tm.Get("todo", "list")
 	if err != nil {
-		http.Error(w, "Template not found", http.StatusInternalServerError)
+		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
 }
 
@@ -75,20 +75,20 @@ func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.tm.Get("todo", "new")
 	if err != nil {
-		http.Error(w, "Template not found", http.StatusInternalServerError)
+		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
 }
 
@@ -102,7 +102,7 @@ func (h *WebHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.CreateList(ctx, list)
 	if err != nil {
-		http.Error(w, "Failed to create list", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 	list, err := h.service.GetListBySlug(ctx, slug)
 	if err != nil {
-		http.Error(w, "List not found", http.StatusNotFound)
+		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -134,20 +134,20 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.tm.Get("todo", "show")
 	if err != nil {
-		http.Error(w, "Template not found", http.StatusInternalServerError)
+		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
 }
 
@@ -158,7 +158,7 @@ func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
 
 	list, err := h.service.GetListBySlug(ctx, slug)
 	if err != nil {
-		http.Error(w, "List not found", http.StatusNotFound)
+		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -170,20 +170,20 @@ func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
 
 	tmpl, err := h.tm.Get("todo", "edit")
 	if err != nil {
-		http.Error(w, "Template not found", http.StatusInternalServerError)
+		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		http.Error(w, "Failed to render template", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		http.Error(w, "Failed to write response", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
 }
 
@@ -194,7 +194,7 @@ func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	list, err := h.service.GetListBySlug(ctx, slug)
 	if err != nil {
-		http.Error(w, "List not found", http.StatusNotFound)
+		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -205,7 +205,7 @@ func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.UpdateList(ctx, list)
 	if err != nil {
-		http.Error(w, "Failed to update list", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
 	}
 
@@ -219,7 +219,7 @@ func (h *WebHandler) Delete(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.DeleteListBySlug(ctx, slug)
 	if err != nil {
-		http.Error(w, "Failed to delete list", http.StatusInternalServerError)
+		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return
 	}
 
