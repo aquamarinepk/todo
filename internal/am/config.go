@@ -223,13 +223,13 @@ func (cfg *Config) defineFlags(flagDefs map[string]interface{}) {
 }
 
 func (cfg *Config) WebAddr() string {
-	host := cfg.StrValOrDef(Keys.WebHostKey, "localhost")
-	port := cfg.StrValOrDef(Keys.WebPortKey, "8080")
+	host := cfg.StrValOrDef(Key.ServerWebHost, "localhost")
+	port := cfg.StrValOrDef(Key.ServerWebPort, "8080")
 	return host + ":" + port
 }
 
 func (cfg *Config) APIAddr() string {
-	host := cfg.StrValOrDef(Keys.APIHostKey, "localhost")
-	port := cfg.StrValOrDef(Keys.APIPortKey, "8081")
+	host := cfg.StrValOrDef(Key.ServerAPIHost, "localhost")
+	port := cfg.StrValOrDef(Key.ServerAPIPort, "8081")
 	return host + ":" + port
 }

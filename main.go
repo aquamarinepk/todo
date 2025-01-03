@@ -12,7 +12,7 @@ import (
 const (
 	name      = "todo"
 	version   = "v1"
-	namespace = "todo"
+	namespace = "TODO"
 )
 
 var (

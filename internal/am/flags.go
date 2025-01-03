@@ -1,10 +1,10 @@
 package am
 
 var Flags = map[string]interface{}{
-	Keys.WebHostKey: "localhost",
-	Keys.WebPortKey: "8080",
-	Keys.WebEnabled: true,
-	Keys.APIHostKey: "localhost",
-	Keys.APIPortKey: "8081",
-	Keys.APIEnabled: true,
+	Key.ServerWebHost:    "localhost",
+	Key.ServerWebPort:    "8080",
+	Key.ServerWebEnabled: true,
+	Key.ServerAPIHost:    "localhost",
+	Key.ServerAPIPort:    "8081",
+	Key.ServerAPIEnabled: true,
 }

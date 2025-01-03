@@ -10,6 +10,10 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+var (
+	key = am.Key
+)
+
 type WebHandler struct {
 	core    *am.Handler
 	service Service
@@ -110,11 +114,16 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cfg := h.Cfg()
+	gray, _ := cfg.StrVal(key.ButtonStyleGray)
+	blue, _ := cfg.StrVal(key.ButtonStyleBlue)
+	red, _ := cfg.StrVal(key.ButtonStyleRed)
+
 	page := am.NewPage(list)
 	page.SetActions([]am.Action{ // NOTE: This is a WIP, it will be improved.
-		{URL: "/todo", Text: "Back to List", Color: "gray", IsForm: false},
-		{URL: fmt.Sprintf("/todo/%s/edit", slug), Text: "Edit", Color: "blue", IsForm: false},
-		{URL: fmt.Sprintf("/todo/%s/delete", slug), Text: "Delete", Color: "red", IsForm: true},
+		{URL: "/todo", Text: "Back to List", Style: gray, IsForm: false},
+		{URL: fmt.Sprintf("/todo/%s/edit", slug), Text: "Edit", Style: blue, IsForm: false},
+		{URL: fmt.Sprintf("/todo/%s/delete", slug), Text: "Delete", Style: red, IsForm: true},
 	})
 
 	tmpl, err := h.tm.Get("todo", "show")

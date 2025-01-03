@@ -111,7 +111,7 @@ func (a *App) Start(ctx context.Context) error {
 	webAddr := a.Cfg().WebAddr()
 	apiAddr := a.Cfg().APIAddr()
 
-	if a.Cfg().BoolVal(Keys.WebEnabled, true) {
+	if a.Cfg().BoolVal(Key.ServerWebEnabled, true) {
 		webServer := &http.Server{
 			Addr:    webAddr,
 			Handler: a.Router,
@@ -119,7 +119,7 @@ func (a *App) Start(ctx context.Context) error {
 		go a.StartServer(webServer, webServer.Addr)
 	}
 
-	if a.Cfg().BoolVal(Keys.APIEnabled, true) {
+	if a.Cfg().BoolVal(Key.ServerAPIEnabled, true) {
 		apiServer := &http.Server{
 			Addr:    apiAddr,
 			Handler: a.APIRouter,

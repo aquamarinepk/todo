@@ -4,10 +4,10 @@
         {{ range .Actions }}
         {{ if .IsForm }}
         <form action="{{ .URL }}" method="POST" class="inline">
-            <button type="submit" class="bg-{{ .Color }}-600 text-white px-4 py-2 rounded">{{ .Text }}</button>
+            <button type="submit" class="{{ .Style }}">{{ .Text }}</button>
         </form>
         {{ else }}
-        <a href="{{ .URL }}" class="bg-{{ .Color }}-600 text-white px-4 py-2 rounded">{{ .Text }}</a>
+        <a href="{{ .URL }}" class="{{ .Style }}">{{ .Text }}</a>
         {{ end }}
         {{ end }}
     </div>
