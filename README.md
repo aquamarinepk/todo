@@ -1,5 +1,8 @@
 # TODO Application
-This is a TODO application.  
+
+This is a TODO application. This simple app is an exploratory attempt to create a kit to develop microservices and self-contained apps.
+
+<img src="docs/img/todo.png" alt="TODO Application" />
 
 ## Configuration
 ### Command-Line Flags
@@ -29,11 +32,11 @@ export TODO_SERVER_WEB_HOST=127.0.0.1
 export TODO_SERVER_WEB_PORT=8080
 export TODO_SERVER_API_HOST=127.0.0.1
 export TODO_SERVER_API_PORT=8081
-./feat
+./res
 ```
 
 Using command-line flags:
 
 ```shell
-./feat -server.web.host=127.0.0.1 -server.web.port=8080 -server.api.host=127.0.0.1 -server.api.port=8081
+./res -server.web.host=127.0.0.1 -server.web.port=8080 -server.api.host=127.0.0.1 -server.api.port=8081
 ```
