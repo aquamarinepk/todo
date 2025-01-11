@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/aquamarinepk/todo/internal/am"
-	"github.com/aquamarinepk/todo/internal/feat/todo"
+	"github.com/aquamarinepk/todo/internal/res/todo"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )

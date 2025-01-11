@@ -53,8 +53,8 @@ func (qm *QueryManager) loadQueries(path string) {
 		return
 	}
 	engine := parts[2]
-	feature := parts[3]
-	resource := strings.TrimSuffix(parts[4], ".sql")
+	resure := parts[3]
+	res := strings.TrimSuffix(parts[4], ".sql")
 
 	queries := strings.Split(string(content), "-- ")
 	for _, query := range queries {
@@ -64,7 +64,7 @@ func (qm *QueryManager) loadQueries(path string) {
 			if !isValidQueryName(queryName) {
 				continue
 			}
-			key := engine + ":" + feature + ":" + resource + ":" + queryName
+			key := engine + ":" + resure + ":" + res + ":" + queryName
 			value := strings.Join(lines[1:], "\n")
 			qm.queries.Store(key, strings.TrimSpace(value))
 		}
@@ -72,11 +72,11 @@ func (qm *QueryManager) loadQueries(path string) {
 }
 
 func isValidQueryName(queryName string) bool {
-	return queryName != "" && !strings.HasPrefix(queryName, "Resource:") && !strings.HasPrefix(queryName, "Table:")
+	return queryName != "" && !strings.HasPrefix(queryName, "res:") && !strings.HasPrefix(queryName, "Table:")
 }
 
-func (qm *QueryManager) Get(engine, feature, resource, queryName string) (string, error) {
-	key := engine + ":" + feature + ":" + resource + ":" + queryName
+func (qm *QueryManager) Get(engine, resure, res, queryName string) (string, error) {
+	key := engine + ":" + resure + ":" + res + ":" + queryName
 	if query, ok := qm.queries.Load(key); ok {
 		return query.(string), nil
 	}

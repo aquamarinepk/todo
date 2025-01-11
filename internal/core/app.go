@@ -8,7 +8,7 @@ import (
 	"os/signal"
 
 	"github.com/aquamarinepk/todo/internal/am"
-	"github.com/aquamarinepk/todo/internal/feat/todo"
+	"github.com/aquamarinepk/todo/internal/res/todo"
 )
 
 type App struct {

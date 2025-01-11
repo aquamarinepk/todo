@@ -6,7 +6,7 @@ import (
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/aquamarinepk/todo/internal/core"
-	"github.com/aquamarinepk/todo/internal/feat/todo"
+	"github.com/aquamarinepk/todo/internal/res/todo"
 )
 
 const (

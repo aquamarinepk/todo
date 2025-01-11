@@ -1,4 +1,4 @@
--- Resource: List
+-- res: List
 -- Table: lists
 
 -- GetAll
