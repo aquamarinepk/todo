@@ -16,7 +16,12 @@ type Repo interface {
 	GetListBySlug(ctx context.Context, slug string) (List, error)
 	CreateList(ctx context.Context, list List) error
 	UpdateList(ctx context.Context, list List) error
-	DeleteList(ctx context.Context, id uuid.UUID) error
+	DeleteList(ctx context.Context, slug string) error
+	AddItem(ctx context.Context, listSlug string, item Item) error
+	GetItemByID(ctx context.Context, listID uuid.UUID, itemID string) (Item, error)
+	GetItemBySlug(ctx context.Context, listSlug, itemSlug string) (Item, error)
+	UpdateItem(ctx context.Context, listSlug string, item Item) error
+	DeleteItem(ctx context.Context, listSlug, itemSlug string) error
 	Debug()
 }
 
@@ -24,6 +29,7 @@ type BaseRepo struct {
 	core  *am.Repo
 	mu    sync.Mutex
 	lists map[uuid.UUID]ListDA
+	items map[string]ItemDA
 	order []uuid.UUID
 }
 
@@ -31,6 +37,7 @@ func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	repo := &BaseRepo{
 		core:  am.NewRepo("todo-repo", qm, opts...),
 		lists: make(map[uuid.UUID]ListDA),
+		items: make(map[string]ItemDA),
 		order: []uuid.UUID{},
 	}
 
@@ -42,7 +49,7 @@ func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 func (repo *BaseRepo) addSampleData() {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New()
-		list := NewList(fmt.Sprintf("Sample ListLists %d", i), fmt.Sprintf("This is the description for sample list %d", i))
+		list := NewList(fmt.Sprintf("Sample List %d", i), fmt.Sprintf("This is the description for sample list %d", i))
 		list.GenSlug()
 		list.SetCreateValues()
 		listDA := toListDA(list)
@@ -113,11 +120,18 @@ func (repo *BaseRepo) UpdateList(ctx context.Context, list List) error {
 	return nil
 }
 
-func (repo *BaseRepo) DeleteList(ctx context.Context, id uuid.UUID) error {
+func (repo *BaseRepo) DeleteList(ctx context.Context, slug string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	if _, exists := repo.lists[id]; !exists {
+	var id uuid.UUID
+	for _, listDA := range repo.lists {
+		if listDA.Slug.String == slug {
+			id = listDA.ID
+			break
+		}
+	}
+	if id == uuid.Nil {
 		return errors.New("list not found")
 	}
 	delete(repo.lists, id)
@@ -127,6 +141,116 @@ func (repo *BaseRepo) DeleteList(ctx context.Context, id uuid.UUID) error {
 			break
 		}
 	}
+	return nil
+}
+
+func (repo *BaseRepo) AddItem(ctx context.Context, listSlug string, item Item) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var listID uuid.UUID
+	for _, listDA := range repo.lists {
+		if listDA.Slug.String == listSlug {
+			listID = listDA.ID
+			break
+		}
+	}
+	if listID == uuid.Nil {
+		return errors.New("list not found")
+	}
+
+	itemDA := toItemDA(item)
+	if _, exists := repo.items[itemDA.ID]; exists {
+		return errors.New("item already exists")
+	}
+	repo.items[itemDA.ID] = itemDA
+	return nil
+}
+
+func (repo *BaseRepo) GetItemByID(ctx context.Context, listID uuid.UUID, itemID string) (Item, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	itemDA, exists := repo.items[itemID]
+	if !exists {
+		return Item{}, errors.New("item not found")
+	}
+	return toItem(itemDA), nil
+}
+
+func (repo *BaseRepo) GetItemBySlug(ctx context.Context, listSlug, itemSlug string) (Item, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var listID uuid.UUID
+	for _, listDA := range repo.lists {
+		if listDA.Slug.String == listSlug {
+			listID = listDA.ID
+			break
+		}
+	}
+	if listID == uuid.Nil {
+		return Item{}, errors.New("list not found")
+	}
+
+	for _, itemDA := range repo.items {
+		if itemDA.ListID == listID && itemDA.Description.String == itemSlug {
+			return toItem(itemDA), nil
+		}
+	}
+	return Item{}, errors.New("item not found")
+}
+
+func (repo *BaseRepo) UpdateItem(ctx context.Context, listSlug string, item Item) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var listID uuid.UUID
+	for _, listDA := range repo.lists {
+		if listDA.Slug.String == listSlug {
+			listID = listDA.ID
+			break
+		}
+	}
+	if listID == uuid.Nil {
+		return errors.New("list not found")
+	}
+
+	itemDA := toItemDA(item)
+	if _, exists := repo.items[itemDA.ID]; !exists {
+		msg := fmt.Sprintf("item not found for ID: %s", itemDA.ID)
+		return errors.New(msg)
+	}
+	repo.items[itemDA.ID] = itemDA
+	return nil
+}
+
+func (repo *BaseRepo) DeleteItem(ctx context.Context, listSlug, itemSlug string) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var listID uuid.UUID
+	for _, listDA := range repo.lists {
+		if listDA.Slug.String == listSlug {
+			listID = listDA.ID
+			break
+		}
+	}
+	if listID == uuid.Nil {
+		return errors.New("list not found")
+	}
+
+	var itemID string
+	for id, itemDA := range repo.items {
+		if itemDA.ListID == listID && itemDA.Description.String == itemSlug {
+			itemID = id
+			break
+		}
+	}
+	if itemID == "" {
+		return errors.New("item not found")
+	}
+	delete(repo.items, itemID)
 	return nil
 }
 

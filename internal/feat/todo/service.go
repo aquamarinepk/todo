@@ -15,6 +15,9 @@ type Service interface {
 	UpdateList(ctx context.Context, list List) error
 	DeleteList(ctx context.Context, id uuid.UUID) error
 	DeleteListBySlug(ctx context.Context, slug string) error
+	AddItem(ctx context.Context, listSlug string, item Item) error
+	EditItem(ctx context.Context, listSlug, itemID, name, description string) error
+	DeleteItem(ctx context.Context, listSlug, itemID string) error
 }
 
 type BaseService struct {
@@ -44,7 +47,7 @@ func (svc *BaseService) GetListBySlug(ctx context.Context, slug string) (List, e
 func (svc *BaseService) CreateList(ctx context.Context, list List) error {
 	list.GenSlug()
 	list.SetCreateValues()
-	err := svc.repo.CreateList(ctx, list) // NOTE: Remove assignment to err and return the function call directly.
+	err := svc.repo.CreateList(ctx, list)
 	svc.repo.Debug()
 	return err
 }
@@ -53,8 +56,8 @@ func (svc *BaseService) UpdateList(ctx context.Context, list List) error {
 	return svc.repo.UpdateList(ctx, list)
 }
 
-func (svc *BaseService) DeleteList(ctx context.Context, id uuid.UUID) error {
-	return svc.repo.DeleteList(ctx, id)
+func (svc *BaseService) DeleteList(ctx context.Context, slug string) error {
+	return svc.repo.DeleteList(ctx, slug)
 }
 
 func (svc *BaseService) DeleteListBySlug(ctx context.Context, slug string) error {
@@ -62,7 +65,37 @@ func (svc *BaseService) DeleteListBySlug(ctx context.Context, slug string) error
 	if err != nil {
 		return err
 	}
-	return svc.repo.DeleteList(ctx, list.ID())
+	return svc.repo.DeleteList(ctx, list.Slug())
+}
+
+func (svc *BaseService) AddItem(ctx context.Context, listSlug string, item Item) error {
+	list, err := svc.repo.GetListBySlug(ctx, listSlug)
+	if err != nil {
+		return err
+	}
+	item.SetCreateValues()
+	return svc.repo.AddItem(ctx, list.Slug(), item)
+}
+
+func (svc *BaseService) EditItem(ctx context.Context, listSlug, itemID, name, description string) error {
+	list, err := svc.repo.GetListBySlug(ctx, listSlug)
+	if err != nil {
+		return err
+	}
+	item, err := svc.repo.GetItemByID(ctx, list.ID(), itemID)
+	if err != nil {
+		return err
+	}
+	item.Description = description
+	return svc.repo.UpdateItem(ctx, list.Slug(), item)
+}
+
+func (svc *BaseService) DeleteItem(ctx context.Context, listSlug, itemID string) error {
+	list, err := svc.repo.GetListBySlug(ctx, listSlug)
+	if err != nil {
+		return err
+	}
+	return svc.repo.DeleteItem(ctx, list.Slug(), itemID)
 }
 
 func (svc *BaseService) Name() string {
