@@ -8,11 +8,14 @@ import (
 func NewAPIRouter(handler *APIHandler, opts ...am.Option) *am.Router {
 	r := am.NewRouter("api-router", opts...)
 
-	r.Get("/", handler.List)          // GET /api/todo
-	r.Post("/", handler.Create)       // POST /api/todo
-	r.Get("/{id}", handler.Show)      // GET /api/todo/{id}
-	r.Put("/{id}", handler.Update)    // PUT /api/todo/{id}
-	r.Delete("/{id}", handler.Delete) // DELETE /api/todo/{id}
+	r.Get("/", handler.ListLists)
+	r.Get("/{slug}", handler.ShowList)
+	r.Post("/create-list", handler.CreateList)
+	r.Post("/edit-list", handler.EditList)
+	r.Post("/delete-list", handler.DeleteList)
+	r.Post("/add-item", handler.AddItem)
+	r.Post("/edit-item", handler.EditItem)
+	r.Post("/remove-item", handler.RemoveItem)
 
 	return r
 }
