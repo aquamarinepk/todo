@@ -7,7 +7,6 @@ import (
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
 )
 
 type APIHandler struct {
@@ -32,6 +31,16 @@ func (h *APIHandler) ListLists(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(lists)
 }
 
+func (h *APIHandler) ShowList(w http.ResponseWriter, r *http.Request) {
+	slug := chi.URLParam(r, "slug")
+	list, err := h.service.GetListBySlug(r.Context(), slug)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+	json.NewEncoder(w).Encode(list)
+}
+
 func (h *APIHandler) CreateList(w http.ResponseWriter, r *http.Request) {
 	var list List
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
@@ -45,32 +54,23 @@ func (h *APIHandler) CreateList(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *APIHandler) ShowList(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		http.Error(w, "invalid ID", http.StatusBadRequest)
+func (h *APIHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		Slug        string `json:"slug"`
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	list, err := h.service.GetListByID(r.Context(), id)
+	list, err := h.service.GetListBySlug(r.Context(), payload.Slug)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	json.NewEncoder(w).Encode(list)
-}
-
-func (h *APIHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		http.Error(w, "invalid ID", http.StatusBadRequest)
-		return
-	}
-	var list List
-	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	list.SetID(id)
+	list.Name = payload.Name
+	list.Description = payload.Description
 	if err := h.service.UpdateList(r.Context(), list); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -79,12 +79,66 @@ func (h *APIHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *APIHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
-	if err != nil {
-		http.Error(w, "invalid ID", http.StatusBadRequest)
+	var payload struct {
+		Slug string `json:"slug"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := h.service.DeleteList(r.Context(), id); err != nil {
+	if err := h.service.DeleteListBySlug(r.Context(), payload.Slug); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *APIHandler) AddItem(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		ListSlug    string `json:"list_slug"`
+		Description string `json:"description"`
+		Status      string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	item := NewItem(payload.Description, payload.Status)
+	if err := h.service.AddItem(r.Context(), payload.ListSlug, item); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *APIHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		ListSlug    string `json:"list_slug"`
+		ItemID      string `json:"item_id"`
+		Description string `json:"description"`
+		Status      string `json:"status"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := h.service.EditItem(r.Context(), payload.ListSlug, payload.ItemID, payload.Description, payload.Status); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *APIHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
+	var payload struct {
+		ListSlug string `json:"list_slug"`
+		ItemID   string `json:"item_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err := h.service.DeleteItem(r.Context(), payload.ListSlug, payload.ItemID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
