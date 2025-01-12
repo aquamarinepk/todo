@@ -11,12 +11,12 @@ import (
 )
 
 type Repo interface {
-	GetAll(ctx context.Context) ([]List, error)
-	GetByID(ctx context.Context, id uuid.UUID) (List, error)
-	GetBySlug(ctx context.Context, slug string) (List, error)
-	Create(ctx context.Context, list List) error
-	Update(ctx context.Context, list List) error
-	Delete(ctx context.Context, id uuid.UUID) error
+	GetListAll(ctx context.Context) ([]List, error)
+	GetListByID(ctx context.Context, id uuid.UUID) (List, error)
+	GetListBySlug(ctx context.Context, slug string) (List, error)
+	CreateList(ctx context.Context, list List) error
+	UpdateList(ctx context.Context, list List) error
+	DeleteList(ctx context.Context, id uuid.UUID) error
 	Debug()
 }
 
@@ -42,7 +42,7 @@ func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 func (repo *BaseRepo) addSampleData() {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New()
-		list := NewList(fmt.Sprintf("Sample List %d", i), fmt.Sprintf("This is the description for sample list %d", i))
+		list := NewList(fmt.Sprintf("Sample ListLists %d", i), fmt.Sprintf("This is the description for sample list %d", i))
 		list.GenSlug()
 		list.SetCreateValues()
 		listDA := toListDA(list)
@@ -53,7 +53,7 @@ func (repo *BaseRepo) addSampleData() {
 	}
 }
 
-func (repo *BaseRepo) GetAll(ctx context.Context) ([]List, error) {
+func (repo *BaseRepo) GetListAll(ctx context.Context) ([]List, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -64,7 +64,7 @@ func (repo *BaseRepo) GetAll(ctx context.Context) ([]List, error) {
 	return result, nil
 }
 
-func (repo *BaseRepo) GetByID(ctx context.Context, id uuid.UUID) (List, error) {
+func (repo *BaseRepo) GetListByID(ctx context.Context, id uuid.UUID) (List, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -75,7 +75,7 @@ func (repo *BaseRepo) GetByID(ctx context.Context, id uuid.UUID) (List, error) {
 	return toList(listDA), nil
 }
 
-func (repo *BaseRepo) GetBySlug(ctx context.Context, slug string) (List, error) {
+func (repo *BaseRepo) GetListBySlug(ctx context.Context, slug string) (List, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -87,7 +87,7 @@ func (repo *BaseRepo) GetBySlug(ctx context.Context, slug string) (List, error) 
 	return List{}, errors.New("list not found")
 }
 
-func (repo *BaseRepo) Create(ctx context.Context, list List) error {
+func (repo *BaseRepo) CreateList(ctx context.Context, list List) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -100,7 +100,7 @@ func (repo *BaseRepo) Create(ctx context.Context, list List) error {
 	return nil
 }
 
-func (repo *BaseRepo) Update(ctx context.Context, list List) error {
+func (repo *BaseRepo) UpdateList(ctx context.Context, list List) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -113,7 +113,7 @@ func (repo *BaseRepo) Update(ctx context.Context, list List) error {
 	return nil
 }
 
-func (repo *BaseRepo) Delete(ctx context.Context, id uuid.UUID) error {
+func (repo *BaseRepo) DeleteList(ctx context.Context, id uuid.UUID) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
