@@ -22,10 +22,10 @@ server.api.port: Port for the API server (default: 8081)
 ### Environment Variables
 The same configuration can be set using environment variables. The environment variables should be prefixed with TODO_ and use underscores instead of dots. For example:  
 ```shell
-TODO_SERVER_WEB_HOST: Host for the web server
-TODO_SERVER_WEB_PORT: Port for the web server
-TODO_SERVER_API_HOST: Host for the API server
-TODO_SERVER_API_PORT: Port for the API server
+TODO_SERVER_WEB_HOST: 127.0.0.1
+TODO_SERVER_WEB_PORT: 8080
+TODO_SERVER_API_HOST: 127.0.0.1
+TODO_SERVER_API_PORT: 8081
 ```
 
 ## Usage
@@ -37,7 +37,7 @@ export TODO_SERVER_WEB_HOST=127.0.0.1
 export TODO_SERVER_WEB_PORT=8080
 export TODO_SERVER_API_HOST=127.0.0.1
 export TODO_SERVER_API_PORT=8081
-./res
+./todo
 ```
 
 Using command-line flags:
