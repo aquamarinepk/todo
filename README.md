@@ -4,6 +4,11 @@ This is a TODO application. This simple app is an exploratory attempt to create 
 
 <img src="docs/img/todo.png" alt="TODO Application" />
 
+## Overview
+This is a sample app using the common example of a todo list. The example is designed to express the desired outcome for the generator library. Currently, there is some repetition because we are implementing the same functionality using different approaches: resource-based with RESTful routes and feature-based, which is more command-query based (though not pure CQRS as commands will return a meaningful response). 
+
+In both cases, the core functionality is always implemented through a service layer that exposes its functionality to web and API for now, but eventually to gRPC or even CLI commands.
+
 ## Configuration
 ### Command-Line Flags
 You can pass the following flags to the application:  
