@@ -23,7 +23,7 @@ func NewAPIHandler(service Service, options ...am.Option) *APIHandler {
 	}
 }
 
-func (h *APIHandler) List(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) ListLists(w http.ResponseWriter, r *http.Request) {
 	lists, err := h.service.GetLists(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -32,7 +32,7 @@ func (h *APIHandler) List(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(lists)
 }
 
-func (h *APIHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) CreateList(w http.ResponseWriter, r *http.Request) {
 	var list List
 	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -45,7 +45,7 @@ func (h *APIHandler) Create(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *APIHandler) Show(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) ShowList(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, "invalid ID", http.StatusBadRequest)
@@ -59,7 +59,7 @@ func (h *APIHandler) Show(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(list)
 }
 
-func (h *APIHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, "invalid ID", http.StatusBadRequest)
@@ -78,7 +78,7 @@ func (h *APIHandler) Update(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *APIHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, "invalid ID", http.StatusBadRequest)

@@ -30,39 +30,39 @@ func NewService(repo Repo, opts ...am.Option) *BaseService {
 }
 
 func (svc *BaseService) GetLists(ctx context.Context) ([]List, error) {
-	return svc.repo.GetAll(ctx)
+	return svc.repo.GetListAll(ctx)
 }
 
 func (svc *BaseService) GetListByID(ctx context.Context, id uuid.UUID) (List, error) {
-	return svc.repo.GetByID(ctx, id)
+	return svc.repo.GetListByID(ctx, id)
 }
 
 func (svc *BaseService) GetListBySlug(ctx context.Context, slug string) (List, error) {
-	return svc.repo.GetBySlug(ctx, slug)
+	return svc.repo.GetListBySlug(ctx, slug)
 }
 
 func (svc *BaseService) CreateList(ctx context.Context, list List) error {
 	list.GenSlug()
 	list.SetCreateValues()
-	err := svc.repo.Create(ctx, list) // NOTE: Remove assignment to err and return the function call directly.
+	err := svc.repo.CreateList(ctx, list) // NOTE: Remove assignment to err and return the function call directly.
 	svc.repo.Debug()
 	return err
 }
 
 func (svc *BaseService) UpdateList(ctx context.Context, list List) error {
-	return svc.repo.Update(ctx, list)
+	return svc.repo.UpdateList(ctx, list)
 }
 
 func (svc *BaseService) DeleteList(ctx context.Context, id uuid.UUID) error {
-	return svc.repo.Delete(ctx, id)
+	return svc.repo.DeleteList(ctx, id)
 }
 
 func (svc *BaseService) DeleteListBySlug(ctx context.Context, slug string) error {
-	list, err := svc.repo.GetBySlug(ctx, slug)
+	list, err := svc.repo.GetListBySlug(ctx, slug)
 	if err != nil {
 		return err
 	}
-	return svc.repo.Delete(ctx, list.ID())
+	return svc.repo.DeleteList(ctx, list.ID())
 }
 
 func (svc *BaseService) Name() string {

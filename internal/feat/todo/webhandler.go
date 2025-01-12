@@ -31,8 +31,8 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 	}
 }
 
-func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("List of lists")
+func (h *WebHandler) ListLists(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("ListLists of lists")
 	ctx := r.Context()
 
 	lists, err := h.service.GetLists(ctx)
@@ -64,13 +64,13 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("New todo form")
+func (h *WebHandler) NewList(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("NewList todo form")
 
 	page := am.NewPage(List{})
 	page.SetFormAction(todoResPath)
 	page.SetFormMethod(method.POST)
-	page.SetFormButtonText("Create")
+	page.SetFormButtonText("CreateList")
 	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("todo", "new")
@@ -92,8 +92,8 @@ func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *WebHandler) Create(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Create todo")
+func (h *WebHandler) CreateList(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("CreateList todo")
 	ctx := r.Context()
 
 	name := r.FormValue("name")
@@ -111,7 +111,7 @@ func (h *WebHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Show todo ", slug)
+	h.Log().Info("ShowList todo ", slug)
 	ctx := r.Context()
 
 	list, err := h.service.GetListBySlug(ctx, slug)
@@ -127,9 +127,9 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(list)
 	page.SetActions([]am.Action{ // NOTE: This is a WIP, it will be improved.
-		{URL: todoResPath, Text: "Back to List", Style: gray},
-		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "Edit", Style: blue},
-		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "Delete", Style: red},
+		{URL: todoResPath, Text: "Back to ListLists", Style: gray},
+		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "EditList", Style: blue},
+		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "DeleteList", Style: red},
 	})
 
 	tmpl, err := h.tm.Get("todo", "show")
@@ -151,9 +151,9 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
+func (h *WebHandler) EditList(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Edit todo ", slug)
+	h.Log().Info("EditList todo ", slug)
 	ctx := r.Context()
 
 	list, err := h.service.GetListBySlug(ctx, slug)
@@ -165,7 +165,7 @@ func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(list)
 	page.SetFormAction(fmt.Sprintf("%s/%s", todoResPath, slug))
 	page.SetFormMethod(method.PUT)
-	page.SetFormButtonText("Update")
+	page.SetFormButtonText("UpdateList")
 	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("todo", "edit")
@@ -187,9 +187,9 @@ func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *WebHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Update todo ", slug)
+	h.Log().Info("UpdateList todo ", slug)
 	ctx := r.Context()
 
 	list, err := h.service.GetListBySlug(ctx, slug)
@@ -214,7 +214,7 @@ func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
 
 func (h *WebHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Delete todo ", slug)
+	h.Log().Info("DeleteList todo ", slug)
 	ctx := r.Context()
 
 	err := h.service.DeleteListBySlug(ctx, slug)
