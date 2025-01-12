@@ -43,5 +43,5 @@ export TODO_SERVER_API_PORT=8081
 Using command-line flags:
 
 ```shell
-./res -server.web.host=127.0.0.1 -server.web.port=8080 -server.api.host=127.0.0.1 -server.api.port=8081
+./todo -server.web.host=127.0.0.1 -server.web.port=8080 -server.api.host=127.0.0.1 -server.api.port=8081
 ```
