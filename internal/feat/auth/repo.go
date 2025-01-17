@@ -11,33 +11,33 @@ import (
 )
 
 type Repo interface {
-	GetListAll(ctx context.Context) ([]List, error)
-	GetListByID(ctx context.Context, id uuid.UUID) (List, error)
-	GetListBySlug(ctx context.Context, slug string) (List, error)
-	CreateList(ctx context.Context, list List) error
-	UpdateList(ctx context.Context, list List) error
-	DeleteList(ctx context.Context, slug string) error
-	AddItem(ctx context.Context, listSlug string, item Item) error
-	GetItemByID(ctx context.Context, listID uuid.UUID, itemID string) (Item, error)
-	GetItemBySlug(ctx context.Context, listSlug, itemSlug string) (Item, error)
-	UpdateItem(ctx context.Context, listSlug string, item Item) error
-	DeleteItem(ctx context.Context, listSlug, itemSlug string) error
+	GetUserAll(ctx context.Context) ([]User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserBySlug(ctx context.Context, slug string) (User, error)
+	CreateUser(ctx context.Context, user User) error
+	UpdateUser(ctx context.Context, user User) error
+	DeleteUser(ctx context.Context, slug string) error
+	AddRole(ctx context.Context, userSlug string, role Role) error
+	GetRoleByID(ctx context.Context, userID uuid.UUID, roleID string) (Role, error)
+	GetRoleBySlug(ctx context.Context, userSlug, roleSlug string) (Role, error)
+	UpdateRole(ctx context.Context, userSlug string, role Role) error
+	DeleteRole(ctx context.Context, userSlug, roleSlug string) error
 	Debug()
 }
 
 type BaseRepo struct {
 	core  *am.Repo
 	mu    sync.Mutex
-	lists map[uuid.UUID]ListDA
-	items map[string]ItemDA
+	users map[uuid.UUID]UserDA
+	roles map[string]RoleDA
 	order []uuid.UUID
 }
 
 func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	repo := &BaseRepo{
 		core:  am.NewRepo("todo-repo", qm, opts...),
-		lists: make(map[uuid.UUID]ListDA),
-		items: make(map[string]ItemDA),
+		users: make(map[uuid.UUID]UserDA),
+		roles: make(map[string]RoleDA),
 		order: []uuid.UUID{},
 	}
 
@@ -49,92 +49,94 @@ func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 func (repo *BaseRepo) addSampleData() {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New()
-		list := NewList(fmt.Sprintf("Sample List %d", i), fmt.Sprintf("This is the description for sample list %d", i))
-		list.GenSlug()
-		list.SetCreateValues()
-		listDA := toListDA(list)
-		listDA.ID = id
-		repo.lists[id] = listDA
+		username := fmt.Sprintf("sampleuser%d", i)
+		email := fmt.Sprintf("sampleuser%d@example.com", i)
+		user := NewUser(username, email)
+		user.GenSlug()
+		user.SetCreateValues()
+		userDA := toUserDA(user)
+		userDA.ID = id
+		repo.users[id] = userDA
 		repo.order = append(repo.order, id)
-		repo.Log().Info("Created list with ID: ", id)
+		repo.Log().Info("Created user with ID: ", id)
 	}
 }
 
-func (repo *BaseRepo) GetListAll(ctx context.Context) ([]List, error) {
+func (repo *BaseRepo) GetUserAll(ctx context.Context) ([]User, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	var result []List
+	var result []User
 	for _, id := range repo.order {
-		result = append(result, toList(repo.lists[id]))
+		result = append(result, toUser(repo.users[id]))
 	}
 	return result, nil
 }
 
-func (repo *BaseRepo) GetListByID(ctx context.Context, id uuid.UUID) (List, error) {
+func (repo *BaseRepo) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	listDA, exists := repo.lists[id]
+	userDA, exists := repo.users[id]
 	if !exists {
-		return List{}, errors.New("list not found")
+		return User{}, errors.New("user not found")
 	}
-	return toList(listDA), nil
+	return toUser(userDA), nil
 }
 
-func (repo *BaseRepo) GetListBySlug(ctx context.Context, slug string) (List, error) {
+func (repo *BaseRepo) GetUserBySlug(ctx context.Context, slug string) (User, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	for _, listDA := range repo.lists {
-		if listDA.Slug.String == slug {
-			return toList(listDA), nil
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == slug {
+			return toUser(userDA), nil
 		}
 	}
-	return List{}, errors.New("list not found")
+	return User{}, errors.New("user not found")
 }
 
-func (repo *BaseRepo) CreateList(ctx context.Context, list List) error {
+func (repo *BaseRepo) CreateUser(ctx context.Context, user User) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	listDA := toListDA(list)
-	if _, exists := repo.lists[listDA.ID]; exists {
-		return errors.New("list already exists")
+	userDA := toUserDA(user)
+	if _, exists := repo.users[userDA.ID]; exists {
+		return errors.New("user already exists")
 	}
-	repo.lists[listDA.ID] = listDA
-	repo.order = append(repo.order, listDA.ID)
+	repo.users[userDA.ID] = userDA
+	repo.order = append(repo.order, userDA.ID)
 	return nil
 }
 
-func (repo *BaseRepo) UpdateList(ctx context.Context, list List) error {
+func (repo *BaseRepo) UpdateUser(ctx context.Context, user User) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	listDA := toListDA(list)
-	if _, exists := repo.lists[listDA.ID]; !exists {
-		msg := fmt.Sprintf("list not found for ID: %s", listDA.ID)
+	userDA := toUserDA(user)
+	if _, exists := repo.users[userDA.ID]; !exists {
+		msg := fmt.Sprintf("user not found for ID: %s", userDA.ID)
 		return errors.New(msg)
 	}
-	repo.lists[listDA.ID] = listDA
+	repo.users[userDA.ID] = userDA
 	return nil
 }
 
-func (repo *BaseRepo) DeleteList(ctx context.Context, slug string) error {
+func (repo *BaseRepo) DeleteUser(ctx context.Context, slug string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
 	var id uuid.UUID
-	for _, listDA := range repo.lists {
-		if listDA.Slug.String == slug {
-			id = listDA.ID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == slug {
+			id = userDA.ID
 			break
 		}
 	}
 	if id == uuid.Nil {
-		return errors.New("list not found")
+		return errors.New("user not found")
 	}
-	delete(repo.lists, id)
+	delete(repo.users, id)
 	for i, oid := range repo.order {
 		if oid == id {
 			repo.order = append(repo.order[:i], repo.order[i+1:]...)
@@ -144,113 +146,113 @@ func (repo *BaseRepo) DeleteList(ctx context.Context, slug string) error {
 	return nil
 }
 
-func (repo *BaseRepo) AddItem(ctx context.Context, listSlug string, item Item) error {
+func (repo *BaseRepo) AddRole(ctx context.Context, userSlug string, role Role) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	var listID uuid.UUID
-	for _, listDA := range repo.lists {
-		if listDA.Slug.String == listSlug {
-			listID = listDA.ID
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
 			break
 		}
 	}
-	if listID == uuid.Nil {
-		return errors.New("list not found")
+	if userID == uuid.Nil {
+		return errors.New("user not found")
 	}
 
-	itemDA := toItemDA(item)
-	if _, exists := repo.items[itemDA.ID]; exists {
-		return errors.New("item already exists")
+	roleDA := toRoleDA(role)
+	if _, exists := repo.roles[roleDA.ID]; exists {
+		return errors.New("role already exists")
 	}
-	repo.items[itemDA.ID] = itemDA
+	repo.roles[roleDA.ID] = roleDA
 	return nil
 }
 
-func (repo *BaseRepo) GetItemByID(ctx context.Context, listID uuid.UUID, itemID string) (Item, error) {
+func (repo *BaseRepo) GetRoleByID(ctx context.Context, userID uuid.UUID, roleID string) (Role, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	itemDA, exists := repo.items[itemID]
+	roleDA, exists := repo.roles[roleID]
 	if !exists {
-		return Item{}, errors.New("item not found")
+		return Role{}, errors.New("role not found")
 	}
-	return toItem(itemDA), nil
+	return toRole(roleDA), nil
 }
 
-func (repo *BaseRepo) GetItemBySlug(ctx context.Context, listSlug, itemSlug string) (Item, error) {
+func (repo *BaseRepo) GetRoleBySlug(ctx context.Context, userSlug, roleSlug string) (Role, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	var listID uuid.UUID
-	for _, listDA := range repo.lists {
-		if listDA.Slug.String == listSlug {
-			listID = listDA.ID
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
 			break
 		}
 	}
-	if listID == uuid.Nil {
-		return Item{}, errors.New("list not found")
+	if userID == uuid.Nil {
+		return Role{}, errors.New("user not found")
 	}
 
-	for _, itemDA := range repo.items {
-		if itemDA.ListID == listID && itemDA.Description.String == itemSlug {
-			return toItem(itemDA), nil
+	for _, roleDA := range repo.roles {
+		if roleDA.UserID == userID && roleDA.Description.String == roleSlug {
+			return toRole(roleDA), nil
 		}
 	}
-	return Item{}, errors.New("item not found")
+	return Role{}, errors.New("role not found")
 }
 
-func (repo *BaseRepo) UpdateItem(ctx context.Context, listSlug string, item Item) error {
+func (repo *BaseRepo) UpdateRole(ctx context.Context, userSlug string, role Role) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	var listID uuid.UUID
-	for _, listDA := range repo.lists {
-		if listDA.Slug.String == listSlug {
-			listID = listDA.ID
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
 			break
 		}
 	}
-	if listID == uuid.Nil {
-		return errors.New("list not found")
+	if userID == uuid.Nil {
+		return errors.New("user not found")
 	}
 
-	itemDA := toItemDA(item)
-	if _, exists := repo.items[itemDA.ID]; !exists {
-		msg := fmt.Sprintf("item not found for ID: %s", itemDA.ID)
+	roleDA := toRoleDA(role)
+	if _, exists := repo.roles[roleDA.ID]; !exists {
+		msg := fmt.Sprintf("role not found for ID: %s", roleDA.ID)
 		return errors.New(msg)
 	}
-	repo.items[itemDA.ID] = itemDA
+	repo.roles[roleDA.ID] = roleDA
 	return nil
 }
 
-func (repo *BaseRepo) DeleteItem(ctx context.Context, listSlug, itemSlug string) error {
+func (repo *BaseRepo) DeleteRole(ctx context.Context, userSlug, roleSlug string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	var listID uuid.UUID
-	for _, listDA := range repo.lists {
-		if listDA.Slug.String == listSlug {
-			listID = listDA.ID
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
 			break
 		}
 	}
-	if listID == uuid.Nil {
-		return errors.New("list not found")
+	if userID == uuid.Nil {
+		return errors.New("user not found")
 	}
 
-	var itemID string
-	for id, itemDA := range repo.items {
-		if itemDA.ListID == listID && itemDA.Description.String == itemSlug {
-			itemID = id
+	var roleID string
+	for id, roleDA := range repo.roles {
+		if roleDA.UserID == userID && roleDA.Description.String == roleSlug {
+			roleID = id
 			break
 		}
 	}
-	if itemID == "" {
-		return errors.New("item not found")
+	if roleID == "" {
+		return errors.New("role not found")
 	}
-	delete(repo.items, itemID)
+	delete(repo.roles, roleID)
 	return nil
 }
 
@@ -259,11 +261,11 @@ func (repo *BaseRepo) Debug() {
 	defer repo.mu.Unlock()
 
 	var result string
-	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n", "Type", "ID", "NameID", "Slug", "Name", "Description")
+	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n", "Type", "ID", "NameID", "Slug", "Username", "EncPassword")
 	for _, id := range repo.order {
-		listDA := repo.lists[id]
+		userDA := repo.users[id]
 		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n",
-			listDA.Type, listDA.ID.String(), listDA.NameID.String, listDA.Slug.String, listDA.Name.String, listDA.Description.String)
+			userDA.Type, userDA.ID.String(), userDA.NameID.String, userDA.Slug.String, userDA.Name.String, userDA.Description.String)
 	}
 	result = fmt.Sprintf("%s state:\n%s", repo.Name(), result)
 	repo.Log().Info(result)

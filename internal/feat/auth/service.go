@@ -8,16 +8,16 @@ import (
 )
 
 type Service interface {
-	GetLists(ctx context.Context) ([]List, error)
-	GetListByID(ctx context.Context, id uuid.UUID) (List, error)
-	GetListBySlug(ctx context.Context, slug string) (List, error)
-	CreateList(ctx context.Context, list List) error
-	UpdateList(ctx context.Context, list List) error
-	DeleteList(ctx context.Context, id uuid.UUID) error
-	DeleteListBySlug(ctx context.Context, slug string) error
-	AddItem(ctx context.Context, listSlug string, item Item) error
-	EditItem(ctx context.Context, listSlug, itemID, name, description string) error
-	DeleteItem(ctx context.Context, listSlug, itemID string) error
+	GetUsers(ctx context.Context) ([]User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserBySlug(ctx context.Context, slug string) (User, error)
+	CreateUser(ctx context.Context, user User) error
+	UpdateUser(ctx context.Context, user User) error
+	DeleteUser(ctx context.Context, id uuid.UUID) error
+	DeleteUserBySlug(ctx context.Context, slug string) error
+	AddRole(ctx context.Context, userSlug string, role Role) error
+	EditRole(ctx context.Context, userSlug, roleID, name, description string) error
+	DeleteRole(ctx context.Context, userSlug, roleID string) error
 }
 
 type BaseService struct {
@@ -32,70 +32,70 @@ func NewService(repo Repo, opts ...am.Option) *BaseService {
 	}
 }
 
-func (svc *BaseService) GetLists(ctx context.Context) ([]List, error) {
-	return svc.repo.GetListAll(ctx)
+func (svc *BaseService) GetUsers(ctx context.Context) ([]User, error) {
+	return svc.repo.GetUserAll(ctx)
 }
 
-func (svc *BaseService) GetListByID(ctx context.Context, id uuid.UUID) (List, error) {
-	return svc.repo.GetListByID(ctx, id)
+func (svc *BaseService) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
+	return svc.repo.GetUserByID(ctx, id)
 }
 
-func (svc *BaseService) GetListBySlug(ctx context.Context, slug string) (List, error) {
-	return svc.repo.GetListBySlug(ctx, slug)
+func (svc *BaseService) GetUserBySlug(ctx context.Context, slug string) (User, error) {
+	return svc.repo.GetUserBySlug(ctx, slug)
 }
 
-func (svc *BaseService) CreateList(ctx context.Context, list List) error {
-	list.GenSlug()
-	list.SetCreateValues()
-	err := svc.repo.CreateList(ctx, list)
+func (svc *BaseService) CreateUser(ctx context.Context, user User) error {
+	user.GenSlug()
+	user.SetCreateValues()
+	err := svc.repo.CreateUser(ctx, user)
 	svc.repo.Debug()
 	return err
 }
 
-func (svc *BaseService) UpdateList(ctx context.Context, list List) error {
-	return svc.repo.UpdateList(ctx, list)
+func (svc *BaseService) UpdateUser(ctx context.Context, user User) error {
+	return svc.repo.UpdateUser(ctx, user)
 }
 
-func (svc *BaseService) DeleteList(ctx context.Context, slug string) error {
-	return svc.repo.DeleteList(ctx, slug)
+func (svc *BaseService) DeleteUser(ctx context.Context, slug string) error {
+	return svc.repo.DeleteUser(ctx, slug)
 }
 
-func (svc *BaseService) DeleteListBySlug(ctx context.Context, slug string) error {
-	list, err := svc.repo.GetListBySlug(ctx, slug)
+func (svc *BaseService) DeleteUserBySlug(ctx context.Context, slug string) error {
+	user, err := svc.repo.GetUserBySlug(ctx, slug)
 	if err != nil {
 		return err
 	}
-	return svc.repo.DeleteList(ctx, list.Slug())
+	return svc.repo.DeleteUser(ctx, user.Slug())
 }
 
-func (svc *BaseService) AddItem(ctx context.Context, listSlug string, item Item) error {
-	list, err := svc.repo.GetListBySlug(ctx, listSlug)
+func (svc *BaseService) AddRole(ctx context.Context, userSlug string, role Role) error {
+	user, err := svc.repo.GetUserBySlug(ctx, userSlug)
 	if err != nil {
 		return err
 	}
-	item.SetCreateValues()
-	return svc.repo.AddItem(ctx, list.Slug(), item)
+	role.SetCreateValues()
+	return svc.repo.AddRole(ctx, user.Slug(), role)
 }
 
-func (svc *BaseService) EditItem(ctx context.Context, listSlug, itemID, name, description string) error {
-	list, err := svc.repo.GetListBySlug(ctx, listSlug)
+func (svc *BaseService) EditRole(ctx context.Context, userSlug, roleID, name, description string) error {
+	user, err := svc.repo.GetUserBySlug(ctx, userSlug)
 	if err != nil {
 		return err
 	}
-	item, err := svc.repo.GetItemByID(ctx, list.ID(), itemID)
+	role, err := svc.repo.GetRoleByID(ctx, user.ID(), roleID)
 	if err != nil {
 		return err
 	}
-	item.Description = description
-	return svc.repo.UpdateItem(ctx, list.Slug(), item)
+	role.Description = description
+	return svc.repo.UpdateRole(ctx, user.Slug(), role)
 }
 
-func (svc *BaseService) DeleteItem(ctx context.Context, listSlug, itemID string) error {
-	list, err := svc.repo.GetListBySlug(ctx, listSlug)
+func (svc *BaseService) DeleteRole(ctx context.Context, userSlug, roleID string) error {
+	user, err := svc.repo.GetUserBySlug(ctx, userSlug)
 	if err != nil {
 		return err
 	}
-	return svc.repo.DeleteItem(ctx, list.Slug(), itemID)
+	return svc.repo.DeleteRole(ctx, user.Slug(), roleID)
 }
 
 func (svc *BaseService) Name() string {

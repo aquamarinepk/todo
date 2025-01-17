@@ -31,21 +31,21 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 	}
 }
 
-func (h *WebHandler) ListLists(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("List of lists")
+func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("List of users")
 	ctx := r.Context()
 
-	lists, err := h.service.GetLists(ctx)
+	users, err := h.service.GetUsers(ctx)
 	if err != nil {
 		http.Error(w, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
 	}
 
-	page := am.NewPage(lists)
+	page := am.NewPage(users)
 	page.SetFormAction(todoResPath)
 	page.GenCSRFToken(r)
 
-	tmpl, err := h.tm.Get("todo", "list")
+	tmpl, err := h.tm.Get("auth", "list-user")
 	if err != nil {
 		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
@@ -64,12 +64,12 @@ func (h *WebHandler) ListLists(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *WebHandler) ShowList(w http.ResponseWriter, r *http.Request) {
+func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Show todo list ", slug)
+	h.Log().Info("Show user", slug)
 	ctx := r.Context()
 
-	list, err := h.service.GetListBySlug(ctx, slug)
+	user, err := h.service.GetUserBySlug(ctx, slug)
 	if err != nil {
 		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
@@ -80,14 +80,14 @@ func (h *WebHandler) ShowList(w http.ResponseWriter, r *http.Request) {
 	blue, _ := cfg.StrVal(key.ButtonStyleBlue)
 	red, _ := cfg.StrVal(key.ButtonStyleRed)
 
-	page := am.NewPage(list)
+	page := am.NewPage(user)
 	page.SetActions([]am.Action{
-		{URL: todoResPath, Text: "Back to List", Style: gray},
-		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "Edit List", Style: blue},
-		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "Delete List", Style: red},
+		{URL: todoResPath, Text: "Back to User", Style: gray},
+		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "Edit User", Style: blue},
+		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "Delete User", Style: red},
 	})
 
-	tmpl, err := h.tm.Get("todo", "show")
+	tmpl, err := h.tm.Get("auth", "show-user")
 	if err != nil {
 		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
@@ -106,15 +106,15 @@ func (h *WebHandler) ShowList(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *WebHandler) CreateList(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Create todo list")
+func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Create user")
 	ctx := r.Context()
 
-	name := r.FormValue("name")
-	description := r.FormValue("description")
-	list := NewList(name, description)
+	username := r.FormValue("username")
+	email := r.FormValue("email")
+	user := NewUser(username, email)
 
-	err := h.service.CreateList(ctx, list)
+	err := h.service.CreateUser(ctx, user)
 	if err != nil {
 		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
@@ -123,12 +123,12 @@ func (h *WebHandler) CreateList(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
 }
 
-func (h *WebHandler) EditList(w http.ResponseWriter, r *http.Request) {
+func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	slug := r.FormValue("slug")
-	h.Log().Info("Edit todo list ", slug)
+	h.Log().Info("Edit er ", slug)
 	ctx := r.Context()
 
-	list, err := h.service.GetListBySlug(ctx, slug)
+	user, err := h.service.GetUserBySlug(ctx, slug)
 	if err != nil {
 		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
@@ -136,10 +136,10 @@ func (h *WebHandler) EditList(w http.ResponseWriter, r *http.Request) {
 
 	name := r.FormValue("name")
 	description := r.FormValue("description")
-	list.Name = name
-	list.Description = description
+	user.Username = name
+	user.EncPassword = description
 
-	err = h.service.UpdateList(ctx, list)
+	err = h.service.UpdateUser(ctx, user)
 	if err != nil {
 		http.Error(w, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
@@ -148,12 +148,12 @@ func (h *WebHandler) EditList(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
 }
 
-func (h *WebHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
+func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	slug := r.FormValue("slug")
-	h.Log().Info("Delete todo list ", slug)
+	h.Log().Info("Delete er ", slug)
 	ctx := r.Context()
 
-	err := h.service.DeleteListBySlug(ctx, slug)
+	err := h.service.DeleteUserBySlug(ctx, slug)
 	if err != nil {
 		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return
@@ -162,56 +162,57 @@ func (h *WebHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
 }
 
-func (h *WebHandler) AddItem(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Add item to list")
+func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Add role to user")
 	ctx := r.Context()
 
-	listSlug := r.FormValue("list_slug")
+	userSlug := r.FormValue("user_slug")
+	name := r.FormValue("name")
 	description := r.FormValue("description")
 	status := r.FormValue("status")
-	item := NewItem(description, status)
+	role := NewRole(name, description, status)
 
-	err := h.service.AddItem(ctx, listSlug, item)
+	err := h.service.AddRole(ctx, userSlug, role)
 	if err != nil {
 		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, listSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
 }
 
-func (h *WebHandler) EditItem(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Edit item in list")
+func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Edit role in user")
 	ctx := r.Context()
 
-	listSlug := r.FormValue("list_slug")
-	itemID := r.FormValue("item_id")
+	userSlug := r.FormValue("user_slug")
+	roleID := r.FormValue("role_id")
 	description := r.FormValue("description")
 	status := r.FormValue("status")
 
-	err := h.service.EditItem(ctx, listSlug, itemID, description, status)
+	err := h.service.EditRole(ctx, userSlug, roleID, description, status)
 	if err != nil {
 		http.Error(w, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, listSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
 }
 
-func (h *WebHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Delete item from list")
+func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Delete role from user")
 	ctx := r.Context()
 
-	listSlug := r.FormValue("list_slug")
-	itemID := r.FormValue("item_id")
+	userSlug := r.FormValue("user_slug")
+	roleID := r.FormValue("role_id")
 
-	err := h.service.DeleteItem(ctx, listSlug, itemID)
+	err := h.service.DeleteRole(ctx, userSlug, roleID)
 	if err != nil {
 		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, listSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
 }
 
 // Name returns the name in WebHandler.

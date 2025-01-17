@@ -1,53 +1,55 @@
 package todo
 
 import (
-	"database/sql"
-
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/google/uuid"
 )
 
-// ListDA represents the data access layer for the User model.
-type ListDA struct {
-	Type        string
-	ID          uuid.UUID      `db:"id"`
-	Slug        sql.NullString `db:"slug"`
-	NameID      sql.NullString `db:"name_id"`
-	Name        sql.NullString `db:"name"`
-	Description sql.NullString `db:"description"`
-	CreatedBy   sql.NullString `db:"created_by"`
-	UpdatedBy   sql.NullString `db:"updated_by"`
-	CreatedAt   sql.NullTime   `db:"created_at"`
-	UpdatedAt   sql.NullTime   `db:"updated_at"`
+const (
+	userType = "user"
+)
+
+type User struct {
+	Model       am.Model
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	Name        string `json:"name"`
+	EncPassword string
 }
 
-// Convert ListDA to User
-func toList(da ListDA) User {
+// NewUser creates a new user.
+func NewUser(username, email string) User {
 	return User{
-		Model: am.NewModel(
-			am.WithID(da.ID),
-			am.WithSlug(da.Slug.String),
-			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
-			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
-			am.WithCreatedAt(da.CreatedAt.Time),
-			am.WithUpdatedAt(da.UpdatedAt.Time),
-		),
-		Name:        da.Name.String,
-		Description: da.Description.String,
+		Model:    am.NewModel(am.WithType(userType)),
+		Username: username,
+		Email:    email,
 	}
 }
 
-// Convert User to ListDA
-func toListDA(list User) ListDA {
-	return ListDA{
-		ID:          list.ID(),
-		Slug:        sql.NullString{String: list.Slug(), Valid: list.Slug() != ""},
-		NameID:      sql.NullString{String: list.Model.NameID(), Valid: list.Model.NameID() != ""},
-		Name:        sql.NullString{String: list.Name, Valid: list.Name != ""},
-		Description: sql.NullString{String: list.Description, Valid: list.Description != ""},
-		CreatedBy:   sql.NullString{String: list.Model.CreatedBy().String(), Valid: list.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:   sql.NullString{String: list.Model.UpdatedBy().String(), Valid: list.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:   sql.NullTime{Time: list.Model.CreatedAt(), Valid: !list.Model.CreatedAt().IsZero()},
-		UpdatedAt:   sql.NullTime{Time: list.Model.UpdatedAt(), Valid: !list.Model.UpdatedAt().IsZero()},
-	}
+// ID returns the unique identifier of the user.
+func (l *User) ID() uuid.UUID {
+	return l.Model.ID()
+}
+
+// SetID sets the unique identifier of the user.
+func (l *User) SetID(id uuid.UUID, force ...bool) {
+	l.Model.SetID(id, force...)
+}
+
+// Slug returns the slug of the user.
+func (l *User) Slug() string {
+	return l.Model.Slug()
+}
+
+// GenSlug generates and sets the slug of the user.
+func (l *User) GenSlug() {
+	l.Model.GenSlug(l.Username)
+}
+
+func (l *User) GetNameID() {
+	l.Model.GenNameID()
+}
+
+func (l *User) SetCreateValues() {
+	l.Model.GenCreationValues()
 }
