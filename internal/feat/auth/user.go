@@ -7,7 +7,7 @@ import (
 	"github.com/google/uuid"
 )
 
-// ListDA represents the data access layer for the List model.
+// ListDA represents the data access layer for the User model.
 type ListDA struct {
 	Type        string
 	ID          uuid.UUID      `db:"id"`
@@ -21,9 +21,9 @@ type ListDA struct {
 	UpdatedAt   sql.NullTime   `db:"updated_at"`
 }
 
-// Convert ListDA to List
-func toList(da ListDA) List {
-	return List{
+// Convert ListDA to User
+func toList(da ListDA) User {
+	return User{
 		Model: am.NewModel(
 			am.WithID(da.ID),
 			am.WithSlug(da.Slug.String),
@@ -37,8 +37,8 @@ func toList(da ListDA) List {
 	}
 }
 
-// Convert List to ListDA
-func toListDA(list List) ListDA {
+// Convert User to ListDA
+func toListDA(list User) ListDA {
 	return ListDA{
 		ID:          list.ID(),
 		Slug:        sql.NullString{String: list.Slug(), Valid: list.Slug() != ""},
