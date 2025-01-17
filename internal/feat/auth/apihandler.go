@@ -22,39 +22,39 @@ func NewAPIHandler(service Service, options ...am.Option) *APIHandler {
 	}
 }
 
-func (h *APIHandler) ListLists(w http.ResponseWriter, r *http.Request) {
-	lists, err := h.service.GetLists(r.Context())
+func (h *APIHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
+	users, err := h.service.GetUsers(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(lists)
+	json.NewEncoder(w).Encode(users)
 }
 
-func (h *APIHandler) ShowList(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	slug := chi.URLParam(r, "slug")
-	list, err := h.service.GetListBySlug(r.Context(), slug)
+	user, err := h.service.GetUserBySlug(r.Context(), slug)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	json.NewEncoder(w).Encode(list)
+	json.NewEncoder(w).Encode(user)
 }
 
-func (h *APIHandler) CreateList(w http.ResponseWriter, r *http.Request) {
-	var list List
-	if err := json.NewDecoder(r.Body).Decode(&list); err != nil {
+func (h *APIHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var user User
+	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := h.service.CreateList(r.Context(), list); err != nil {
+	if err := h.service.CreateUser(r.Context(), user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *APIHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
 		Slug        string `json:"slug"`
 		Name        string `json:"name"`
@@ -64,21 +64,21 @@ func (h *APIHandler) UpdateList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	list, err := h.service.GetListBySlug(r.Context(), payload.Slug)
+	user, err := h.service.GetUserBySlug(r.Context(), payload.Slug)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
-	list.Name = payload.Name
-	list.Description = payload.Description
-	if err := h.service.UpdateList(r.Context(), list); err != nil {
+	user.Username = payload.Name
+	user.EncPassword = payload.Description
+	if err := h.service.UpdateUser(r.Context(), user); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *APIHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
 		Slug string `json:"slug"`
 	}
@@ -86,16 +86,17 @@ func (h *APIHandler) DeleteList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := h.service.DeleteListBySlug(r.Context(), payload.Slug); err != nil {
+	if err := h.service.DeleteUserBySlug(r.Context(), payload.Slug); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *APIHandler) AddItem(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		ListSlug    string `json:"list_slug"`
+		UserSlug    string `json:"user_slug"`
+		Name        string `json:"name"`
 		Description string `json:"description"`
 		Status      string `json:"status"`
 	}
@@ -103,18 +104,18 @@ func (h *APIHandler) AddItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	item := NewItem(payload.Description, payload.Status)
-	if err := h.service.AddItem(r.Context(), payload.ListSlug, item); err != nil {
+	role := NewRole(payload.Name, payload.Description, payload.Status)
+	if err := h.service.AddRole(r.Context(), payload.UserSlug, role); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
 }
 
-func (h *APIHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		ListSlug    string `json:"list_slug"`
-		ItemID      string `json:"item_id"`
+		UserSlug    string `json:"user_slug"`
+		RoleID      string `json:"role_id"`
 		Description string `json:"description"`
 		Status      string `json:"status"`
 	}
@@ -122,23 +123,23 @@ func (h *APIHandler) UpdateItem(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := h.service.EditItem(r.Context(), payload.ListSlug, payload.ItemID, payload.Description, payload.Status); err != nil {
+	if err := h.service.EditRole(r.Context(), payload.UserSlug, payload.RoleID, payload.Description, payload.Status); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
-func (h *APIHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
+func (h *APIHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		ListSlug string `json:"list_slug"`
-		ItemID   string `json:"item_id"`
+		UserSlug string `json:"user_slug"`
+		RoleID   string `json:"role_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := h.service.DeleteItem(r.Context(), payload.ListSlug, payload.ItemID); err != nil {
+	if err := h.service.DeleteRole(r.Context(), payload.UserSlug, payload.RoleID); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
