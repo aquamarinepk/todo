@@ -5,19 +5,18 @@ import (
 )
 
 // NewAPIRouter creates a new API router for the todo feature.
-// GET requests will be mounted to the app's API router that handles `/query` requests,
-// and POST requests will be mounted to the app's router that handles `/cmd` requests.
+// Both GET and POST requests will be mounted to the app's router that handles `/cq` requests.
 func NewAPIRouter(handler *APIHandler, opts ...am.Option) *am.Router {
 	r := am.NewRouter("api-router", opts...)
 
-	r.Get("/", handler.ListLists)
-	r.Get("/{slug}", handler.ShowList)
-	r.Post("/create-list", handler.CreateList)
-	r.Post("/update-list", handler.UpdateList)
-	r.Post("/delete-list", handler.DeleteList)
-	r.Post("/add-item", handler.AddItem)
-	r.Post("/update-item", handler.UpdateItem)
-	r.Post("/delete-item", handler.DeleteItem)
+	r.Get("/", handler.ListUsers)
+	r.Get("/{slug}", handler.ShowUser)
+	r.Post("/create-user", handler.CreateUser)
+	r.Post("/update-user", handler.UpdateUser)
+	r.Post("/delete-user", handler.DeleteUser)
+	r.Post("/add-role", handler.AddRole)
+	r.Post("/update-role", handler.UpdateRole)
+	r.Post("/delete-role", handler.DeleteRole)
 
 	return r
 }

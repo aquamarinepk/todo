@@ -100,6 +100,14 @@ func (a *App) Setup(ctx context.Context) error {
 		return true
 	})
 
+	if a.Log() == nil {
+		errs = append(errs, "logging services not available")
+	}
+
+	if a.Cfg() == nil {
+		errs = append(errs, "config not available")
+	}
+
 	if len(errs) > 0 {
 		return errors.New(strings.Join(errs, "; "))
 	}

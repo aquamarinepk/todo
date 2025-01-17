@@ -7,43 +7,51 @@ import (
 	"github.com/google/uuid"
 )
 
-// ItemDA represents the data access layer for the Item model.
-type ItemDA struct {
-	ID          string         `db:"id"`
-	ListID      uuid.UUID      `db:"list_id"`
+// UserDA represents the data access layer for the User model.
+type UserDA struct {
+	Type        string
+	ID          uuid.UUID      `db:"id"`
+	Slug        sql.NullString `db:"slug"`
+	NameID      sql.NullString `db:"name_id"`
+	Username    sql.NullString `db:"username"`
+	Email       sql.NullString `db:"email"`
+	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
-	Status      sql.NullString `db:"status"`
 	CreatedBy   sql.NullString `db:"created_by"`
 	UpdatedBy   sql.NullString `db:"updated_by"`
 	CreatedAt   sql.NullTime   `db:"created_at"`
 	UpdatedAt   sql.NullTime   `db:"updated_at"`
 }
 
-// Convert ItemDA to Item
-func toItem(da ItemDA) Item {
-	return Item{
+// Convert UserDA to User
+func toUser(da UserDA) User {
+	return User{
 		Model: am.NewModel(
-			am.WithID(uuid.MustParse(da.ID)),
+			am.WithID(da.ID),
+			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
 			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
 			am.WithCreatedAt(da.CreatedAt.Time),
 			am.WithUpdatedAt(da.UpdatedAt.Time),
 		),
-		Description: da.Description.String,
-		Status:      da.Status.String,
+		Username:    da.Name.String,
+		EncPassword: da.Description.String,
 	}
 }
 
-// Convert Item to ItemDA
-func toItemDA(item Item) ItemDA {
-	return ItemDA{
-		ID:          item.ID().String(),
-		ListID:      item.ListID,
-		Description: sql.NullString{String: item.Description, Valid: item.Description != ""},
-		Status:      sql.NullString{String: item.Status, Valid: item.Status != ""},
-		CreatedBy:   sql.NullString{String: item.Model.CreatedBy().String(), Valid: item.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:   sql.NullString{String: item.Model.UpdatedBy().String(), Valid: item.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:   sql.NullTime{Time: item.Model.CreatedAt(), Valid: !item.Model.CreatedAt().IsZero()},
-		UpdatedAt:   sql.NullTime{Time: item.Model.UpdatedAt(), Valid: !item.Model.UpdatedAt().IsZero()},
+// Convert User to UserDA
+func toUserDA(user User) UserDA {
+	return UserDA{
+		ID:          user.ID(),
+		Slug:        sql.NullString{String: user.Slug(), Valid: user.Slug() != ""},
+		NameID:      sql.NullString{String: user.Model.NameID(), Valid: user.Model.NameID() != ""},
+		Username:    sql.NullString{String: user.Username, Valid: user.Username != ""},
+		Email:       sql.NullString{String: user.Email, Valid: user.Email != ""},
+		Name:        sql.NullString{String: user.Username, Valid: user.Username != ""},
+		Description: sql.NullString{String: user.EncPassword, Valid: user.EncPassword != ""},
+		CreatedBy:   sql.NullString{String: user.Model.CreatedBy().String(), Valid: user.Model.CreatedBy() != uuid.Nil},
+		UpdatedBy:   sql.NullString{String: user.Model.UpdatedBy().String(), Valid: user.Model.UpdatedBy() != uuid.Nil},
+		CreatedAt:   sql.NullTime{Time: user.Model.CreatedAt(), Valid: !user.Model.CreatedAt().IsZero()},
+		UpdatedAt:   sql.NullTime{Time: user.Model.UpdatedAt(), Valid: !user.Model.UpdatedAt().IsZero()},
 	}
 }

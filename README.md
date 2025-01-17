@@ -5,9 +5,10 @@ This is a TODO application. This simple app is an exploratory attempt to create 
 <img src="docs/img/todo.png" alt="TODO Application" />
 
 ## Overview
-This is a sample app using the common example of a todo list. The example is designed to express the desired outcome for the generator library. Currently, there is some repetition because we are implementing the same functionality using different approaches: resource-based with RESTful routes and feature-based, which is implemented in a command-query style (though not pure CQRS as commands will return a meaningful response). 
-
-Feature-based implementation allows operating on several resources (a list and item in this particular case) and all are handled through this command-query interface.
+This is a sample app using the common example of a todo list.
+The example is designed to express the desired outcome for the generator library.
+The feature-based implementation showcases user roles, all handled through a command-query like interface.
+The resource-based (RESTful) implementation is used to manage the todo list and items.
 
 ## Configuration
 ### Command-Line Flags
