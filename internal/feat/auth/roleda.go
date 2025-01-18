@@ -10,7 +10,6 @@ import (
 // RoleDA represents the data access layer for the Role model.
 type RoleDA struct {
 	ID          string         `db:"id"`
-	UserID      uuid.UUID      `db:"user_id"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	Status      sql.NullString `db:"status"`
@@ -39,10 +38,8 @@ func toRole(da RoleDA) Role {
 func toRoleDA(role Role) RoleDA {
 	return RoleDA{
 		ID:          role.ID().String(),
-		UserID:      role.UserID,
 		Name:        sql.NullString{String: role.Name, Valid: role.Name != ""},
 		Description: sql.NullString{String: role.Description, Valid: role.Description != ""},
-		Status:      sql.NullString{String: role.Status, Valid: role.Status != ""},
 		CreatedBy:   sql.NullString{String: role.Model.CreatedBy().String(), Valid: role.Model.CreatedBy() != uuid.Nil},
 		UpdatedBy:   sql.NullString{String: role.Model.UpdatedBy().String(), Valid: role.Model.UpdatedBy() != uuid.Nil},
 		CreatedAt:   sql.NullTime{Time: role.Model.CreatedAt(), Valid: !role.Model.CreatedAt().IsZero()},

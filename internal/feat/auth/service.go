@@ -15,9 +15,12 @@ type Service interface {
 	UpdateUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	DeleteUserBySlug(ctx context.Context, slug string) error
-	AddRole(ctx context.Context, userSlug string, role Role) error
-	EditRole(ctx context.Context, userSlug, roleID, name, description string) error
-	DeleteRole(ctx context.Context, userSlug, roleID string) error
+	CreateRole(ctx context.Context, role Role) error
+	GetRoleByID(ctx context.Context, id uuid.UUID) (Role, error)
+	UpdateRole(ctx context.Context, role Role) error
+	DeleteRole(ctx context.Context, id uuid.UUID) error
+	AddRole(ctx context.Context, userSlug string, roleID uuid.UUID) error
+	RemoveRole(ctx context.Context, userSlug string, roleID uuid.UUID) error
 }
 
 type BaseService struct {
@@ -56,8 +59,8 @@ func (svc *BaseService) UpdateUser(ctx context.Context, user User) error {
 	return svc.repo.UpdateUser(ctx, user)
 }
 
-func (svc *BaseService) DeleteUser(ctx context.Context, slug string) error {
-	return svc.repo.DeleteUser(ctx, slug)
+func (svc *BaseService) DeleteUser(ctx context.Context, id uuid.UUID) error {
+	return svc.repo.DeleteUser(ctx, id)
 }
 
 func (svc *BaseService) DeleteUserBySlug(ctx context.Context, slug string) error {
@@ -68,34 +71,37 @@ func (svc *BaseService) DeleteUserBySlug(ctx context.Context, slug string) error
 	return svc.repo.DeleteUser(ctx, user.Slug())
 }
 
-func (svc *BaseService) AddRole(ctx context.Context, userSlug string, role Role) error {
-	user, err := svc.repo.GetUserBySlug(ctx, userSlug)
-	if err != nil {
-		return err
-	}
+func (svc *BaseService) CreateRole(ctx context.Context, role Role) error {
 	role.SetCreateValues()
-	return svc.repo.AddRole(ctx, user.Slug(), role)
+	return svc.repo.CreateRole(ctx, role)
 }
 
-func (svc *BaseService) EditRole(ctx context.Context, userSlug, roleID, name, description string) error {
+func (svc *BaseService) GetRoleByID(ctx context.Context, id uuid.UUID) (Role, error) {
+	return svc.repo.GetRoleByID(ctx, id)
+}
+
+func (svc *BaseService) UpdateRole(ctx context.Context, role Role) error {
+	return svc.repo.UpdateRole(ctx, role)
+}
+
+func (svc *BaseService) DeleteRole(ctx context.Context, id uuid.UUID) error {
+	return svc.repo.DeleteRole(ctx, id)
+}
+
+func (svc *BaseService) AddRole(ctx context.Context, userSlug string, roleID uuid.UUID) error {
 	user, err := svc.repo.GetUserBySlug(ctx, userSlug)
 	if err != nil {
 		return err
 	}
-	role, err := svc.repo.GetRoleByID(ctx, user.ID(), roleID)
-	if err != nil {
-		return err
-	}
-	role.Description = description
-	return svc.repo.UpdateRole(ctx, user.Slug(), role)
+	return svc.repo.AddRole(ctx, user.ID(), roleID)
 }
 
-func (svc *BaseService) DeleteRole(ctx context.Context, userSlug, roleID string) error {
+func (svc *BaseService) RemoveRole(ctx context.Context, userSlug string, roleID uuid.UUID) error {
 	user, err := svc.repo.GetUserBySlug(ctx, userSlug)
 	if err != nil {
 		return err
 	}
-	return svc.repo.DeleteRole(ctx, user.Slug(), roleID)
+	return svc.repo.RemoveRole(ctx, user.ID(), roleID)
 }
 
 func (svc *BaseService) Name() string {
