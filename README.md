@@ -46,3 +46,7 @@ Using command-line flags:
 ```shell
 ./todo -server.web.host=127.0.0.1 -server.web.port=8080 -server.api.host=127.0.0.1 -server.api.port=8081
 ```
+
+## Notes
+
+There is significant repetition due to the decision to use composition and delegation for providing core functionality to various entities. While this could be avoided by using embedding, the intention would not be as explicit. For now, we will stick to this approach. If embedding becomes a more sensible option in the future, we can test it out.

@@ -1,4 +1,4 @@
-package todo
+package auth
 
 import (
 	"github.com/aquamarinepk/todo/internal/am"
