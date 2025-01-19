@@ -6,6 +6,7 @@ import (
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/aquamarinepk/todo/internal/core"
+	"github.com/aquamarinepk/todo/internal/feat/auth"
 	"github.com/aquamarinepk/todo/internal/res/todo"
 )
 
@@ -31,25 +32,34 @@ func main() {
 	queryManager := am.NewQueryManager(assetsFS, opts...)
 	templateManager := am.NewTemplateManager(assetsFS, opts...)
 
+	authRepo := auth.NewRepo(queryManager, opts...)
+	authService := auth.NewService(authRepo)
+	authWebHandler := auth.NewWebHandler(templateManager, authService, opts...)
+	authWebRouter := auth.NewWebRouter(authWebHandler, opts...)
+	authAPIHandler := auth.NewAPIHandler(authService, opts...)
+	authAPIRouter := auth.NewAPIRouter(authAPIHandler, opts...)
+
+	// TODO: Auth related functionality not fully implemented yet.
+	app.MountCQWeb("/auth", authWebRouter)
+	app.MountCQAPI(version, "/auth", authAPIRouter)
+
 	todoRepo := todo.NewRepo(queryManager, opts...)
 	todoService := todo.NewService(todoRepo)
-
 	todoWebHandler := todo.NewWebHandler(templateManager, todoService, opts...)
-	webRouter := todo.NewWebRouter(todoWebHandler, opts...)
-
+	todoWebRouter := todo.NewWebRouter(todoWebHandler, opts...)
 	todoAPIHandler := todo.NewAPIHandler(todoService, opts...)
-	apiRouter := todo.NewAPIRouter(todoAPIHandler, opts...)
+	todoAPIRouter := todo.NewAPIRouter(todoAPIHandler, opts...)
 
-	app.MountWeb("/todo", webRouter)
-	app.MountAPI(version, "/todo", apiRouter)
+	app.MountWeb("/todo", todoWebRouter)
+	app.MountAPI(version, "/todo", todoAPIRouter)
 
 	app.Add(templateManager)
 	app.Add(todoRepo)
 	app.Add(todoService)
 	app.Add(todoWebHandler)
 	app.Add(todoAPIHandler)
-	app.Add(webRouter)
-	app.Add(apiRouter)
+	app.Add(todoWebRouter)
+	app.Add(todoAPIRouter)
 
 	err := app.Setup(ctx)
 	if err != nil {
