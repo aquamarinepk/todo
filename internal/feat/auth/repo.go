@@ -10,20 +10,39 @@ import (
 	"github.com/google/uuid"
 )
 
+type Repo interface {
+	GetUserAll(ctx context.Context) ([]User, error)
+	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserBySlug(ctx context.Context, slug string) (User, error)
+	CreateUser(ctx context.Context, user User) error
+	UpdateUser(ctx context.Context, user User) error
+	DeleteUser(ctx context.Context, slug string) error
+	AddRole(ctx context.Context, userSlug string, role Role) error
+	GetRoleByID(ctx context.Context, userID uuid.UUID, roleID string) (Role, error)
+	GetRoleBySlug(ctx context.Context, userSlug, roleSlug string) (Role, error)
+	UpdateRole(ctx context.Context, userSlug string, role Role) error
+	DeleteRole(ctx context.Context, userSlug, roleSlug string) error
+	CreateRole(ctx context.Context, role Role) error
+	RemoveRole(ctx context.Context, userSlug string, roleID string) error
+	Debug()
+}
+
 type BaseRepo struct {
-	core  *am.Repo
-	mu    sync.Mutex
-	users map[uuid.UUID]UserDA
-	roles map[uuid.UUID]RoleDA
-	order []uuid.UUID
+	core      *am.Repo
+	mu        sync.Mutex
+	users     map[uuid.UUID]UserDA
+	roles     map[string]RoleDA
+	userRoles map[uuid.UUID][]string // Map of user ID to role IDs
+	order     []uuid.UUID
 }
 
 func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	repo := &BaseRepo{
-		core:  am.NewRepo("todo-repo", qm, opts...),
-		users: make(map[uuid.UUID]UserDA),
-		roles: make(map[uuid.UUID]RoleDA),
-		order: []uuid.UUID{},
+		core:      am.NewRepo("todo-repo", qm, opts...),
+		users:     make(map[uuid.UUID]UserDA),
+		roles:     make(map[string]RoleDA),
+		userRoles: make(map[uuid.UUID][]string),
+		order:     []uuid.UUID{},
 	}
 
 	repo.addSampleData() // NOTE: Used for testing purposes only.
@@ -36,7 +55,7 @@ func (repo *BaseRepo) addSampleData() {
 		id := uuid.New()
 		username := fmt.Sprintf("sampleuser%d", i)
 		email := fmt.Sprintf("sampleuser%d@example.com", i)
-		user := NewUser(username, email, username)
+		user := NewUser(username, email, username) // Provide the correct number of arguments
 		user.GenSlug()
 		user.SetCreateValues()
 		userDA := toUserDA(user)
@@ -107,17 +126,145 @@ func (repo *BaseRepo) UpdateUser(ctx context.Context, user User) error {
 	return nil
 }
 
-func (repo *BaseRepo) DeleteUser(ctx context.Context, id uuid.UUID) error {
+func (repo *BaseRepo) DeleteUser(ctx context.Context, slug string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	if _, exists := repo.users[id]; !exists {
+	var id uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == slug {
+			id = userDA.ID
+			break
+		}
+	}
+	if id == uuid.Nil {
 		return errors.New("user not found")
 	}
 	delete(repo.users, id)
 	for i, oid := range repo.order {
 		if oid == id {
 			repo.order = append(repo.order[:i], repo.order[i+1:]...)
+			break
+		}
+	}
+	delete(repo.userRoles, id) // Remove user roles
+	return nil
+}
+
+func (repo *BaseRepo) AddRole(ctx context.Context, userSlug string, role Role) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
+			break
+		}
+	}
+	if userID == uuid.Nil {
+		return errors.New("user not found")
+	}
+
+	roleDA := toRoleDA(role)
+	if _, exists := repo.roles[roleDA.ID]; exists {
+		return errors.New("role already exists")
+	}
+	repo.roles[roleDA.ID] = roleDA
+	repo.userRoles[userID] = append(repo.userRoles[userID], roleDA.ID) // Add role to user
+	return nil
+}
+
+func (repo *BaseRepo) GetRoleByID(ctx context.Context, userID uuid.UUID, roleID string) (Role, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	roleDA, exists := repo.roles[roleID]
+	if !exists {
+		return Role{}, errors.New("role not found")
+	}
+	return toRole(roleDA), nil
+}
+
+func (repo *BaseRepo) GetRoleBySlug(ctx context.Context, userSlug, roleSlug string) (Role, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
+			break
+		}
+	}
+	if userID == uuid.Nil {
+		return Role{}, errors.New("user not found")
+	}
+
+	for _, roleID := range repo.userRoles[userID] {
+		roleDA := repo.roles[roleID]
+		if roleDA.Description.String == roleSlug {
+			return toRole(roleDA), nil
+		}
+	}
+	return Role{}, errors.New("role not found")
+}
+
+func (repo *BaseRepo) UpdateRole(ctx context.Context, userSlug string, role Role) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
+			break
+		}
+	}
+	if userID == uuid.Nil {
+		return errors.New("user not found")
+	}
+
+	roleDA := toRoleDA(role)
+	if _, exists := repo.roles[roleDA.ID]; !exists {
+		msg := fmt.Sprintf("role not found for ID: %s", roleDA.ID)
+		return errors.New(msg)
+	}
+	repo.roles[roleDA.ID] = roleDA
+	return nil
+}
+
+func (repo *BaseRepo) DeleteRole(ctx context.Context, userSlug, roleSlug string) error {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
+			break
+		}
+	}
+	if userID == uuid.Nil {
+		return errors.New("user not found")
+	}
+
+	var roleID string
+	for _, rid := range repo.userRoles[userID] {
+		roleDA := repo.roles[rid]
+		if roleDA.Description.String == roleSlug {
+			roleID = rid
+			break
+		}
+	}
+	if roleID == "" {
+		return errors.New("role not found")
+	}
+	delete(repo.roles, roleID)
+	// Remove role from userRoles
+	for i, rid := range repo.userRoles[userID] {
+		if rid == roleID {
+			repo.userRoles[userID] = append(repo.userRoles[userID][:i], repo.userRoles[userID][i+1:]...)
 			break
 		}
 	}
@@ -136,78 +283,28 @@ func (repo *BaseRepo) CreateRole(ctx context.Context, role Role) error {
 	return nil
 }
 
-func (repo *BaseRepo) GetRoleByID(ctx context.Context, id uuid.UUID) (Role, error) {
+func (repo *BaseRepo) RemoveRole(ctx context.Context, userSlug string, roleID string) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	roleDA, exists := repo.roles[id]
-	if !exists {
-		return Role{}, errors.New("role not found")
-	}
-	return toRole(roleDA), nil
-}
-
-func (repo *BaseRepo) UpdateRole(ctx context.Context, role Role) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	roleDA := toRoleDA(role)
-	if _, exists := repo.roles[roleDA.ID]; !exists {
-		msg := fmt.Sprintf("role not found for ID: %s", roleDA.ID)
-		return errors.New(msg)
-	}
-	repo.roles[roleDA.ID] = roleDA
-	return nil
-}
-
-func (repo *BaseRepo) DeleteRole(ctx context.Context, id uuid.UUID) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	if _, exists := repo.roles[id]; !exists {
-		return errors.New("role not found")
-	}
-	delete(repo.roles, id)
-	return nil
-}
-
-func (repo *BaseRepo) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	userDA, userExists := repo.users[userID]
-	if !userExists {
-		return errors.New("user not found")
-	}
-
-	roleDA, roleExists := repo.roles[roleID]
-	if !roleExists {
-		return errors.New("role not found")
-	}
-
-	// TODO: This a simplified approach that maybe needs to be revisited later.
-	userDA.Roles = append(userDA.Roles, roleDA)
-	repo.users[userID] = userDA
-	return nil
-}
-
-func (repo *BaseRepo) RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	userDA, userExists := repo.users[userID]
-	if !userExists {
-		return errors.New("user not found")
-	}
-
-	// TODO: This a simplified approach that maybe needs to be revisited later.
-	for i, role := range userDA.Roles {
-		if role.ID == roleID {
-			userDA.Roles = append(userDA.Roles[:i], userDA.Roles[i+1:]...)
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
 			break
 		}
 	}
-	repo.users[userID] = userDA
+	if userID == uuid.Nil {
+		return errors.New("user not found")
+	}
+
+	// Remove role from userRoles
+	for i, rid := range repo.userRoles[userID] {
+		if rid == roleID {
+			repo.userRoles[userID] = append(repo.userRoles[userID][:i], repo.userRoles[userID][i+1:]...)
+			break
+		}
+	}
 	return nil
 }
 

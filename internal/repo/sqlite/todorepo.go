@@ -47,7 +47,7 @@ func (repo *TodoRepo) GetAll(ctx context.Context) ([]todo.List, error) {
 	var lists []todo.List
 	for rows.Next() {
 		var list todo.List
-		if err := rows.Scan(&list.ID, &list.Name, &list.Slug); err != nil {
+		if err := rows.Scan(list.Slug(), &list.Name, list.Slug); err != nil {
 			return nil, err
 		}
 		lists = append(lists, list)
@@ -57,7 +57,7 @@ func (repo *TodoRepo) GetAll(ctx context.Context) ([]todo.List, error) {
 
 func (repo *TodoRepo) GetByID(ctx context.Context, id uuid.UUID) (todo.List, error) {
 	var list todo.List
-	err := repo.db.QueryRowContext(ctx, queryGetByID, id).Scan(&list.ID, &list.Name, &list.Slug)
+	err := repo.db.QueryRowContext(ctx, queryGetByID, id).Scan(list.ID, &list.Name, list.Slug)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return list, errors.New("list not found")
@@ -69,7 +69,7 @@ func (repo *TodoRepo) GetByID(ctx context.Context, id uuid.UUID) (todo.List, err
 
 func (repo *TodoRepo) GetBySlug(ctx context.Context, slug string) (todo.List, error) {
 	var list todo.List
-	err := repo.db.QueryRowContext(ctx, queryGetBySlug, slug).Scan(&list.ID, &list.Name, &list.Slug)
+	err := repo.db.QueryRowContext(ctx, queryGetBySlug, slug).Scan(list.ID, &list.Name, list.Slug)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return list, errors.New("list not found")
