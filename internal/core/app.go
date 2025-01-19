@@ -3,7 +3,6 @@ package core
 
 import (
 	"context"
-	"net/http"
 	"os"
 	"os/signal"
 
@@ -74,18 +73,19 @@ func (app *App) SetAPIRouter(router *am.Router) {
 }
 
 func (app *App) MountWeb(path string, router *am.Router) {
-	app.mount(path, router)
+	app.core.Mount(path, router)
 }
 
 func (app *App) MountAPI(version, path string, router *am.Router) {
 	app.core.MountAPI(version, path, router)
 }
 
-func (app *App) mount(path string, handler http.Handler) {
-	app.core.Mount(path, handler)
+func (app *App) MountCQWeb(path string, router *am.Router) {
+	app.core.MountCQ(path, router)
 }
 
-func (app *App) mountAPIRouter(version, path string, router http.Handler) {
+func (app *App) MountCQAPI(version, path string, router *am.Router) {
+	app.core.MountCQAPI(version, path, router)
 }
 
 func (app *App) Log() am.Logger {

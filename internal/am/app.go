@@ -16,14 +16,17 @@ import (
 )
 
 type App struct {
-	opts       []Option
-	Core       Core
-	Version    string
-	Router     *Router
-	APIRouter  *Router
-	APIRouters map[string]*Router
-	deps       sync.Map
-	depsMutex  sync.Mutex
+	opts         []Option
+	Core         Core
+	Version      string
+	Router       *Router
+	APIRouter    *Router
+	APIRouters   map[string]*Router
+	CQRouter     *Router
+	CQAPIRouter  *Router
+	CQAPIRouters map[string]*Router
+	deps         sync.Map
+	depsMutex    sync.Mutex
 }
 
 func NewApp(name, version string, opts ...Option) *App {
@@ -33,14 +36,19 @@ func NewApp(name, version string, opts ...Option) *App {
 		opt(core)
 	}
 	app := &App{
-		opts:       opts,
-		Core:       core,
-		Router:     NewRouter("web-router", opts...),
-		APIRouter:  NewRouter("api-router", opts...),
-		APIRouters: make(map[string]*Router),
+		opts:         opts,
+		Core:         core,
+		Router:       NewRouter("web-router", opts...),
+		APIRouter:    NewRouter("api-router", opts...),
+		APIRouters:   make(map[string]*Router),
+		CQRouter:     NewRouter("cq-router", opts...),
+		CQAPIRouter:  NewRouter("cq-api-router", opts...),
+		CQAPIRouters: make(map[string]*Router),
 	}
 
 	app.Router.Mount("/api", app.APIRouter)
+	app.Router.Mount("/cq", app.CQRouter)
+	app.CQRouter.Mount("/api", app.CQAPIRouter)
 
 	return app
 }
@@ -179,6 +187,23 @@ func (a *App) MountAPI(version, path string, handler http.Handler) {
 		a.APIRouters[versionPath] = router
 	}
 	a.APIRouter.Mount(version, router)
+}
+
+func (a *App) MountCQ(path string, handler http.Handler) {
+	a.CQRouter.Mount(path, handler)
+}
+
+func (a *App) MountCQAPI(version, path string, handler http.Handler) {
+	version = fmt.Sprintf("/%s", version)
+	versionPath := fmt.Sprintf("%s%s", path, version)
+	router, exists := a.CQAPIRouters[version]
+	if !exists {
+		name := fmt.Sprintf("cq-api-router-%s", versionPath)
+		router = NewRouter(name, a.opts...)
+		router.Mount(path, handler)
+		a.CQAPIRouters[versionPath] = router
+	}
+	a.CQAPIRouter.Mount(version, router)
 }
 
 func (a *App) checkSetup() error {

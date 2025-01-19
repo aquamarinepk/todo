@@ -1,4 +1,4 @@
-package todo
+package auth
 
 import (
 	"github.com/aquamarinepk/todo/internal/am"
@@ -13,16 +13,16 @@ type WebRouter struct {
 func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core := am.NewRouter("web-router", opts...)
 
-	core.Get("/", handler.ListUsers)
-	core.Get("/{slug}", handler.ShowUser)
-	core.Get("/{slug}/edit", handler.EditUser)
+	core.Get("/list-users", handler.ListUsers)
+	core.Get("/show-user", handler.ShowUser)
+	core.Get("/edit-user", handler.EditUser)
 	core.Post("/create-user", handler.CreateUser)
-	core.Post("/{slug}/update", handler.UpdateUser)
-	core.Post("/{slug}/delete", handler.DeleteUser)
+	core.Post("/update-user", handler.UpdateUser)
+	core.Post("/delete-user", handler.DeleteUser)
 
-	core.Get("/{user_slug}/roles/{role_slug}/edit", handler.EditRole)
-	core.Post("/{user_slug}/roles/{role_slug}/update", handler.UpdateRole)
-	core.Post("/{user_slug}/roles/{role_slug}/delete", handler.DeleteRole)
+	core.Get("/edit-role", handler.EditRole)
+	core.Post("/update-role", handler.UpdateRole)
+	core.Post("/delete-role", handler.DeleteRole)
 	core.Post("/create-role", handler.CreateRole)
 	core.Post("/add-role", handler.AddRole)
 	core.Post("/remove-role", handler.RemoveRole)
