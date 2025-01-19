@@ -69,7 +69,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Show user", slug)
 	ctx := r.Context()
 
-	user, err := h.service.GetUserBySlug(ctx, slug)
+	user, err := h.service.GetUser(ctx, slug)
 	if err != nil {
 		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
@@ -112,7 +112,8 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	username := r.FormValue("username")
 	email := r.FormValue("email")
-	user := NewUser(username, email)
+	name := r.FormValue("name")
+	user := NewUser(username, email, name)
 
 	err := h.service.CreateUser(ctx, user)
 	if err != nil {
@@ -124,11 +125,45 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
-	slug := r.FormValue("slug")
-	h.Log().Info("Edit er ", slug)
+	slug := chi.URLParam(r, "slug")
+	h.Log().Info("Edit user", slug)
 	ctx := r.Context()
 
-	user, err := h.service.GetUserBySlug(ctx, slug)
+	user, err := h.service.GetUser(ctx, slug)
+	if err != nil {
+		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	page := am.NewPage(user)
+	page.SetFormAction(fmt.Sprintf("%s/%s/edit", todoResPath, slug))
+	page.GenCSRFToken(r)
+
+	tmpl, err := h.tm.Get("auth", "edit-user")
+	if err != nil {
+		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	slug := r.FormValue("slug")
+	h.Log().Info("Update user", slug)
+	ctx := r.Context()
+
+	user, err := h.service.GetUser(ctx, slug)
 	if err != nil {
 		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
@@ -150,10 +185,10 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	slug := r.FormValue("slug")
-	h.Log().Info("Delete er ", slug)
+	h.Log().Info("Delete user", slug)
 	ctx := r.Context()
 
-	err := h.service.DeleteUserBySlug(ctx, slug)
+	err := h.service.DeleteUser(ctx, slug)
 	if err != nil {
 		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return
@@ -170,9 +205,9 @@ func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 	status := r.FormValue("status")
-	role := NewRole(name, description, status)
+	role := NewRole(name, description, status) // TODO: This should be obtained from the DB.
 
-	err := h.service.AddRole(ctx, userSlug, role)
+	err := h.service.AddRole(ctx, userSlug, role.Slug())
 	if err != nil {
 		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
@@ -181,16 +216,91 @@ func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
 }
 
-func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Edit role in user")
+func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Remove role from user")
 	ctx := r.Context()
 
 	userSlug := r.FormValue("user_slug")
-	roleID := r.FormValue("role_id")
+	roleSlug := r.FormValue("role_slug")
+
+	err := h.service.RemoveRole(ctx, userSlug, roleSlug)
+	if err != nil {
+		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
+}
+
+func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Create role")
+	ctx := r.Context()
+
+	name := r.FormValue("name")
 	description := r.FormValue("description")
 	status := r.FormValue("status")
+	role := NewRole(name, description, status)
 
-	err := h.service.EditRole(ctx, userSlug, roleID, description, status)
+	err := h.service.CreateRole(ctx, role)
+	if err != nil {
+		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
+}
+
+func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
+	userSlug := chi.URLParam(r, "user_slug")
+	roleSlug := chi.URLParam(r, "role_slug")
+	h.Log().Info("Edit role", userSlug, roleSlug)
+	ctx := r.Context()
+
+	role, err := h.service.GetRole(ctx, userSlug, roleSlug)
+	if err != nil {
+		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	page := am.NewPage(role)
+	page.SetFormAction(fmt.Sprintf("%s/%s/roles/%s/edit", todoResPath, userSlug, roleSlug))
+	page.GenCSRFToken(r)
+
+	tmpl, err := h.tm.Get("auth", "edit-role")
+	if err != nil {
+		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
+	userSlug := r.FormValue("user_slug")
+	roleSlug := r.FormValue("role_slug")
+	h.Log().Info("Update role", userSlug, roleSlug)
+	ctx := r.Context()
+
+	role, err := h.service.GetRole(ctx, userSlug, roleSlug)
+	if err != nil {
+		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	role.Name = r.FormValue("name")
+	role.Description = r.FormValue("description")
+
+	err = h.service.UpdateRole(ctx, role)
 	if err != nil {
 		http.Error(w, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
@@ -200,13 +310,12 @@ func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Delete role from user")
+	userSlug := r.FormValue("user_slug")
+	roleSlug := r.FormValue("role_slug")
+	h.Log().Info("Delete role", userSlug, roleSlug)
 	ctx := r.Context()
 
-	userSlug := r.FormValue("user_slug")
-	roleID := r.FormValue("role_id")
-
-	err := h.service.DeleteRole(ctx, userSlug, roleID)
+	err := h.service.DeleteRole(ctx, userSlug, roleSlug)
 	if err != nil {
 		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return

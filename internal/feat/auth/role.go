@@ -9,6 +9,7 @@ import (
 type Role struct {
 	Model       am.Model
 	UserID      uuid.UUID
+	UserSlug    string
 	Name        string
 	Description string
 	Status      string
@@ -24,12 +25,32 @@ func NewRole(name, description, status string) Role {
 	}
 }
 
-// ID returns the ID of the role.
-func (i *Role) ID() uuid.UUID {
-	return i.Model.ID()
+// ID returns the unique identifier of the role.
+func (r *Role) ID() uuid.UUID {
+	return r.Model.ID()
+}
+
+// SetID sets the unique identifier of the role.
+func (r *Role) SetID(id uuid.UUID, force ...bool) {
+	r.Model.SetID(id, force...)
+}
+
+// Slug returns the slug of the role.
+func (r *Role) Slug() string {
+	return r.Model.Slug()
+}
+
+// GenSlug generates and sets the slug of the role.
+func (r *Role) GenSlug() {
+	r.Model.GenSlug(r.Name)
+}
+
+// GetNameID generates and sets the name ID of the role.
+func (r *Role) GetNameID() {
+	r.Model.GenNameID()
 }
 
 // SetCreateValues sets the creation values for the role.
-func (i *Role) SetCreateValues() {
-	i.Model.GenCreationValues()
+func (r *Role) SetCreateValues() {
+	r.Model.GenCreationValues()
 }
