@@ -15,7 +15,7 @@ type User struct {
 	Email       string `json:"email"`
 	Name        string `json:"name"`
 	EncPassword string
-	Roles       []Role `json:"roles"` 
+	Roles       []Role `json:"roles"`
 }
 
 // NewUser creates a new user.
@@ -25,6 +25,21 @@ func NewUser(username, email, name string) User {
 		Username: username,
 		Email:    email,
 		Name:     name,
+	}
+}
+
+// AddRole adds a role to the user.
+func (l *User) AddRole(role Role) {
+	l.Roles = append(l.Roles, role)
+}
+
+// RemoveRole removes a role from the user.
+func (l *User) RemoveRole(roleID uuid.UUID) {
+	for i, role := range l.Roles {
+		if role.ID() == roleID {
+			l.Roles = append(l.Roles[:i], l.Roles[i+1:]...)
+			break
+		}
 	}
 }
 
@@ -54,19 +69,4 @@ func (l *User) GetNameID() {
 
 func (l *User) SetCreateValues() {
 	l.Model.GenCreationValues()
-}
-
-// AddRole adds a role to the user.
-func (l *User) AddRole(role Role) {
-	l.Roles = append(l.Roles, role)
-}
-
-// RemoveRole removes a role from the user.
-func (l *User) RemoveRole(roleID uuid.UUID) {
-	for i, role := range l.Roles {
-		if role.ID() == roleID {
-			l.Roles = append(l.Roles[:i], l.Roles[i+1:]...)
-			break
-		}
-	}
 }
