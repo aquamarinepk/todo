@@ -1,14 +1,15 @@
 # TODO Application
 
-This is a TODO application. This simple app is an exploratory attempt to create a kit to develop microservices and self-contained apps.
+This is a TODO application. This simple app is an exploratory attempt to create a kit for developing microservices and self-contained apps.
+
+This reference app is designed to showcase the features and patterns that the kit generator should later replicate for other specific projects.
 
 <img src="docs/img/todo.png" alt="TODO Application" />
 
 ## Overview
-This is a sample app using the common example of a todo list.
-The example is designed to express the desired outcome for the generator library.
-The feature-based implementation showcases user roles, all handled through a command-query like interface.
-The resource-based (RESTful) implementation is used to manage the todo list and items.
+This is a sample app using the common example of a todo list. The example is designed to express the desired outcome for the generator library.
+
+Among other upcoming features, the main idea is that the generator will expose its features in two different ways. Related features involving one or more resources will be organized in separate packages under `feat`. The interface to handle its logic will be exposed through a command-query interface. For simple cases, where a client needs to manage basic CRUD operations, a RESTful interface can also be generated, with resource entities defined under a directory hanging from `res`. This is handy for simple cases or to interface with more traditional clients.
 
 ## Configuration
 ### Command-Line Flags
