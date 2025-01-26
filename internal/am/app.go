@@ -16,17 +16,17 @@ import (
 )
 
 type App struct {
-	opts         []Option
-	Core         Core
-	Version      string
-	Router       *Router
-	APIRouter    *Router
-	APIRouters   map[string]*Router
-	CQRouter     *Router
-	CQAPIRouter  *Router
-	CQAPIRouters map[string]*Router
-	deps         sync.Map
-	depsMutex    sync.Mutex
+	opts          []Option
+	Core          Core
+	Version       string
+	Router        *Router
+	APIRouter     *Router
+	APIRouters    map[string]*Router
+	FeatRouter    *Router
+	FeatAPIRouter *Router
+	FeatPIRouters map[string]*Router
+	deps          sync.Map
+	depsMutex     sync.Mutex
 }
 
 func NewApp(name, version string, opts ...Option) *App {
@@ -36,19 +36,19 @@ func NewApp(name, version string, opts ...Option) *App {
 		opt(core)
 	}
 	app := &App{
-		opts:         opts,
-		Core:         core,
-		Router:       NewRouter("web-router", opts...),
-		APIRouter:    NewRouter("api-router", opts...),
-		APIRouters:   make(map[string]*Router),
-		CQRouter:     NewRouter("cq-router", opts...),
-		CQAPIRouter:  NewRouter("cq-api-router", opts...),
-		CQAPIRouters: make(map[string]*Router),
+		opts:          opts,
+		Core:          core,
+		Router:        NewRouter("web-router", opts...),
+		APIRouter:     NewRouter("api-router", opts...),
+		APIRouters:    make(map[string]*Router),
+		FeatRouter:    NewRouter("cq-router", opts...),
+		FeatAPIRouter: NewRouter("cq-api-router", opts...),
+		FeatPIRouters: make(map[string]*Router),
 	}
 
 	app.Router.Mount("/api", app.APIRouter)
-	app.Router.Mount("/cq", app.CQRouter)
-	app.CQRouter.Mount("/api", app.CQAPIRouter)
+	app.Router.Mount("/feat", app.FeatRouter)
+	app.FeatRouter.Mount("/api", app.FeatAPIRouter)
 
 	return app
 }
@@ -189,21 +189,21 @@ func (a *App) MountAPI(version, path string, handler http.Handler) {
 	a.APIRouter.Mount(version, router)
 }
 
-func (a *App) MountCQ(path string, handler http.Handler) {
-	a.CQRouter.Mount(path, handler)
+func (a *App) MountFeat(path string, handler http.Handler) {
+	a.FeatRouter.Mount(path, handler)
 }
 
-func (a *App) MountCQAPI(version, path string, handler http.Handler) {
+func (a *App) MountFeatAPI(version, path string, handler http.Handler) {
 	version = fmt.Sprintf("/%s", version)
 	versionPath := fmt.Sprintf("%s%s", path, version)
-	router, exists := a.CQAPIRouters[version]
+	router, exists := a.FeatPIRouters[version]
 	if !exists {
-		name := fmt.Sprintf("cq-api-router-%s", versionPath)
+		name := fmt.Sprintf("feat-api-router-%s", versionPath)
 		router = NewRouter(name, a.opts...)
 		router.Mount(path, handler)
-		a.CQAPIRouters[versionPath] = router
+		a.FeatPIRouters[versionPath] = router
 	}
-	a.CQAPIRouter.Mount(version, router)
+	a.FeatAPIRouter.Mount(version, router)
 }
 
 func (a *App) checkSetup() error {
