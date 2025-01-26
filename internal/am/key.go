@@ -22,6 +22,9 @@ type Keys struct {
 	NotificationWarnStyle    string
 	NotificationErrorStyle   string
 	NotificationDebugStyle   string
+
+	RenderWebErrors string
+	RenderAPIErrors string
 }
 
 var Key = Keys{
@@ -46,4 +49,7 @@ var Key = Keys{
 	NotificationWarnStyle:    "notification.warn.style",
 	NotificationErrorStyle:   "notification.error.style",
 	NotificationDebugStyle:   "notification.debug.style",
+
+	RenderWebErrors: "render.web.errors",
+	RenderAPIErrors: "render.api.errors",
 }

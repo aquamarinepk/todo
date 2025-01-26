@@ -4,7 +4,7 @@ import (
 	"github.com/aquamarinepk/todo/internal/am"
 )
 
-// NewAPIRouter creates a new API router for the todo resure.
+// NewAPIRouter creates a new API router for the todo resource.
 func NewAPIRouter(handler *APIHandler, opts ...am.Option) *am.Router {
 	r := am.NewRouter("api-router", opts...)
 

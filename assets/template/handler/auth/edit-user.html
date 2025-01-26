@@ -1,0 +1,12 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+Edit {{ .Data.Name }}
+{{ end }}
+
+{{ define "content" }}
+<h1>Edit Todo</h1>
+{{ template "form" . }}
+{{ end }}

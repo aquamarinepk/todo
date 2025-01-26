@@ -80,12 +80,12 @@ func (app *App) MountAPI(version, path string, router *am.Router) {
 	app.core.MountAPI(version, path, router)
 }
 
-func (app *App) MountCQWeb(path string, router *am.Router) {
-	app.core.MountCQ(path, router)
+func (app *App) MountFeatWeb(path string, router *am.Router) {
+	app.core.MountFeat(path, router)
 }
 
-func (app *App) MountCQAPI(version, path string, router *am.Router) {
-	app.core.MountCQAPI(version, path, router)
+func (app *App) MountFeatAPI(version, path string, router *am.Router) {
+	app.core.MountFeatAPI(version, path, router)
 }
 
 func (app *App) Log() am.Logger {
