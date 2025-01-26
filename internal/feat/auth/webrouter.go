@@ -14,6 +14,7 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core := am.NewRouter("web-router", opts...)
 
 	core.Get("/list-users", handler.ListUsers)
+	core.Get("/new-user", handler.NewUser)
 	core.Get("/show-user", handler.ShowUser)
 	core.Get("/edit-user", handler.EditUser)
 	core.Post("/create-user", handler.CreateUser)

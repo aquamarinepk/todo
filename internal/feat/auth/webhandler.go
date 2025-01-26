@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	todoResPath = "/todo"
+	userResPath = "/feat/auth" // TODO: This should be obtained from a helper
 	key         = am.Key
 	method      = am.HTTPMethod
 )
@@ -37,30 +37,59 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 
 	users, err := h.service.GetUsers(ctx)
 	if err != nil {
-		http.Error(w, am.ErrCannotGetResources, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
 	}
 
 	page := am.NewPage(users)
-	page.SetFormAction(todoResPath)
+	page.SetFormAction(userResPath)
 	page.GenCSRFToken(r)
 
-	tmpl, err := h.tm.Get("auth", "list-user")
+	tmpl, err := h.tm.Get("auth", "list-users")
 	if err != nil {
-		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("New user form")
+	// ctx := r.Context()
+
+	user := &User{}
+
+	page := am.NewPage(user)
+	page.SetFormAction(fmt.Sprintf("%s/create-user", userResPath))
+	page.GenCSRFToken(r)
+
+	tmpl, err := h.tm.Get("auth", "new-user")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
 }
 
@@ -71,7 +100,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.service.GetUser(ctx, slug)
 	if err != nil {
-		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -82,27 +111,27 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(user)
 	page.SetActions([]am.Action{
-		{URL: todoResPath, Text: "Back to User", Style: gray},
-		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "Edit User", Style: blue},
-		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "Delete User", Style: red},
+		{URL: userResPath, Text: "Back to User", Style: gray},
+		{URL: fmt.Sprintf("%s/%s/edit", userResPath, slug), Text: "Edit User", Style: blue},
+		{URL: fmt.Sprintf("%s/%s/delete", userResPath, slug), Text: "Delete User", Style: red},
 	})
 
 	tmpl, err := h.tm.Get("auth", "show-user")
 	if err != nil {
-		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
 }
 
@@ -117,11 +146,11 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.CreateUser(ctx, user)
 	if err != nil {
-		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
+	http.Redirect(w, r, userResPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
@@ -131,30 +160,30 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.service.GetUser(ctx, slug)
 	if err != nil {
-		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
 	page := am.NewPage(user)
-	page.SetFormAction(fmt.Sprintf("%s/%s/edit", todoResPath, slug))
+	page.SetFormAction(fmt.Sprintf("%s/%s/edit", userResPath, slug))
 	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("auth", "edit-user")
 	if err != nil {
-		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
 }
 
@@ -165,7 +194,7 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.service.GetUser(ctx, slug)
 	if err != nil {
-		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -176,11 +205,11 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.UpdateUser(ctx, user)
 	if err != nil {
-		http.Error(w, am.ErrCannotUpdateResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
+	http.Redirect(w, r, userResPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -190,11 +219,11 @@ func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.DeleteUser(ctx, slug)
 	if err != nil {
-		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
+	http.Redirect(w, r, userResPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
@@ -209,11 +238,11 @@ func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.AddRole(ctx, userSlug, role.Slug())
 	if err != nil {
-		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", userResPath, userSlug), http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
@@ -225,11 +254,11 @@ func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.RemoveRole(ctx, userSlug, roleSlug)
 	if err != nil {
-		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", userResPath, userSlug), http.StatusSeeOther)
 }
 
 func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
@@ -243,11 +272,11 @@ func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.CreateRole(ctx, role)
 	if err != nil {
-		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
+	http.Redirect(w, r, userResPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
@@ -258,30 +287,30 @@ func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
 
 	role, err := h.service.GetRole(ctx, userSlug, roleSlug)
 	if err != nil {
-		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
 	page := am.NewPage(role)
-	page.SetFormAction(fmt.Sprintf("%s/%s/roles/%s/edit", todoResPath, userSlug, roleSlug))
+	page.SetFormAction(fmt.Sprintf("%s/%s/roles/%s/edit", userResPath, userSlug, roleSlug))
 	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("auth", "edit-role")
 	if err != nil {
-		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, page)
 	if err != nil {
-		http.Error(w, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
 		return
 	}
 
 	_, err = buf.WriteTo(w)
 	if err != nil {
-		http.Error(w, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
 }
 
@@ -293,7 +322,7 @@ func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 
 	role, err := h.service.GetRole(ctx, userSlug, roleSlug)
 	if err != nil {
-		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
@@ -302,11 +331,11 @@ func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.UpdateRole(ctx, role)
 	if err != nil {
-		http.Error(w, am.ErrCannotUpdateResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", userResPath, userSlug), http.StatusSeeOther)
 }
 
 func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
@@ -317,11 +346,11 @@ func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 
 	err := h.service.DeleteRole(ctx, userSlug, roleSlug)
 	if err != nil {
-		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", todoResPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", userResPath, userSlug), http.StatusSeeOther)
 }
 
 // Name returns the name in WebHandler.
@@ -367,4 +396,16 @@ func (h *WebHandler) Start(ctx context.Context) error {
 // Stop is the default implementation for the Stop method in WebHandler.
 func (h *WebHandler) Stop(ctx context.Context) error {
 	return h.core.Stop(ctx)
+}
+
+// Err logs the error and returns the message with the code.
+// TODO: Move this to am.Handler to make it available to all handlers.
+func (h *WebHandler) Err(w http.ResponseWriter, err error, msg string, code int) {
+	h.Log().Error(err)
+	renderErr := h.Cfg().BoolVal(key.RenderWebErrors, false)
+	if renderErr {
+		http.Error(w, fmt.Sprintf("%s: %s", msg, err.Error()), code)
+		return
+	}
+	http.Error(w, msg, code)
 }

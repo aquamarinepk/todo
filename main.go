@@ -40,8 +40,8 @@ func main() {
 	authAPIRouter := auth.NewAPIRouter(authAPIHandler, opts...)
 
 	// TODO: Auth related functionality not fully implemented yet.
-	app.MountCQWeb("/auth", authWebRouter)
-	app.MountCQAPI(version, "/auth", authAPIRouter)
+	app.MountFeatWeb("/auth", authWebRouter)
+	app.MountFeatAPI(version, "/auth", authAPIRouter)
 
 	todoRepo := todo.NewRepo(queryManager, opts...)
 	todoService := todo.NewService(todoRepo)

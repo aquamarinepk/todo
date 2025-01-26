@@ -57,6 +57,9 @@ setenv:
 	@export TODO_BUTTON_STYLE_RED="bg-red-600 text-white px-4 py-2 rounded"
 	@export TODO_BUTTON_STYLE_GREEN="bg-green-600 text-white px-4 py-2 rounded"
 	@export TODO_BUTTON_STYLE_YELLOW="bg-yellow-600 text-white px-4 py-2 rounded"
+	@echo "Setting render errors..."
+	@export TODO_RENDER_WEB_ERRORS="true"
+	@export TODO_RENDER_API_ERRORS="true"
 	@echo "Environment variables set."
 
 # Clean the build directory
@@ -66,5 +69,4 @@ clean:
 	@echo "Clean complete."
 
 # Phony targets
-.PHONY: all build run run_flags setenv clean
-
+.PHONY: all build run runflags setenv clean
