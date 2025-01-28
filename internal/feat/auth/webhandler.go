@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	userResPath = "/feat/auth" // TODO: This should be obtained from a helper
+	authFeathPath = "feat/auth" // TODO: This should be obtained from a helper
 	key         = am.Key
 	method      = am.HTTPMethod
 )
@@ -42,7 +42,7 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(users)
-	page.SetFormAction(userResPath)
+	page.SetFormAction(authFeathPath)
 	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("auth", "list-users")
@@ -71,7 +71,7 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	user := &User{}
 
 	page := am.NewPage(user)
-	page.SetFormAction(fmt.Sprintf("%s/create-user", userResPath))
+	page.SetFormAction(fmt.Sprintf("%s/create-user", authFeathPath))
 	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("auth", "new-user")
@@ -94,7 +94,7 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
+	slug := r.URL.Query().Get("slug")
 	h.Log().Info("Show user", slug)
 	ctx := r.Context()
 
@@ -111,13 +111,13 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(user)
 	page.SetActions([]am.Action{
-		{URL: userResPath, Text: "Back to User", Style: gray},
-		{URL: fmt.Sprintf("%s/%s/edit", userResPath, slug), Text: "Edit User", Style: blue},
-		{URL: fmt.Sprintf("%s/%s/delete", userResPath, slug), Text: "Delete User", Style: red},
+		{URL: authFeathPath, Text: "Back to User", Style: gray},
+		{URL: fmt.Sprintf("%s/edit-user?slug=%s", authFeathPath, slug), Text: "Edit User", Style: blue},
+		{URL: fmt.Sprintf("%s/delete-user?slug=%s", authFeathPath, slug), Text: "Delete User", Style: red},
 	})
 
 	tmpl, err := h.tm.Get("auth", "show-user")
-	if err != nil {
+	if (err != nil) {
 		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
@@ -150,11 +150,11 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, userResPath, http.StatusSeeOther)
+	http.Redirect(w, r, authFeathPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
+	slug := r.URL.Query().Get("slug")
 	h.Log().Info("Edit user", slug)
 	ctx := r.Context()
 
@@ -165,7 +165,7 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(user)
-	page.SetFormAction(fmt.Sprintf("%s/%s/edit", userResPath, slug))
+	page.SetFormAction(fmt.Sprintf("%s/edit-user?slug=%s", authFeathPath, slug))
 	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("auth", "edit-user")
@@ -209,7 +209,7 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, userResPath, http.StatusSeeOther)
+	http.Redirect(w, r, authFeathPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -223,7 +223,7 @@ func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, userResPath, http.StatusSeeOther)
+	http.Redirect(w, r, "list-users", http.StatusSeeOther)
 }
 
 func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
@@ -242,7 +242,7 @@ func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", userResPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", authFeathPath, userSlug), http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
@@ -258,7 +258,7 @@ func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", userResPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", authFeathPath, userSlug), http.StatusSeeOther)
 }
 
 func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
@@ -276,7 +276,7 @@ func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, userResPath, http.StatusSeeOther)
+	http.Redirect(w, r, authFeathPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
@@ -292,7 +292,7 @@ func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(role)
-	page.SetFormAction(fmt.Sprintf("%s/%s/roles/%s/edit", userResPath, userSlug, roleSlug))
+	page.SetFormAction(fmt.Sprintf("%s/%s/roles/%s/edit", authFeathPath, userSlug, roleSlug))
 	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("auth", "edit-role")
@@ -335,7 +335,7 @@ func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", userResPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", authFeathPath, userSlug), http.StatusSeeOther)
 }
 
 func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
@@ -350,7 +350,7 @@ func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", userResPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", authFeathPath, userSlug), http.StatusSeeOther)
 }
 
 // Name returns the name in WebHandler.
