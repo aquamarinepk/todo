@@ -8,7 +8,7 @@ User List
 
 {{ define "content" }}
 <h1 class="text-2xl font-bold mb-4">User List</h1>
-<a href="/feat/auth/new-user" class="mb-4 inline-block bg-blue-500 text-white px-4 py-2 rounded">Create New User</a>
+<a href="/new-user" class="mb-4 inline-block bg-blue-500 text-white px-4 py-2 rounded">Create New User</a>
 <table class="min-w-full bg-white border border-gray-200">
   <thead>
     <tr>
@@ -22,14 +22,14 @@ User List
     {{ range .Data }}
     <tr>
       <td class="py-2 px-4 border-b">
-        <a href="/auth/{{ .Slug }}" class="text-blue-500 hover:underline">{{ .Username }}</a>
+        <a href="show-user?slug={{ .Slug }}" class="text-blue-500 hover:underline">{{ .Username }}</a>
       </td>
       <td class="py-2 px-4 border-b">{{ .Email }}</td>
       <td class="py-2 px-4 border-b text-center">
-        <a href="/auth/{{ .Slug }}" class="inline-block bg-green-500 text-white px-4 py-2 rounded mr-2">Show</a>
-        <a href="/auth/{{ .Slug }}/edit" class="inline-block bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</a>
-        <form action="/auth/{{ .Slug }}" method="POST" class="inline-block">
-          <input type="hidden" name="_method" value="DELETE">
+        <a href="show-user?slug={{ .Slug }}" class="inline-block bg-green-500 text-white px-4 py-2 rounded mr-2">Show</a>
+        <a href="edit-user?slug={{ .Slug }}" class="inline-block bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</a>
+        <form action="delete-user" method="POST" class="inline-block">
+          <input type="hidden" name="slug" value="{{ .Slug }}">
           <input type="hidden" name="aquamarine.csrf.token" value="{{ $csrf }}">
           <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
         </form>
