@@ -11,6 +11,8 @@ This is a sample app using the common example of a todo list. The example is des
 
 Among other upcoming features, the main idea is that the generator will expose its features in two different ways. Related features involving one or more resources will be organized in separate packages under `feat`. The interface to handle its logic will be exposed through a command-query interface. For simple cases, where a client needs to manage basic CRUD operations, a RESTful interface can also be generated, with resource entities defined under a directory hanging from `res`. This is handy for simple cases or to interface with more traditional clients.
 
+Although we refer to command-query, it is not in the pure CQRS sense; commands will return a response. Each feature (a set of resources managed by a service and exposed through various interfaces such as web, API, gRPC, CLI) is contained within a single package under `feat` (one feature per package under `feat`). Ideally, each feature should handle a single bounded context, and interactions with other features should be done through mechanisms other than direct method calls. Synchronous operations via gRPC or asynchronous methods such as pub/sub, queues, etc., are viable options.
+
 ## Configuration
 ### Command-Line Flags
 You can pass the following flags to the application:  
@@ -51,3 +53,5 @@ Using command-line flags:
 ## Notes
 
 There is significant repetition due to the decision to use composition and delegation for providing core functionality to various entities. While this could be avoided by using embedding, the intention would not be as explicit. For now, we will stick to this approach. If embedding becomes a more sensible option in the future, we can test it out.
+
+The complete implementation for roles is currently pending but will be done in the near future. This will provide a complete foundation that can be used to finalize the generator.
