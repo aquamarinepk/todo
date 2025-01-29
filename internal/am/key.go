@@ -7,6 +7,7 @@ type Keys struct {
 	ServerAPIHost    string
 	ServerAPIPort    string
 	ServerAPIEnabled string
+	ServerFeatPath   string
 
 	SecCSRFKey      string
 	SecCSRFRedirect string
@@ -34,6 +35,7 @@ var Key = Keys{
 	ServerAPIHost:    "server.api.host",
 	ServerAPIPort:    "server.api.port",
 	ServerAPIEnabled: "server.api.enabled",
+	ServerFeatPath:   "server.feat.path",
 
 	SecCSRFKey:      "sec.csrf.key",
 	SecCSRFRedirect: "sec.csrf.redirect",
