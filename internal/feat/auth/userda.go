@@ -16,7 +16,7 @@ type UserDA struct {
 	Username    sql.NullString `db:"username"`
 	Email       sql.NullString `db:"email"`
 	Name        sql.NullString `db:"name"`
-	Description sql.NullString `db:"description"`
+	EncPassword sql.NullString `db:"enc_password"`
 	CreatedBy   sql.NullString `db:"created_by"`
 	UpdatedBy   sql.NullString `db:"updated_by"`
 	CreatedAt   sql.NullTime   `db:"created_at"`
@@ -35,7 +35,9 @@ func toUser(da UserDA) User {
 			am.WithUpdatedAt(da.UpdatedAt.Time),
 		),
 		Username:    da.Name.String,
-		EncPassword: da.Description.String,
+		Email:       da.Email.String,
+		Name:        da.Name.String,
+		EncPassword: da.EncPassword.String,
 	}
 }
 
@@ -48,7 +50,6 @@ func toUserDA(user User) UserDA {
 		Username:    sql.NullString{String: user.Username, Valid: user.Username != ""},
 		Email:       sql.NullString{String: user.Email, Valid: user.Email != ""},
 		Name:        sql.NullString{String: user.Username, Valid: user.Username != ""},
-		Description: sql.NullString{String: user.EncPassword, Valid: user.EncPassword != ""},
 		CreatedBy:   sql.NullString{String: user.Model.CreatedBy().String(), Valid: user.Model.CreatedBy() != uuid.Nil},
 		UpdatedBy:   sql.NullString{String: user.Model.UpdatedBy().String(), Valid: user.Model.UpdatedBy() != uuid.Nil},
 		CreatedAt:   sql.NullTime{Time: user.Model.CreatedAt(), Valid: !user.Model.CreatedAt().IsZero()},

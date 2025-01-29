@@ -15,6 +15,14 @@ type Config struct {
 	flags     map[string]string
 }
 
+func NewConfig() *Config {
+	return &Config{
+		namespace: "AQM",
+		values:    make(map[string]string),
+		flags:     make(map[string]string),
+	}
+}
+
 // LoadCfg initializes a Config instance with the specified namespace and loads the corresponding environment variables and CLI flags.
 func LoadCfg(namespace string, flagDefs map[string]interface{}) *Config {
 	cfg := &Config{}

@@ -15,6 +15,10 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	featPath = "/feat"
+)
+
 type App struct {
 	opts          []Option
 	Core          Core
@@ -35,6 +39,17 @@ func NewApp(name, version string, opts ...Option) *App {
 	for _, opt := range opts {
 		opt(core)
 	}
+
+	if core.Log() == nil {
+		core.SetLog(NewLogger("info"))
+		opts = append(opts, WithLog(core.Log()))
+	}
+
+	if core.Cfg() == nil {
+		core.SetCfg(NewConfig())
+		opts = append(opts, WithCfg(core.Cfg()))
+	}
+	
 	app := &App{
 		opts:          opts,
 		Core:          core,
@@ -46,9 +61,11 @@ func NewApp(name, version string, opts ...Option) *App {
 		FeatPIRouters: make(map[string]*Router),
 	}
 
+	featPath := app.Cfg().StrValOrDef(Key.ServerFeatPath, featPath)
+
 	app.Router.Mount("/api", app.APIRouter)
-	app.Router.Mount("/feat", app.FeatRouter)
-	app.FeatRouter.Mount("/api", app.FeatAPIRouter)
+	app.Router.Mount(featPath, app.FeatRouter)
+	app.FeatRouter.Mount(featPath, app.FeatAPIRouter)
 
 	return app
 }
