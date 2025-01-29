@@ -316,8 +316,8 @@ func (repo *BaseRepo) Debug() {
 	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n", "Type", "ID", "NameID", "Slug", "Username", "EncPassword")
 	for _, id := range repo.order {
 		userDA := repo.users[id]
-		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n",
-			userDA.Type, userDA.ID.String(), userDA.NameID.String, userDA.Slug.String, userDA.Name.String, userDA.Description.String)
+		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s\n",
+			userDA.Type, userDA.ID.String(), userDA.NameID.String, userDA.Slug.String, userDA.Name.String)
 	}
 	result = fmt.Sprintf("%s state:\n%s", repo.Name(), result)
 	repo.Log().Info(result)
