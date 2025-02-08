@@ -17,6 +17,7 @@ type Repo interface {
 	CreateUser(ctx context.Context, user User) error
 	UpdateUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, slug string) error
+	GetRolesForUser(ctx context.Context, userSlug string) ([]Role, error)
 	AddRole(ctx context.Context, userSlug string, role Role) error
 	GetRoleByID(ctx context.Context, userID uuid.UUID, roleID string) (Role, error)
 	GetRoleBySlug(ctx context.Context, userSlug, roleSlug string) (Role, error)
@@ -149,6 +150,29 @@ func (repo *BaseRepo) DeleteUser(ctx context.Context, slug string) error {
 	}
 	delete(repo.userRoles, id) // Remove user roles
 	return nil
+}
+
+func (repo *BaseRepo) GetRolesForUser(ctx context.Context, userSlug string) ([]Role, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var userID uuid.UUID
+	for _, userDA := range repo.users {
+		if userDA.Slug.String == userSlug {
+			userID = userDA.ID
+			break
+		}
+	}
+	if userID == uuid.Nil {
+		return nil, errors.New("user not found")
+	}
+
+	var roles []Role
+	for _, roleID := range repo.userRoles[userID] {
+		roleDA := repo.roles[roleID]
+		roles = append(roles, toRole(roleDA))
+	}
+	return roles, nil
 }
 
 func (repo *BaseRepo) AddRole(ctx context.Context, userSlug string, role Role) error {
