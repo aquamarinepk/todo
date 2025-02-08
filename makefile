@@ -36,7 +36,8 @@ gencsrfkey:
 	fi
 
 # Set environment variables
-# WIP: This is a workaround to be able to assoiciate some styles to notifications and buttons but probably another approach will be used at the end.
+# WIP: This is a workaround to be able to associate some styles to notifications and buttons but another approach will
+# be used at the end.
 setenv:
 	@echo "Setting environment variables..."
 	@export TODO_SERVER_WEB_HOST=localhost
