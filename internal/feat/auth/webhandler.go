@@ -108,6 +108,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: This is presentation logic and will be moved to a more appropriate place later.
 	cfg := h.Cfg()
 	gray, _ := cfg.StrVal(key.ButtonStyleGray)
 	blue, _ := cfg.StrVal(key.ButtonStyleBlue)
@@ -118,6 +119,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 		{URL: authPath, Text: "Back to User", Style: gray},
 		{URL: fmt.Sprintf(userPathFmt, authPath, "edit", fmt.Sprintf(am.Slug, slug)), Text: "Edit User", Style: blue},
 		{URL: fmt.Sprintf(userPathFmt, authPath, "delete", fmt.Sprintf(am.Slug, slug)), Text: "Delete User", Style: red},
+		{URL: fmt.Sprintf("list-user-roles?slug=%s", slug), Text: "Manage Roles", Style: blue},
 	})
 
 	tmpl, err := h.tm.Get("auth", "show-user")
@@ -228,6 +230,69 @@ func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 
 	http.Redirect(w, r, "list-users", http.StatusSeeOther)
 }
+
+func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
+    slug := r.URL.Query().Get("slug")
+    h.Log().Info("List roles for user", slug)
+    ctx := r.Context()
+
+    user, err := h.service.GetUser(ctx, slug)
+    if err != nil {
+        h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+        return
+    }
+
+    roles, err := h.service.GetUserRoles(ctx, slug) 
+    if err != nil {
+        h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+        return
+    }
+
+    page := am.NewPage(struct {
+        User  *User
+        Roles []Role
+    }{
+        User:  &user,
+        Roles: roles,
+    })
+    page.SetFormAction(authPath)
+    page.GenCSRFToken(r)
+
+    tmpl, err := h.tm.Get("auth", "list-user-roles")
+    if err != nil {
+        h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+        return
+    }
+
+    var buf bytes.Buffer
+    err = tmpl.Execute(&buf, page)
+    if err != nil {
+        h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+        return
+    }
+
+    _, err = buf.WriteTo(w)
+    if err != nil {
+        h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+    }
+}
+
+func (h *WebHandler) AddRoleToUser(w http.ResponseWriter, r *http.Request) {
+    h.Log().Info("Add role to user")
+    ctx := r.Context()
+
+    userSlug := r.FormValue("user_slug")
+    roleSlug := r.FormValue("role_slug")
+
+    err := h.service.AddRole(ctx, userSlug, roleSlug)
+    if err != nil {
+        h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+        return
+    }
+
+    http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
+}
+
 
 func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Add role to user")

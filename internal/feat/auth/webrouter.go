@@ -20,6 +20,8 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Post("/create-user", handler.CreateUser)
 	core.Post("/update-user", handler.UpdateUser)
 	core.Post("/delete-user", handler.DeleteUser)
+	core.Get("/list-user-roles", handler.ListUserRoles)
+	core.Get("/add-role-to-user", handler.AddRoleToUser)
 
 	core.Get("/edit-role", handler.EditRole)
 	core.Post("/update-role", handler.UpdateRole)
