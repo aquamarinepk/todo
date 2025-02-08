@@ -2,49 +2,43 @@
 
 /* Custom styles */
 
+/* Note: For now, we don't have the assets preprocessor in place, but later these custom styles will wrap actual Tailwind classes to declutter the layout and templates. */
+
 /* Header styles */
 .header {
-    font-size: 1.5rem; /* text-2xl */
-    font-weight: bold; /* font-bold */
-    margin-bottom: 1rem; /* mb-4 */
+    @apply text-2xl font-bold mb-4;
 }
 
 /* Button styles */
 .button {
-    background-color: #3b82f6; /* bg-blue-500 */
-    color: white; /* text-white */
-    padding: 0.5rem 1rem; /* px-4 py-2 */
-    border-radius: 0.25rem; /* rounded */
+    @apply bg-blue-500 text-white px-4 py-2 rounded;
 }
 
 .button-green {
-    background-color: #10b981; /* bg-green-500 */
+    @apply bg-green-500;
 }
 
 .button-yellow {
-    background-color: #f59e0b; /* bg-yellow-500 */
+    @apply bg-yellow-500;
 }
 
 .button-red {
-    background-color: #ef4444; /* bg-red-500 */
+    @apply bg-red-500;
 }
 
 /* Table styles */
 .table {
-    min-width: 100%; /* min-w-full */
-    background-color: white; /* bg-white */
-    border: 1px solid #e5e7eb; /* border border-gray-200 */
+    @apply min-w-full bg-white border border-gray-200;
 }
 
 .table th, .table td {
-    padding: 0.5rem 1rem; /* py-2 px-4 */
-    border-bottom: 1px solid #e5e7eb; /* border-b */
+    @apply py-2 px-4 border-b;
 }
 
 .table th {
-    text-align: left;
+    @apply text-left;
 }
 
 .table-actions {
-    text-align: center; /* text-center */
+    @apply text-center;
 }
