@@ -56,4 +56,4 @@ Using command-line flags:
 
 There is significant repetition due to the decision to use composition and delegation for providing core functionality to various entities. While this could be avoided by using embedding, the intention would not be as explicit. For now, we will stick to this approach. If embedding becomes a more sensible option in the future, we can test it out.
 
-The complete implementation for roles is currently pending but will be done in the near future. This will provide a complete foundation that can be used to finalize the generator.
+[What about testing?](https://htmx.org/essays/prefer-if-statements/#:~:text=Implementation%20Driven%20Development,drive%20that%20test)
