@@ -27,11 +27,19 @@ func main() {
 	cfg := am.LoadCfg(namespace, am.Flags)
 	opts := am.DefOpts(log, cfg)
 
-	app := core.NewApp(name, version, opts...)
+	//_ = am.DebugFS(assetsFS, "assets")
+
+	app := core.NewApp(name, version, assetsFS, opts...)
 
 	queryManager := am.NewQueryManager(assetsFS, opts...)
 	templateManager := am.NewTemplateManager(assetsFS, opts...)
 
+	// Start the FileServer
+	fileServer := am.NewFileServer(assetsFS, opts...)
+
+	app.MountWeb("/", fileServer.Router())
+
+	// Start the Auth feature
 	authRepo := auth.NewRepo(queryManager, opts...)
 	authService := auth.NewService(authRepo)
 	authWebHandler := auth.NewWebHandler(templateManager, authService, opts...)
@@ -39,10 +47,10 @@ func main() {
 	authAPIHandler := auth.NewAPIHandler(authService, opts...)
 	authAPIRouter := auth.NewAPIRouter(authAPIHandler, opts...)
 
-	// TODO: Auth related functionality not fully implemented yet.
 	app.MountFeatWeb("/auth", authWebRouter)
 	app.MountFeatAPI(version, "/auth", authAPIRouter)
 
+	// Start the Todo resource
 	todoRepo := todo.NewRepo(queryManager, opts...)
 	todoService := todo.NewService(todoRepo)
 	todoWebHandler := todo.NewWebHandler(templateManager, todoService, opts...)
@@ -53,6 +61,8 @@ func main() {
 	app.MountWeb("/todo", todoWebRouter)
 	app.MountAPI(version, "/todo", todoAPIRouter)
 
+	// Add deps
+	app.Add(fileServer)
 	app.Add(templateManager)
 	app.Add(todoRepo)
 	app.Add(todoService)

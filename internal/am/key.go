@@ -1,13 +1,14 @@
 package am
 
 type Keys struct {
-	ServerWebHost    string
-	ServerWebPort    string
-	ServerWebEnabled string
-	ServerAPIHost    string
-	ServerAPIPort    string
-	ServerAPIEnabled string
-	ServerFeatPath   string
+	ServerWebHost      string
+	ServerWebPort      string
+	ServerWebEnabled   string
+	ServerAPIHost      string
+	ServerAPIPort      string
+	ServerAPIEnabled   string
+	ServerFeatPath     string
+	ServerIndexEnabled string
 
 	SecCSRFKey      string
 	SecCSRFRedirect string
@@ -29,13 +30,14 @@ type Keys struct {
 }
 
 var Key = Keys{
-	ServerWebHost:    "server.web.host",
-	ServerWebPort:    "server.web.port",
-	ServerWebEnabled: "server.web.enabled",
-	ServerAPIHost:    "server.api.host",
-	ServerAPIPort:    "server.api.port",
-	ServerAPIEnabled: "server.api.enabled",
-	ServerFeatPath:   "server.feat.path",
+	ServerWebHost:      "server.web.host",
+	ServerWebPort:      "server.web.port",
+	ServerWebEnabled:   "server.web.enabled",
+	ServerAPIHost:      "server.api.host",
+	ServerAPIPort:      "server.api.port",
+	ServerAPIEnabled:   "server.api.enabled",
+	ServerFeatPath:     "server.feat.path",
+	ServerIndexEnabled: "server.index.enabled",
 
 	SecCSRFKey:      "sec.csrf.key",
 	SecCSRFRedirect: "sec.csrf.redirect",
