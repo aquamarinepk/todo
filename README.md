@@ -13,6 +13,8 @@ Among other upcoming features, the main idea is that the generated code will exp
 
 Although we refer to command-query, it is not in the pure CQRS sense; commands will return a response. Each feature (a set of resources managed by a service and exposed through various interfaces such as web, API, gRPC, CLI) is contained within a single package under `feat` (one feature per package under `feat`). Ideally, each feature should handle a single bounded context, and interactions with other features should be done through mechanisms other than direct method calls. This approach is intended to facilitate decoupling and potential future separation into distinct services. Organizing the code this way and avoiding direct coupling between features makes it easier to transition to a microservices architecture if required at some point. While this is the recommended approach, developers can modify the code as needed. Synchronous operations via gRPC or asynchronous methods such as pub/sub, queues, etc., are viable options. The kit will provide appropriate interfaces and some specific implementations to simplify this operatory.
 
+Additionally, the kit aims to address observability and monitoring concerns by providing hooks and eventually some implementations to facilitate these aspects.
+
 ## Configuration
 ### Command-Line Flags
 You can pass the following flags to the application:  
