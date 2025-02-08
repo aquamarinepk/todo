@@ -2,6 +2,7 @@ package am
 
 import (
 	"context"
+	"embed"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -31,9 +32,10 @@ type App struct {
 	FeatPIRouters map[string]*Router
 	deps          sync.Map
 	depsMutex     sync.Mutex
+	fs            embed.FS
 }
 
-func NewApp(name, version string, opts ...Option) *App {
+func NewApp(name, version string, fs embed.FS, opts ...Option) *App {
 	core := NewCore(name, opts...)
 	core.SetName(name)
 	for _, opt := range opts {
@@ -49,16 +51,17 @@ func NewApp(name, version string, opts ...Option) *App {
 		core.SetCfg(NewConfig())
 		opts = append(opts, WithCfg(core.Cfg()))
 	}
-	
+
 	app := &App{
 		opts:          opts,
 		Core:          core,
 		Router:        NewRouter("web-router", opts...),
 		APIRouter:     NewRouter("api-router", opts...),
 		APIRouters:    make(map[string]*Router),
-		FeatRouter:    NewRouter("cq-router", opts...),
-		FeatAPIRouter: NewRouter("cq-api-router", opts...),
+		FeatRouter:    NewRouter("feat-router", opts...),
+		FeatAPIRouter: NewRouter("feat-api-router", opts...),
 		FeatPIRouters: make(map[string]*Router),
+		fs:            fs,
 	}
 
 	featPath := app.Cfg().StrValOrDef(Key.ServerFeatPath, featPath)

@@ -1,8 +1,8 @@
-// internal/core/app.go
 package core
 
 import (
 	"context"
+	"embed"
 	"os"
 	"os/signal"
 
@@ -11,16 +11,13 @@ import (
 )
 
 type App struct {
-	core      *am.App
-	router    *am.Router
-	webRouter *am.Router
-	apiRouter *am.Router
-	repo      todo.Repo
-	service   todo.Service
+	core    *am.App
+	repo    todo.Repo
+	service todo.Service
 }
 
-func NewApp(name, version string, opts ...am.Option) *App {
-	core := am.NewApp(name, version, opts...)
+func NewApp(name, version string, fs embed.FS, opts ...am.Option) *App {
+	core := am.NewApp(name, version, fs, opts...)
 	app := &App{
 		core: core,
 	}
@@ -65,11 +62,11 @@ func (app *App) SetService(service todo.Service) {
 }
 
 func (app *App) SetWebRouter(router *am.Router) {
-	app.webRouter = router
+	app.core.Router = router
 }
 
 func (app *App) SetAPIRouter(router *am.Router) {
-	app.apiRouter = router
+	app.core.APIRouter = router
 }
 
 func (app *App) MountWeb(path string, router *am.Router) {

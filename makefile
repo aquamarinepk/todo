@@ -43,6 +43,7 @@ setenv:
 	@export TODO_SERVER_WEB_PORT=8080
 	@export TODO_SERVER_API_HOST=localhost
 	@export TODO_SERVER_API_PORT=8081
+	@export TODO_SERVER_INDEX_ENABLED=true
 	@echo "Setting a CSRF key..."
 	@export TODO_SEC_CSRF_KEY="NdZ7ULOe+NJ1bs5TzS51K+U4azOYQ6Wtv4CXlF6gJNM="
 	@echo "Setting notification styles..."
