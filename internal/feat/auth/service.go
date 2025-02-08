@@ -15,6 +15,7 @@ type Service interface {
 	UpdateUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, slug string) error
 	CreateRole(ctx context.Context, role Role) error
+	GetUserRoles(ctx context.Context, userSlug string) ([]Role, error)
 	GetRole(ctx context.Context, userSlug string, roleSlug string) (Role, error)
 	UpdateRole(ctx context.Context, role Role) error
 	DeleteRole(ctx context.Context, userSlug string, roleSlug string) error
@@ -56,6 +57,10 @@ func (svc *BaseService) UpdateUser(ctx context.Context, user User) error {
 
 func (svc *BaseService) DeleteUser(ctx context.Context, slug string) error {
 	return svc.repo.DeleteUser(ctx, slug)
+}
+
+func (svc *BaseService) GetUserRoles(ctx context.Context, userSlug string) ([]Role, error) {
+	return svc.repo.GetRolesForUser(ctx, userSlug)
 }
 
 func (svc *BaseService) CreateRole(ctx context.Context, role Role) error {
