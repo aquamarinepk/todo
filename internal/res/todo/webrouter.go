@@ -5,20 +5,19 @@ import (
 )
 
 type WebRouter struct {
-	core    *am.Router
 	handler *WebHandler
 }
 
 func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
-	core := am.NewRouter("web-router", opts...)
+	r := am.NewRouter("web-router", opts...)
 
-	core.Get("/", handler.List)
-	core.Get("/new", handler.New)
-	core.Post("/", handler.Create)
-	core.Get("/{slug}", handler.Show)
-	core.Get("/{slug}/edit", handler.Edit)
-	core.Put("/{slug}", handler.Update)
-	core.Delete("/{slug}", handler.Delete)
+	r.Get("/", handler.List)
+	r.Get("/new", handler.New)
+	r.Post("/", handler.Create)
+	r.Get("/{slug}", handler.Show)
+	r.Get("/{slug}/edit", handler.Edit)
+	r.Put("/{slug}", handler.Update)
+	r.Delete("/{slug}", handler.Delete)
 
-	return core
+	return r
 }

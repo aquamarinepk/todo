@@ -22,7 +22,7 @@ var (
 )
 
 type WebHandler struct {
-	core    *am.Handler
+	*am.Handler
 	service Service
 	tm      *am.TemplateManager
 }
@@ -30,7 +30,7 @@ type WebHandler struct {
 func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option) *WebHandler {
 	handler := am.NewHandler("web-handler", options...)
 	return &WebHandler{
-		core:    handler,
+		Handler: handler,
 		service: service,
 		tm:      tm,
 	}
@@ -232,67 +232,66 @@ func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
-    slug := r.URL.Query().Get("slug")
-    h.Log().Info("List roles for user", slug)
-    ctx := r.Context()
+	slug := r.URL.Query().Get("slug")
+	h.Log().Info("List roles for user", slug)
+	ctx := r.Context()
 
-    user, err := h.service.GetUser(ctx, slug)
-    if err != nil {
-        h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
-        return
-    }
+	user, err := h.service.GetUser(ctx, slug)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
 
-    roles, err := h.service.GetUserRoles(ctx, slug) 
-    if err != nil {
-        h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
-        return
-    }
+	roles, err := h.service.GetUserRoles(ctx, slug)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
 
-    page := am.NewPage(struct {
-        User  *User
-        Roles []Role
-    }{
-        User:  &user,
-        Roles: roles,
-    })
-    page.SetFormAction(authPath)
-    page.GenCSRFToken(r)
+	page := am.NewPage(struct {
+		User  *User
+		Roles []Role
+	}{
+		User:  &user,
+		Roles: roles,
+	})
+	page.SetFormAction(authPath)
+	page.GenCSRFToken(r)
 
-    tmpl, err := h.tm.Get("auth", "list-user-roles")
-    if err != nil {
-        h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
-        return
-    }
+	tmpl, err := h.tm.Get("auth", "list-user-roles")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
 
-    var buf bytes.Buffer
-    err = tmpl.Execute(&buf, page)
-    if err != nil {
-        h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
-        return
-    }
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
 
-    _, err = buf.WriteTo(w)
-    if err != nil {
-        h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
-    }
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) AddRoleToUser(w http.ResponseWriter, r *http.Request) {
-    h.Log().Info("Add role to user")
-    ctx := r.Context()
+	h.Log().Info("Add role to user")
+	ctx := r.Context()
 
-    userSlug := r.FormValue("user_slug")
-    roleSlug := r.FormValue("role_slug")
+	userSlug := r.FormValue("user_slug")
+	roleSlug := r.FormValue("role_slug")
 
-    err := h.service.AddRole(ctx, userSlug, roleSlug)
-    if err != nil {
-        h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
-        return
-    }
+	err := h.service.AddRole(ctx, userSlug, roleSlug)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
 
-    http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
 }
-
 
 func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Add role to user")
@@ -429,39 +428,9 @@ func (h *WebHandler) SetupPaths(ctx context.Context) {
 	authPath = fmt.Sprintf("%s/auth", featPath)
 }
 
-// Name returns the name in WebHandler.
-func (h *WebHandler) Name() string {
-	return h.core.Name()
-}
-
-// SetName sets the name in WebHandler.
-func (h *WebHandler) SetName(name string) {
-	h.core.SetName(name)
-}
-
-// Log returns the Logger in WebHandler.
-func (h *WebHandler) Log() am.Logger {
-	return h.core.Log()
-}
-
-// SetLog sets the Logger in WebHandler.
-func (h *WebHandler) SetLog(log am.Logger) {
-	h.core.SetLog(log)
-}
-
-// Cfg returns the Config in WebHandler.
-func (h *WebHandler) Cfg() *am.Config {
-	return h.core.Cfg()
-}
-
-// SetCfg sets the Config in WebHandler.
-func (h *WebHandler) SetCfg(cfg *am.Config) {
-	h.core.SetCfg(cfg)
-}
-
 // Setup is the default implementation for the Setup method in WebHandler.
 func (h *WebHandler) Setup(ctx context.Context) error {
-	err := h.core.Setup(ctx)
+	err := h.Handler.Setup(ctx)
 	if err != nil {
 		return err
 	}
@@ -469,16 +438,6 @@ func (h *WebHandler) Setup(ctx context.Context) error {
 	h.SetupPaths(ctx)
 
 	return nil
-}
-
-// Start is the default implementation for the Start method in WebHandler.
-func (h *WebHandler) Start(ctx context.Context) error {
-	return h.core.Start(ctx)
-}
-
-// Stop is the default implementation for the Stop method in WebHandler.
-func (h *WebHandler) Stop(ctx context.Context) error {
-	return h.core.Stop(ctx)
 }
 
 // Err logs the error and returns the message with the code.

@@ -2,7 +2,6 @@ package todo
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net/http"
 
@@ -17,7 +16,7 @@ var (
 )
 
 type WebHandler struct {
-	core    *am.Handler
+	*am.Handler
 	service Service
 	tm      *am.TemplateManager
 }
@@ -25,7 +24,7 @@ type WebHandler struct {
 func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option) *WebHandler {
 	handler := am.NewHandler("web-handler", options...)
 	return &WebHandler{
-		core:    handler,
+		Handler: handler,
 		service: service,
 		tm:      tm,
 	}
@@ -224,49 +223,4 @@ func (h *WebHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, todoResPath, http.StatusSeeOther)
-}
-
-// Name returns the name in WebHandler.
-func (h *WebHandler) Name() string {
-	return h.core.Name()
-}
-
-// SetName sets the name in WebHandler.
-func (h *WebHandler) SetName(name string) {
-	h.core.SetName(name)
-}
-
-// Log returns the Logger in WebHandler.
-func (h *WebHandler) Log() am.Logger {
-	return h.core.Log()
-}
-
-// SetLog sets the Logger in WebHandler.
-func (h *WebHandler) SetLog(log am.Logger) {
-	h.core.SetLog(log)
-}
-
-// Cfg returns the Config in WebHandler.
-func (h *WebHandler) Cfg() *am.Config {
-	return h.core.Cfg()
-}
-
-// SetCfg sets the Config in WebHandler.
-func (h *WebHandler) SetCfg(cfg *am.Config) {
-	h.core.SetCfg(cfg)
-}
-
-// Setup is the default implementation for the Setup method in WebHandler.
-func (h *WebHandler) Setup(ctx context.Context) error {
-	return h.core.Setup(ctx)
-}
-
-// Start is the default implementation for the Start method in WebHandler.
-func (h *WebHandler) Start(ctx context.Context) error {
-	return h.core.Start(ctx)
-}
-
-// Stop is the default implementation for the Stop method in WebHandler.
-func (h *WebHandler) Stop(ctx context.Context) error {
-	return h.core.Stop(ctx)
 }

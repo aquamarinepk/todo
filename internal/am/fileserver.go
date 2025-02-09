@@ -23,7 +23,7 @@ const (
 
 // FileServer serves static files from an embedded filesystem.
 type FileServer struct {
-	Core   Core
+	Core
 	router *Router
 	fs     embed.FS
 }
@@ -102,36 +102,6 @@ func (f *FileServer) Router() *Router {
 	return f.router
 }
 
-// Name returns the name in FileServer.
-func (f *FileServer) Name() string {
-	return f.Core.Name()
-}
-
-// SetName sets the name in FileServer.
-func (f *FileServer) SetName(name string) {
-	f.Core.SetName(name)
-}
-
-// Log returns the Logger in FileServer.
-func (f *FileServer) Log() Logger {
-	return f.Core.Log()
-}
-
-// SetLog sets the Logger in FileServer.
-func (f *FileServer) SetLog(log Logger) {
-	f.Core.SetLog(log)
-}
-
-// Cfg returns the Config in FileServer.
-func (f *FileServer) Cfg() *Config {
-	return f.Core.Cfg()
-}
-
-// SetCfg sets the Config in FileServer.
-func (f *FileServer) SetCfg(cfg *Config) {
-	f.Core.SetCfg(cfg)
-}
-
 // Setup is the default implementation for the Setup method in FileServer.
 func (f *FileServer) Setup(ctx context.Context) error {
 	err := f.Core.Setup(ctx)
@@ -140,14 +110,4 @@ func (f *FileServer) Setup(ctx context.Context) error {
 	}
 
 	return f.SetupRoutes()
-}
-
-// Start is the default implementation for the Start method in FileServer.
-func (f *FileServer) Start(ctx context.Context) error {
-	return f.Core.Start(ctx)
-}
-
-// Stop is the default implementation for the Stop method in FileServer.
-func (f *FileServer) Stop(ctx context.Context) error {
-	return f.Core.Stop(ctx)
 }

@@ -10,10 +10,6 @@ const (
 )
 
 type Dep struct {
-	core   Core
+	Core
 	Status Status
-}
-
-func (d *Dep) Core() Core {
-	return d.core
 }

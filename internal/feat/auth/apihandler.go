@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -10,7 +9,7 @@ import (
 )
 
 type APIHandler struct {
-	core    *am.Handler
+	*am.Handler
 	service Service
 }
 
@@ -18,7 +17,7 @@ type APIHandler struct {
 func NewAPIHandler(service Service, options ...am.Option) *APIHandler {
 	handler := am.NewHandler("api-handler", options...)
 	return &APIHandler{
-		core:    handler,
+		Handler: handler,
 		service: service,
 	}
 }
@@ -118,7 +117,7 @@ func (h *APIHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	role.SetCreateValues()
+	role.GenCreationValues()
 	if err := h.service.CreateRole(r.Context(), role); err != nil {
 		res := am.NewErrorResponse("Failed to create role", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)
@@ -212,49 +211,4 @@ func (h *APIHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
 	}
 	res := am.NewSuccessResponse("Role removed from user successfully", nil)
 	am.Respond(w, http.StatusOK, res)
-}
-
-// Name returns the name in APIHandler.
-func (h *APIHandler) Name() string {
-	return h.core.Name()
-}
-
-// SetName sets the name in APIHandler.
-func (h *APIHandler) SetName(name string) {
-	h.core.SetName(name)
-}
-
-// Log returns the Logger in APIHandler.
-func (h *APIHandler) Log() am.Logger {
-	return h.core.Log()
-}
-
-// SetLog sets the Logger in APIHandler.
-func (h *APIHandler) SetLog(log am.Logger) {
-	h.core.SetLog(log)
-}
-
-// Cfg returns the Config in APIHandler.
-func (h *APIHandler) Cfg() *am.Config {
-	return h.core.Cfg()
-}
-
-// SetCfg sets the Config in APIHandler.
-func (h *APIHandler) SetCfg(cfg *am.Config) {
-	h.core.SetCfg(cfg)
-}
-
-// Setup is the default implementation for the Setup method in APIHandler.
-func (h *APIHandler) Setup(ctx context.Context) error {
-	return h.core.Setup(ctx)
-}
-
-// Start is the default implementation for the Start method in APIHandler.
-func (h *APIHandler) Start(ctx context.Context) error {
-	return h.core.Start(ctx)
-}
-
-// Stop is the default implementation for the Stop method in APIHandler.
-func (h *APIHandler) Stop(ctx context.Context) error {
-	return h.core.Stop(ctx)
 }
