@@ -21,7 +21,7 @@ type Repo interface {
 }
 
 type BaseRepo struct {
-	core  *am.Repo
+	*am.Repo
 	mu    sync.Mutex
 	lists map[uuid.UUID]ListDA
 	order []uuid.UUID
@@ -29,7 +29,7 @@ type BaseRepo struct {
 
 func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	repo := &BaseRepo{
-		core:  am.NewRepo("todo-repo", qm, opts...),
+		Repo:  am.NewRepo("todo-repo", qm, opts...),
 		lists: make(map[uuid.UUID]ListDA),
 		order: []uuid.UUID{},
 	}
@@ -143,40 +143,4 @@ func (repo *BaseRepo) Debug() {
 	}
 	result = fmt.Sprintf("%s state:\n%s", repo.Name(), result)
 	repo.Log().Info(result)
-}
-
-func (repo *BaseRepo) Name() string {
-	return repo.core.Name()
-}
-
-func (repo *BaseRepo) SetName(name string) {
-	repo.core.SetName(name)
-}
-
-func (repo *BaseRepo) Log() am.Logger {
-	return repo.core.Log()
-}
-
-func (repo *BaseRepo) SetLog(log am.Logger) {
-	repo.core.SetLog(log)
-}
-
-func (repo *BaseRepo) Cfg() *am.Config {
-	return repo.core.Cfg()
-}
-
-func (repo *BaseRepo) SetCfg(cfg *am.Config) {
-	repo.core.SetCfg(cfg)
-}
-
-func (repo *BaseRepo) Setup(ctx context.Context) error {
-	return repo.core.Setup(ctx)
-}
-
-func (repo *BaseRepo) Start(ctx context.Context) error {
-	return repo.core.Start(ctx)
-}
-
-func (repo *BaseRepo) Stop(ctx context.Context) error {
-	return repo.core.Stop(ctx)
 }

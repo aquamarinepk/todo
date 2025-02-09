@@ -93,7 +93,7 @@ func (a *App) Add(dep Core) {
 	defer a.depsMutex.Unlock()
 
 	a.deps.Store(dep.Name(), &Dep{
-		core:   dep,
+		Core:   dep,
 		Status: Stopped,
 	})
 }
@@ -112,13 +112,13 @@ func (a *App) Setup(ctx context.Context) error {
 	// Debug the content of deps
 	a.deps.Range(func(key, value interface{}) bool {
 		dep := value.(*Dep)
-		a.Log().Infof("Dependency key: %s, Dependency name: %s, Status: %s", key, dep.core.Name(), dep.Status)
+		a.Log().Infof("Dependency key: %s, Dependency name: %s, Status: %s", key, dep.Core.Name(), dep.Status)
 		return true
 	})
 
 	a.deps.Range(func(key, value interface{}) bool {
 		dep := value.(*Dep)
-		if coreDep, ok := dep.core.(Core); ok {
+		if coreDep, ok := dep.Core.(Core); ok {
 			err := coreDep.Setup(ctx)
 			if err != nil {
 				msg := fmt.Sprintf("failed to setup %s: %v", coreDep.Name(), err)

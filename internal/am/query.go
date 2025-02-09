@@ -11,7 +11,7 @@ import (
 )
 
 type QueryManager struct {
-	core     Core
+	Core
 	queries  sync.Map
 	assetsFS embed.FS
 }
@@ -19,7 +19,7 @@ type QueryManager struct {
 func NewQueryManager(assetsFS embed.FS, opts ...Option) *QueryManager {
 	core := NewCore("query-manager", opts...)
 	qm := &QueryManager{
-		core:     core,
+		Core:     core,
 		assetsFS: assetsFS,
 	}
 	return qm
@@ -91,39 +91,7 @@ func (qm *QueryManager) Debug() {
 	})
 }
 
-func (qm *QueryManager) Name() string {
-	return qm.core.Name()
-}
-
-func (qm *QueryManager) SetName(name string) {
-	qm.core.SetName(name)
-}
-
-func (qm *QueryManager) Log() Logger {
-	return qm.core.Log()
-}
-
-func (qm *QueryManager) SetLog(log Logger) {
-	qm.core.SetLog(log)
-}
-
-func (qm *QueryManager) Cfg() *Config {
-	return qm.core.Cfg()
-}
-
-func (qm *QueryManager) SetCfg(cfg *Config) {
-	qm.core.SetCfg(cfg)
-}
-
 func (qm *QueryManager) Setup(ctx context.Context) error {
 	qm.Load()
-	return qm.core.Setup(ctx)
-}
-
-func (qm *QueryManager) Start(ctx context.Context) error {
-	return qm.core.Start(ctx)
-}
-
-func (qm *QueryManager) Stop(ctx context.Context) error {
-	return qm.core.Stop(ctx)
+	return nil
 }

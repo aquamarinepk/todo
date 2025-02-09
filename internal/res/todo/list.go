@@ -10,7 +10,7 @@ const (
 )
 
 type List struct {
-	Model       am.Model
+	am.Model
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
