@@ -18,14 +18,14 @@ type Service interface {
 }
 
 type BaseService struct {
-	core am.Core
+	*am.Service
 	repo Repo
 }
 
 func NewService(repo Repo, opts ...am.Option) *BaseService {
 	return &BaseService{
-		core: am.NewCore("", opts...),
-		repo: repo,
+		Service: am.NewService("", opts...),
+		repo:    repo,
 	}
 }
 
@@ -63,40 +63,4 @@ func (svc *BaseService) DeleteListBySlug(ctx context.Context, slug string) error
 		return err
 	}
 	return svc.repo.Delete(ctx, list.ID())
-}
-
-func (svc *BaseService) Name() string {
-	return svc.core.Name()
-}
-
-func (svc *BaseService) SetName(name string) {
-	svc.core.SetName(name)
-}
-
-func (svc *BaseService) Log() am.Logger {
-	return svc.core.Log()
-}
-
-func (svc *BaseService) SetLog(log am.Logger) {
-	svc.core.SetLog(log)
-}
-
-func (svc *BaseService) Cfg() *am.Config {
-	return svc.core.Cfg()
-}
-
-func (svc *BaseService) SetCfg(cfg *am.Config) {
-	svc.core.SetCfg(cfg)
-}
-
-func (svc *BaseService) Setup(ctx context.Context) error {
-	return svc.core.Setup(ctx)
-}
-
-func (svc *BaseService) Start(ctx context.Context) error {
-	return svc.core.Start(ctx)
-}
-
-func (svc *BaseService) Stop(ctx context.Context) error {
-	return svc.core.Stop(ctx)
 }

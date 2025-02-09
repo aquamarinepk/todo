@@ -10,7 +10,7 @@ import (
 )
 
 type Server struct {
-	Core   Core
+	Core
 	server *http.Server
 }
 
@@ -69,12 +69,4 @@ func (s *Server) Start() {
 	}
 
 	s.Log().Info("Server stopped gracefully")
-}
-
-func (s *Server) Log() Logger {
-	return s.Core.Log()
-}
-
-func (s *Server) Cfg() *Config {
-	return s.Core.Cfg()
 }

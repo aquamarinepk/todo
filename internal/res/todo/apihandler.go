@@ -1,7 +1,6 @@
 package todo
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 
@@ -11,14 +10,14 @@ import (
 )
 
 type APIHandler struct {
-	core    *am.Handler
+	*am.Handler
 	service Service
 }
 
 func NewAPIHandler(service Service, options ...am.Option) *APIHandler {
 	handler := am.NewHandler("api-handler", options...)
 	return &APIHandler{
-		core:    handler,
+		Handler: handler,
 		service: service,
 	}
 }
@@ -29,7 +28,7 @@ func (h *APIHandler) List(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(lists)
+	json.NewEncoder(w).Encode(lists) // TODO: handle error
 }
 
 func (h *APIHandler) Create(w http.ResponseWriter, r *http.Request) {
@@ -89,49 +88,4 @@ func (h *APIHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
-}
-
-// Name returns the name in APIHandler.
-func (h *APIHandler) Name() string {
-	return h.core.Name()
-}
-
-// SetName sets the name in APIHandler.
-func (h *APIHandler) SetName(name string) {
-	h.core.SetName(name)
-}
-
-// Log returns the Logger in APIHandler.
-func (h *APIHandler) Log() am.Logger {
-	return h.core.Log()
-}
-
-// SetLog sets the Logger in APIHandler.
-func (h *APIHandler) SetLog(log am.Logger) {
-	h.core.SetLog(log)
-}
-
-// Cfg returns the Config in APIHandler.
-func (h *APIHandler) Cfg() *am.Config {
-	return h.core.Cfg()
-}
-
-// SetCfg sets the Config in APIHandler.
-func (h *APIHandler) SetCfg(cfg *am.Config) {
-	h.core.SetCfg(cfg)
-}
-
-// Setup is the default implementation for the Setup method in APIHandler.
-func (h *APIHandler) Setup(ctx context.Context) error {
-	return h.core.Setup(ctx)
-}
-
-// Start is the default implementation for the Start method in APIHandler.
-func (h *APIHandler) Start(ctx context.Context) error {
-	return h.core.Start(ctx)
-}
-
-// Stop is the default implementation for the Stop method in APIHandler.
-func (h *APIHandler) Stop(ctx context.Context) error {
-	return h.core.Stop(ctx)
 }

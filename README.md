@@ -53,7 +53,12 @@ Using command-line flags:
 ```
 
 ## Notes
+~~There is significant repetition due to the decision to use composition and delegation for providing core functionality to various entities.
+While this could be avoided by using embedding, the intention would not be as explicit. 
+For now, we will stick to this approach. If embedding becomes a more sensible option in the future, we can test it out.~~
 
-There is significant repetition due to the decision to use composition and delegation for providing core functionality to various entities. While this could be avoided by using embedding, the intention would not be as explicit. For now, we will stick to this approach. If embedding becomes a more sensible option in the future, we can test it out.
+Having experimented with composition, it has become evident that its benefits in explicitness are minimal or negligible and always come at the cost of redundancy. Embedding eliminates this, reducing code clutter.
+The methods provided by these embedded interfaces and structs seamlessly integrate, offering essential logging, configuration, and lifecycle management capabilities.
+Given these advantages, embedding will be adopted moving forward.
 
 [What about testing?](https://htmx.org/essays/prefer-if-statements/#:~:text=Implementation%20Driven%20Development,drive%20that%20test)
