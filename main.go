@@ -36,8 +36,7 @@ func main() {
 
 	// Start the FileServer
 	fileServer := am.NewFileServer(assetsFS, opts...)
-
-	app.MountWeb("/", fileServer.Router())
+	app.MountFileServer("/", fileServer)
 
 	// Start the Auth feature
 	authRepo := auth.NewRepo(queryManager, opts...)
