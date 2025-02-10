@@ -42,8 +42,8 @@ func (svc *BaseService) GetListBySlug(ctx context.Context, slug string) (List, e
 }
 
 func (svc *BaseService) CreateList(ctx context.Context, list List) error {
-	list.GenSlug()
-	list.SetCreateValues()
+	list.GenSlug("") // NOTE: This function will not accept any arguments later.
+	list.GenCreationValues()
 	err := svc.repo.Create(ctx, list) // NOTE: Remove assignment to err and return the function call directly.
 	svc.repo.Debug()
 	return err
