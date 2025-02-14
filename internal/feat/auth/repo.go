@@ -57,8 +57,8 @@ func (repo *BaseRepo) addSampleData() {
 		username := fmt.Sprintf("sampleuser%d", i)
 		email := fmt.Sprintf("sampleuser%d@example.com", i)
 		user := NewUser(username, email, username) // Provide the correct number of arguments
-		user.GenSlug()
-		user.SetCreateValues()
+		user.GenSlug("")                           // TODO: This function will not accept any arguments laster
+		user.GenCreationValues()
 		userDA := toUserDA(user)
 		userDA.ID = id
 		repo.users[id] = userDA

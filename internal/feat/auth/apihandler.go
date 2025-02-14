@@ -54,7 +54,7 @@ func (h *APIHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	user.SetCreateValues()
+	user.GenCreationValues()
 	if err := h.service.CreateUser(r.Context(), user); err != nil {
 		res := am.NewErrorResponse("Failed to create user", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)

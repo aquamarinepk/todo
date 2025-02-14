@@ -21,8 +21,8 @@ const (
 )
 
 type App struct {
+	Core
 	opts          []Option
-	Core          Core
 	Version       string
 	Router        *Router
 	APIRouter     *Router
@@ -226,6 +226,26 @@ func (a *App) MountFeatAPI(version, path string, handler http.Handler) {
 	a.FeatAPIRouter.Mount(version, router)
 }
 
+func (a *App) MountFileServer(path string, fs *FileServer) {
+	a.Mount(path, fs.Router())
+}
+
+func (app *App) SetWebRouter(router *Router) {
+	app.Router = router
+}
+
+func (app *App) SetAPIRouter(router *Router) {
+	app.APIRouter = router
+}
+
+func (app *App) MountWeb(path string, router *Router) {
+	app.Mount(path, router)
+}
+
+func (app *App) MountFeatWeb(path string, router *Router) {
+	app.MountFeat(path, router)
+}
+
 func (a *App) checkSetup() error {
 	if a.Log() == nil {
 		return errors.New("logging services not available")
@@ -235,30 +255,6 @@ func (a *App) checkSetup() error {
 	}
 
 	return nil
-}
-
-func (a *App) Name() string {
-	return a.Core.Name()
-}
-
-func (a *App) SetName(name string) {
-	a.Core.SetName(name)
-}
-
-func (a *App) Log() Logger {
-	return a.Core.Log()
-}
-
-func (a *App) SetLog(log Logger) {
-	a.Core.SetLog(log)
-}
-
-func (a *App) Cfg() *Config {
-	return a.Core.Cfg()
-}
-
-func (a *App) SetCfg(cfg *Config) {
-	a.Core.SetCfg(cfg)
 }
 
 func genName() string {
