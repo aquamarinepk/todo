@@ -18,7 +18,7 @@ var authPath = "/feat/auth"
 
 var (
 	key    = am.Key
-	method = am.HTTPMethod
+	Ñmethod = am.HTTPMethod
 )
 
 type WebHandler struct {
@@ -418,6 +418,132 @@ func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
+}
+
+// TODO Following handlers are not implemented yet.
+func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ListRoles")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) NewRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement NewRole")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ShowRole")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement RemoveRoleFromUser")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) ListPermissions(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ListPermissions")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) NewPermission(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement NewPermission")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) ShowPermission(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ShowPermission")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) EditPermission(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement EditPermission")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) CreatePermission(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement CreatePermission")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) UpdatePermission(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement UpdatePermission")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) DeletePermission(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement DeletePermission")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) AddPermissionToRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement AddPermissionToRole")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) RemovePermissionFromRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement RemovePermissionFromRole")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement AddPermissionToUser")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement RemovePermissionFromUser")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) ListResources(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ListResources")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) NewResource(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement NewResource")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) ShowResource(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ShowResource")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) EditResource(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement EditResource")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) CreateResource(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement CreateResource")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) UpdateResource(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement UpdateResource")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) DeleteResource(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement DeleteResource")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) ListResourcePermissions(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ListResourcePermissions")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) AddPermissionToResource(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement AddPermissionToResource")
+	// TODO: Implement this handler
+}
+
+func (h *WebHandler) RemovePermissionFromResource(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement RemovePermissionFromResource")
+	// TODO: Implement this handler
 }
 
 // SetupPaths sets the paths for the feature.
