@@ -36,6 +36,7 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 	}
 }
 
+// User handlers
 func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("List of users")
 	ctx := r.Context()
@@ -293,57 +294,35 @@ func (h *WebHandler) AddRoleToUser(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
 }
 
-func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Add role to user")
-	ctx := r.Context()
-
-	userSlug := r.FormValue("user_slug")
-	name := r.FormValue("name")
-	description := r.FormValue("description")
-	status := r.FormValue("status")
-	role := NewRole(name, description, status) // TODO: This should be obtained from the DB.
-
-	err := h.service.AddRole(ctx, userSlug, role.Slug())
-	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
+func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement RemoveRoleFromUser")
+	// TODO: Implement this handler
 }
 
-func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Remove role from user")
-	ctx := r.Context()
-
-	userSlug := r.FormValue("user_slug")
-	roleSlug := r.FormValue("role_slug")
-
-	err := h.service.RemoveRole(ctx, userSlug, roleSlug)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
+func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement AddPermissionToUser")
+	// TODO: Implement this handler
 }
 
-func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Create role")
-	ctx := r.Context()
+func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement RemovePermissionFromUser")
+	// TODO: Implement this handler
+}
 
-	name := r.FormValue("name")
-	description := r.FormValue("description")
-	status := r.FormValue("status")
-	role := NewRole(name, description, status)
+// Role handlers
+func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ListRoles")
+	// TODO: Implement this handler
+}
 
-	err := h.service.CreateRole(ctx, role)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
-		return
-	}
+func (h *WebHandler) NewRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement NewRole")
+	// TODO: Implement this handler
+}
 
-	http.Redirect(w, r, authPath, http.StatusSeeOther)
+func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Implement ShowRole")
+	// TODO: Implement this handler
 }
 
 func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
@@ -379,6 +358,24 @@ func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
+}
+
+func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Create role")
+	ctx := r.Context()
+
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+	status := r.FormValue("status")
+	role := NewRole(name, description, status)
+
+	err := h.service.CreateRole(ctx, role)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, authPath, http.StatusSeeOther)
 }
 
 func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
@@ -420,27 +417,42 @@ func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
 }
 
-// TODO Following handlers are not implemented yet.
-func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Implement ListRoles")
-	// TODO: Implement this handler
+func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Add role to user")
+	ctx := r.Context()
+
+	userSlug := r.FormValue("user_slug")
+	name := r.FormValue("name")
+	description := r.FormValue("description")
+	status := r.FormValue("status")
+	role := NewRole(name, description, status) // TODO: This should be obtained from the DB.
+
+	err := h.service.AddRole(ctx, userSlug, role.Slug())
+	if err != nil {
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
 }
 
-func (h *WebHandler) NewRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Implement NewRole")
-	// TODO: Implement this handler
+func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Remove role from user")
+	ctx := r.Context()
+
+	userSlug := r.FormValue("user_slug")
+	roleSlug := r.FormValue("role_slug")
+
+	err := h.service.RemoveRole(ctx, userSlug, roleSlug)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userSlug), http.StatusSeeOther)
 }
 
-func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Implement ShowRole")
-	// TODO: Implement this handler
-}
-
-func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Implement RemoveRoleFromUser")
-	// TODO: Implement this handler
-}
-
+// Permission handlers
 func (h *WebHandler) ListPermissions(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Implement ListPermissions")
 	// TODO: Implement this handler
@@ -486,16 +498,7 @@ func (h *WebHandler) RemovePermissionFromRole(w http.ResponseWriter, r *http.Req
 	// TODO: Implement this handler
 }
 
-func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Implement AddPermissionToUser")
-	// TODO: Implement this handler
-}
-
-func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Implement RemovePermissionFromUser")
-	// TODO: Implement this handler
-}
-
+// Resource handlers
 func (h *WebHandler) ListResources(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Implement ListResources")
 	// TODO: Implement this handler
