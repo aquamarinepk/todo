@@ -2,15 +2,12 @@ package auth
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"sync"
 
-	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/google/uuid"
 )
 
 type Repo interface {
+	// User methods
 	GetAllUsers(ctx context.Context) ([]User, error)
 	GetUserByID(ctx context.Context, id uuid.UUID) (User, error)
 	GetUserBySlug(ctx context.Context, slug string) (User, error)
@@ -19,330 +16,31 @@ type Repo interface {
 	DeleteUser(ctx context.Context, slug string) error
 	GetRolesForUser(ctx context.Context, userSlug string) ([]Role, error)
 	AddRole(ctx context.Context, userSlug string, role Role) error
+	RemoveRole(ctx context.Context, userSlug string, roleID string) error
+	AddPermissionToUser(ctx context.Context, userSlug string, permission Permission) error
+	RemovePermissionFromUser(ctx context.Context, userSlug string, permissionID string) error
+
 	GetRoleByID(ctx context.Context, userID uuid.UUID, roleID string) (Role, error)
 	GetRoleBySlug(ctx context.Context, userSlug, roleSlug string) (Role, error)
+	CreateRole(ctx context.Context, role Role) error
 	UpdateRole(ctx context.Context, userSlug string, role Role) error
 	DeleteRole(ctx context.Context, userSlug, roleSlug string) error
-	CreateRole(ctx context.Context, role Role) error
-	RemoveRole(ctx context.Context, userSlug string, roleID string) error
+	AddPermissionToRole(ctx context.Context, roleSlug string, permission Permission) error
+	RemovePermissionFromRole(ctx context.Context, roleSlug string, permissionID string) error
+
+	GetAllPermissions(ctx context.Context) ([]Permission, error)
+	GetPermissionByID(ctx context.Context, id string) (Permission, error)
+	CreatePermission(ctx context.Context, permission Permission) error
+	UpdatePermission(ctx context.Context, permission Permission) error
+	DeletePermission(ctx context.Context, id string) error
+
+	GetAllResources(ctx context.Context) ([]Resource, error)
+	GetResourceByID(ctx context.Context, id string) (Resource, error)
+	CreateResource(ctx context.Context, resource Resource) error
+	UpdateResource(ctx context.Context, resource Resource) error
+	DeleteResource(ctx context.Context, id string) error
+	AddPermissionToResource(ctx context.Context, resourceID string, permission Permission) error
+	RemovePermissionFromResource(ctx context.Context, resourceID string, permissionID string) error
+
 	Debug()
-}
-
-type BaseRepo struct {
-	*am.Repo
-	mu        sync.Mutex
-	users     map[uuid.UUID]UserDA
-	roles     map[string]RoleDA
-	userRoles map[uuid.UUID][]string // Map of user ID to role IDs
-	order     []uuid.UUID
-}
-
-func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
-	repo := &BaseRepo{
-		Repo:      am.NewRepo("todo-repo", qm, opts...),
-		users:     make(map[uuid.UUID]UserDA),
-		roles:     make(map[string]RoleDA),
-		userRoles: make(map[uuid.UUID][]string),
-		order:     []uuid.UUID{},
-	}
-
-	repo.addSampleData() // NOTE: Used for testing purposes only.
-
-	return repo
-}
-
-func (repo *BaseRepo) addSampleData() {
-	for i := 1; i <= 5; i++ {
-		id := uuid.New()
-		username := fmt.Sprintf("sampleuser%d", i)
-		email := fmt.Sprintf("sampleuser%d@example.com", i)
-		user := NewUser(username, email, username) // Provide the correct number of arguments
-		user.GenSlug("")                           // TODO: This function will not accept any arguments laster
-		user.GenCreationValues()
-		userDA := toUserDA(user)
-		userDA.ID = id
-		repo.users[id] = userDA
-		repo.order = append(repo.order, id)
-		repo.Log().Info("Created user with ID: ", id)
-	}
-}
-
-func (repo *BaseRepo) GetAllUsers(ctx context.Context) ([]User, error) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var result []User
-	for _, id := range repo.order {
-		result = append(result, toUser(repo.users[id]))
-	}
-	return result, nil
-}
-
-func (repo *BaseRepo) GetUserByID(ctx context.Context, id uuid.UUID) (User, error) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	userDA, exists := repo.users[id]
-	if !exists {
-		return User{}, errors.New("user not found")
-	}
-	return toUser(userDA), nil
-}
-
-func (repo *BaseRepo) GetUserBySlug(ctx context.Context, slug string) (User, error) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	for _, userDA := range repo.users {
-		if userDA.Slug.String == slug {
-			return toUser(userDA), nil
-		}
-	}
-	return User{}, errors.New("user not found")
-}
-
-func (repo *BaseRepo) CreateUser(ctx context.Context, user User) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	userDA := toUserDA(user)
-	if _, exists := repo.users[userDA.ID]; exists {
-		return errors.New("user already exists")
-	}
-	repo.users[userDA.ID] = userDA
-	repo.order = append(repo.order, userDA.ID)
-	return nil
-}
-
-func (repo *BaseRepo) UpdateUser(ctx context.Context, user User) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	userDA := toUserDA(user)
-	if _, exists := repo.users[userDA.ID]; !exists {
-		msg := fmt.Sprintf("user not found for ID: %s", userDA.ID)
-		return errors.New(msg)
-	}
-	repo.users[userDA.ID] = userDA
-	return nil
-}
-
-func (repo *BaseRepo) DeleteUser(ctx context.Context, slug string) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var id uuid.UUID
-	for _, userDA := range repo.users {
-		if userDA.Slug.String == slug {
-			id = userDA.ID
-			break
-		}
-	}
-	if id == uuid.Nil {
-		return errors.New("user not found")
-	}
-	delete(repo.users, id)
-	for i, oid := range repo.order {
-		if oid == id {
-			repo.order = append(repo.order[:i], repo.order[i+1:]...)
-			break
-		}
-	}
-	delete(repo.userRoles, id) // Remove user roles
-	return nil
-}
-
-func (repo *BaseRepo) GetRolesForUser(ctx context.Context, userSlug string) ([]Role, error) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var userID uuid.UUID
-	for _, userDA := range repo.users {
-		if userDA.Slug.String == userSlug {
-			userID = userDA.ID
-			break
-		}
-	}
-	if userID == uuid.Nil {
-		return nil, errors.New("user not found")
-	}
-
-	var roles []Role
-	for _, roleID := range repo.userRoles[userID] {
-		roleDA := repo.roles[roleID]
-		roles = append(roles, toRole(roleDA))
-	}
-	return roles, nil
-}
-
-func (repo *BaseRepo) AddRole(ctx context.Context, userSlug string, role Role) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var userID uuid.UUID
-	for _, userDA := range repo.users {
-		if userDA.Slug.String == userSlug {
-			userID = userDA.ID
-			break
-		}
-	}
-	if userID == uuid.Nil {
-		return errors.New("user not found")
-	}
-
-	roleDA := toRoleDA(role)
-	if _, exists := repo.roles[roleDA.ID]; exists {
-		return errors.New("role already exists")
-	}
-	repo.roles[roleDA.ID] = roleDA
-	repo.userRoles[userID] = append(repo.userRoles[userID], roleDA.ID) // Add role to user
-	return nil
-}
-
-func (repo *BaseRepo) GetRoleByID(ctx context.Context, userID uuid.UUID, roleID string) (Role, error) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	roleDA, exists := repo.roles[roleID]
-	if !exists {
-		return Role{}, errors.New("role not found")
-	}
-	return toRole(roleDA), nil
-}
-
-func (repo *BaseRepo) GetRoleBySlug(ctx context.Context, userSlug, roleSlug string) (Role, error) {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var userID uuid.UUID
-	for _, userDA := range repo.users {
-		if userDA.Slug.String == userSlug {
-			userID = userDA.ID
-			break
-		}
-	}
-	if userID == uuid.Nil {
-		return Role{}, errors.New("user not found")
-	}
-
-	for _, roleID := range repo.userRoles[userID] {
-		roleDA := repo.roles[roleID]
-		if roleDA.Description.String == roleSlug {
-			return toRole(roleDA), nil
-		}
-	}
-	return Role{}, errors.New("role not found")
-}
-
-func (repo *BaseRepo) UpdateRole(ctx context.Context, userSlug string, role Role) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var userID uuid.UUID
-	for _, userDA := range repo.users {
-		if userDA.Slug.String == userSlug {
-			userID = userDA.ID
-			break
-		}
-	}
-	if userID == uuid.Nil {
-		return errors.New("user not found")
-	}
-
-	roleDA := toRoleDA(role)
-	if _, exists := repo.roles[roleDA.ID]; !exists {
-		msg := fmt.Sprintf("role not found for ID: %s", roleDA.ID)
-		return errors.New(msg)
-	}
-	repo.roles[roleDA.ID] = roleDA
-	return nil
-}
-
-func (repo *BaseRepo) DeleteRole(ctx context.Context, userSlug, roleSlug string) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var userID uuid.UUID
-	for _, userDA := range repo.users {
-		if userDA.Slug.String == userSlug {
-			userID = userDA.ID
-			break
-		}
-	}
-	if userID == uuid.Nil {
-		return errors.New("user not found")
-	}
-
-	var roleID string
-	for _, rid := range repo.userRoles[userID] {
-		roleDA := repo.roles[rid]
-		if roleDA.Description.String == roleSlug {
-			roleID = rid
-			break
-		}
-	}
-	if roleID == "" {
-		return errors.New("role not found")
-	}
-	delete(repo.roles, roleID)
-	// Remove role from userRoles
-	for i, rid := range repo.userRoles[userID] {
-		if rid == roleID {
-			repo.userRoles[userID] = append(repo.userRoles[userID][:i], repo.userRoles[userID][i+1:]...)
-			break
-		}
-	}
-	return nil
-}
-
-func (repo *BaseRepo) CreateRole(ctx context.Context, role Role) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	roleDA := toRoleDA(role)
-	if _, exists := repo.roles[roleDA.ID]; exists {
-		return errors.New("role already exists")
-	}
-	repo.roles[roleDA.ID] = roleDA
-	return nil
-}
-
-func (repo *BaseRepo) RemoveRole(ctx context.Context, userSlug string, roleID string) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var userID uuid.UUID
-	for _, userDA := range repo.users {
-		if userDA.Slug.String == userSlug {
-			userID = userDA.ID
-			break
-		}
-	}
-	if userID == uuid.Nil {
-		return errors.New("user not found")
-	}
-
-	// Remove role from userRoles
-	for i, rid := range repo.userRoles[userID] {
-		if rid == roleID {
-			repo.userRoles[userID] = append(repo.userRoles[userID][:i], repo.userRoles[userID][i+1:]...)
-			break
-		}
-	}
-	return nil
-}
-
-func (repo *BaseRepo) Debug() {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	var result string
-	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n", "Type", "ID", "NameID", "Slug", "Username", "EncPassword")
-	for _, id := range repo.order {
-		userDA := repo.users[id]
-		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s\n",
-			userDA.Type, userDA.ID.String(), userDA.NameID.String, userDA.Slug.String, userDA.Name.String)
-	}
-	result = fmt.Sprintf("%s state:\n%s", repo.Name(), result)
-	repo.Log().Info(result)
 }
