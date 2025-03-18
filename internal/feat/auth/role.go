@@ -13,6 +13,7 @@ type Role struct {
 	Name        string
 	Description string
 	Status      string
+	Permissions []Permission
 }
 
 // NewRole creates a new Role.
@@ -22,5 +23,6 @@ func NewRole(name, description, status string) Role {
 		Name:        name,
 		Description: description,
 		Status:      status,
+		Permissions: []Permission{},
 	}
 }

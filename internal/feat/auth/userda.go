@@ -17,6 +17,8 @@ type UserDA struct {
 	Email       sql.NullString `db:"email"`
 	Name        sql.NullString `db:"name"`
 	EncPassword sql.NullString `db:"enc_password"`
+	Roles       []string 
+	Permissions []string
 	CreatedBy   sql.NullString `db:"created_by"`
 	UpdatedBy   sql.NullString `db:"updated_by"`
 	CreatedAt   sql.NullTime   `db:"created_at"`
@@ -38,6 +40,8 @@ func toUser(da UserDA) User {
 		Email:       da.Email.String,
 		Name:        da.Name.String,
 		EncPassword: da.EncPassword.String,
+		Roles:       toRoles(da.Roles),
+		Permissions: toPermissions(da.Permissions),
 	}
 }
 
@@ -50,6 +54,8 @@ func toUserDA(user User) UserDA {
 		Username:    sql.NullString{String: user.Username, Valid: user.Username != ""},
 		Email:       sql.NullString{String: user.Email, Valid: user.Email != ""},
 		Name:        sql.NullString{String: user.Username, Valid: user.Username != ""},
+		Roles:       toRoleIDs(user.Roles),
+		Permissions: toPermissionIDs(user.Permissions),
 		CreatedBy:   sql.NullString{String: user.Model.CreatedBy().String(), Valid: user.Model.CreatedBy() != uuid.Nil},
 		UpdatedBy:   sql.NullString{String: user.Model.UpdatedBy().String(), Valid: user.Model.UpdatedBy() != uuid.Nil},
 		CreatedAt:   sql.NullTime{Time: user.Model.CreatedAt(), Valid: !user.Model.CreatedAt().IsZero()},

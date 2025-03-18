@@ -15,7 +15,8 @@ type User struct {
 	Email       string `json:"email"`
 	Name        string `json:"name"`
 	EncPassword string
-	Roles       []Role `json:"roles"`
+	Roles       []Role
+	Permissions []Permission
 }
 
 // NewUser creates a new user.
@@ -25,6 +26,8 @@ func NewUser(username, email, name string) User {
 		Username: username,
 		Email:    email,
 		Name:     name,
+		Roles:    []Role{},
+		Permissions: []Permission{},
 	}
 }
 
