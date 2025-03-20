@@ -9,7 +9,7 @@ import (
 
 // PermissionDA represents the data access layer for the Permission model.
 type PermissionDA struct {
-	ID          string         `db:"id"`
+	ID          uuid.UUID      `db:"id"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	CreatedBy   sql.NullString `db:"created_by"`
@@ -22,7 +22,7 @@ type PermissionDA struct {
 func toPermission(da PermissionDA) Permission {
 	return Permission{
 		Model: am.NewModel(
-			am.WithID(uuid.MustParse(da.ID)),
+			am.WithID(da.ID),
 			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
 			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -36,7 +36,7 @@ func toPermission(da PermissionDA) Permission {
 // Convert Permission to PermissionDA
 func toPermissionDA(permission Permission) PermissionDA {
 	return PermissionDA{
-		ID:          permission.ID().String(),
+		ID:          permission.ID(),
 		Name:        sql.NullString{String: permission.Name, Valid: permission.Name != ""},
 		Description: sql.NullString{String: permission.Description, Valid: permission.Description != ""},
 		CreatedBy:   sql.NullString{String: permission.Model.CreatedBy().String(), Valid: permission.Model.CreatedBy() != uuid.Nil},
@@ -46,20 +46,10 @@ func toPermissionDA(permission Permission) PermissionDA {
 	}
 }
 
-func toPermissions(permissionIDs []string) []Permission {
-	var permissions []Permission
-	for _, id := range permissionIDs {
-		permissions = append(permissions, Permission{
-			Model: am.NewModel(am.WithID(uuid.MustParse(id))),
-		})
-	}
-	return permissions
-}
-
-func toPermissionIDs(permissions []Permission) []string {
-	var permissionIDs []string
+func toPermissionIDs(permissions []Permission) []uuid.UUID {
+	var permissionIDs []uuid.UUID
 	for _, permission := range permissions {
-		permissionIDs = append(permissionIDs, permission.ID().String())
+		permissionIDs = append(permissionIDs, permission.ID())
 	}
 	return permissionIDs
 }
