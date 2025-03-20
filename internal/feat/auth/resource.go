@@ -18,14 +18,10 @@ type Resource struct {
 	Permissions []Permission
 }
 
-func NewResource(name, description, label, resourceType, uri string) Resource {
+func NewResource(name, description string) Resource {
 	return Resource{
 		Model:       am.NewModel(am.WithType(resourceType)),
 		Name:        name,
 		Description: description,
-		Label:       label,
-		Type:        resourceType,
-		URI:         uri,
-		Permissions: []Permission{},
 	}
 }

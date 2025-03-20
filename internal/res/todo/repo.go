@@ -43,7 +43,7 @@ func (repo *BaseRepo) addSampleData() {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New()
 		list := NewList(fmt.Sprintf("Sample List %d", i), fmt.Sprintf("This is the description for sample list %d", i))
-		list.GenSlug("") // TODO: This function will not accept any arguments laster
+		list.GenSlug()
 		list.GenCreationValues()
 		listDA := toListDA(list)
 		listDA.ID = id
