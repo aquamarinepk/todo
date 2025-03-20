@@ -22,14 +22,14 @@ User List
     {{ range .Data }}
     <tr>
       <td class="py-2 px-4 border-b">
-        <a href="show-user?slug={{ .Slug }}" class="text-blue-500 hover:underline">{{ .Username }}</a>
+        <a href="show-user?id={{ .ID }}" class="text-blue-500 hover:underline">{{ .Username }}</a>
       </td>
       <td class="py-2 px-4 border-b">{{ .Email }}</td>
       <td class="py-2 px-4 border-b text-center">
-        <a href="show-user?slug={{ .Slug }}" class="inline-block bg-green-500 text-white px-4 py-2 rounded mr-2">Show</a>
-        <a href="edit-user?slug={{ .Slug }}" class="inline-block bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</a>
+        <a href="show-user?id={{ .ID }}" class="inline-block bg-green-500 text-white px-4 py-2 rounded mr-2">Show</a>
+        <a href="edit-user?id={{ .ID }}" class="inline-block bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</a>
         <form action="delete-user" method="POST" class="inline-block">
-          <input type="hidden" name="slug" value="{{ .Slug }}">
+          <input type="hidden" name="id" value="{{ .ID }}">
           <input type="hidden" name="aquamarine.csrf.token" value="{{ $csrf }}">
           <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
         </form>

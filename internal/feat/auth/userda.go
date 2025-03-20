@@ -11,6 +11,7 @@ import (
 type UserDA struct {
 	ID          uuid.UUID      `db:"id"`
 	Name        sql.NullString `db:"name"`
+	Username    sql.NullString `db:"username"`
 	Email       sql.NullString `db:"email"`
 	EncPassword sql.NullString `db:"password"`
 	Slug        sql.NullString `db:"slug"`
@@ -28,12 +29,14 @@ func toUser(da UserDA) User {
 	return User{
 		Model: am.NewModel(
 			am.WithID(da.ID),
+			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
 			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
 			am.WithCreatedAt(da.CreatedAt.Time),
 			am.WithUpdatedAt(da.UpdatedAt.Time),
 		),
 		Name:        da.Name.String,
+		Username:    da.Username.String,
 		Email:       da.Email.String,
 		EncPassword: da.EncPassword.String,
 	}
@@ -43,10 +46,11 @@ func toUser(da UserDA) User {
 func toUserDA(user User) UserDA {
 	return UserDA{
 		ID:          user.ID(),
+		Slug:        sql.NullString{String: user.Slug(), Valid: user.Slug() != ""},
 		Name:        sql.NullString{String: user.Name, Valid: user.Name != ""},
+		Username:    sql.NullString{String: user.Username, Valid: user.Username != ""},
 		Email:       sql.NullString{String: user.Email, Valid: user.Email != ""},
 		EncPassword: sql.NullString{String: user.EncPassword, Valid: user.EncPassword != ""},
-		Slug:        sql.NullString{String: user.Slug(), Valid: user.Slug() != ""},
 		Roles:       toRoleIDs(user.Roles),
 		Permissions: toPermissionIDs(user.Permissions),
 		CreatedBy:   sql.NullString{String: user.Model.CreatedBy().String(), Valid: user.Model.CreatedBy() != uuid.Nil},
