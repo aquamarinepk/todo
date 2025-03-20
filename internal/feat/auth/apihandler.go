@@ -6,6 +6,7 @@ import (
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 type APIHandler struct {
@@ -35,8 +36,14 @@ func (h *APIHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *APIHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	user, err := h.service.GetUser(r.Context(), slug)
+	idStr := chi.URLParam(r, "id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		res := am.NewErrorResponse("Invalid user ID", am.ErrorCodeBadRequest, err.Error())
+		am.Respond(w, http.StatusBadRequest, res)
+		return
+	}
+	user, err := h.service.GetUser(r.Context(), id)
 	var res am.Response
 	if err != nil {
 		res = am.NewErrorResponse("User not found", am.ErrorCodeNotFound, err.Error())
@@ -66,16 +73,16 @@ func (h *APIHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		Slug        string `json:"slug"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
+		ID          uuid.UUID `json:"id"`
+		Name        string    `json:"name"`
+		Description string    `json:"description"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		res := am.NewErrorResponse("Invalid request payload", am.ErrorCodeBadRequest, err.Error())
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	user, err := h.service.GetUser(r.Context(), payload.Slug)
+	user, err := h.service.GetUser(r.Context(), payload.ID)
 	if err != nil {
 		res := am.NewErrorResponse("User not found", am.ErrorCodeNotFound, err.Error())
 		am.Respond(w, http.StatusNotFound, res)
@@ -94,14 +101,14 @@ func (h *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		Slug string `json:"slug"`
+		ID uuid.UUID `json:"id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		res := am.NewErrorResponse("Invalid request payload", am.ErrorCodeBadRequest, err.Error())
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	if err := h.service.DeleteUser(r.Context(), payload.Slug); err != nil {
+	if err := h.service.DeleteUser(r.Context(), payload.ID); err != nil {
 		res := am.NewErrorResponse("Failed to delete user", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)
 		return
@@ -129,17 +136,17 @@ func (h *APIHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		UserSlug    string `json:"user_slug"`
-		RoleSlug    string `json:"role_slug"`
-		Name        string `json:"name"`
-		Description string `json:"description"`
+		UserID      uuid.UUID `json:"user_id"`
+		RoleID      uuid.UUID `json:"role_id"`
+		Name        string    `json:"name"`
+		Description string    `json:"description"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		res := am.NewErrorResponse("Invalid request payload", am.ErrorCodeBadRequest, err.Error())
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	role, err := h.service.GetRole(r.Context(), payload.UserSlug, payload.RoleSlug)
+	role, err := h.service.GetRole(r.Context(), payload.UserID, payload.RoleID)
 	if err != nil {
 		res := am.NewErrorResponse("Role not found", am.ErrorCodeNotFound, err.Error())
 		am.Respond(w, http.StatusNotFound, res)
@@ -158,15 +165,15 @@ func (h *APIHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		UserSlug string `json:"user_slug"`
-		RoleSlug string `json:"role_slug"`
+		UserID uuid.UUID `json:"user_id"`
+		RoleID uuid.UUID `json:"role_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		res := am.NewErrorResponse("Invalid request payload", am.ErrorCodeBadRequest, err.Error())
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	if err := h.service.DeleteRole(r.Context(), payload.UserSlug, payload.RoleSlug); err != nil {
+	if err := h.service.DeleteRole(r.Context(), payload.UserID, payload.RoleID); err != nil {
 		res := am.NewErrorResponse("Failed to delete role", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)
 		return
@@ -177,15 +184,15 @@ func (h *APIHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		UserSlug string `json:"user_slug"`
-		RoleSlug string `json:"role_slug"`
+		UserID uuid.UUID `json:"user_id"`
+		RoleID uuid.UUID `json:"role_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		res := am.NewErrorResponse("Invalid request payload", am.ErrorCodeBadRequest, err.Error())
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	if err := h.service.AddRole(r.Context(), payload.UserSlug, payload.RoleSlug); err != nil {
+	if err := h.service.AddRole(r.Context(), payload.UserID, payload.RoleID); err != nil {
 		res := am.NewErrorResponse("Failed to add role to user", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)
 		return
@@ -196,15 +203,15 @@ func (h *APIHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		UserSlug string `json:"user_slug"`
-		RoleSlug string `json:"role_slug"`
+		UserID uuid.UUID `json:"user_id"`
+		RoleID uuid.UUID `json:"role_id"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		res := am.NewErrorResponse("Invalid request payload", am.ErrorCodeBadRequest, err.Error())
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	if err := h.service.RemoveRole(r.Context(), payload.UserSlug, payload.RoleSlug); err != nil {
+	if err := h.service.RemoveRole(r.Context(), payload.UserID, payload.RoleID); err != nil {
 		res := am.NewErrorResponse("Failed to remove role from user", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)
 		return
