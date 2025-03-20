@@ -9,11 +9,11 @@ import (
 
 // RoleDA represents the data access layer for the Role model.
 type RoleDA struct {
-	ID          string         `db:"id"`
+	ID          uuid.UUID      `db:"id"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	Status      sql.NullString `db:"status"`
-	Permissions []string
+	Permissions []uuid.UUID
 	CreatedBy   sql.NullString `db:"created_by"`
 	UpdatedBy   sql.NullString `db:"updated_by"`
 	CreatedAt   sql.NullTime   `db:"created_at"`
@@ -24,7 +24,7 @@ type RoleDA struct {
 func toRole(da RoleDA) Role {
 	return Role{
 		Model: am.NewModel(
-			am.WithID(uuid.MustParse(da.ID)),
+			am.WithID(da.ID),
 			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
 			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -32,14 +32,14 @@ func toRole(da RoleDA) Role {
 		),
 		Description: da.Description.String,
 		Status:      da.Status.String,
-		Permissions: toPermissions(da.Permissions),
 	}
 }
 
 // Convert Role to RoleDA
+// toModel methods do not preload relationships
 func toRoleDA(role Role) RoleDA {
 	return RoleDA{
-		ID:          role.ID().String(),
+		ID:          role.ID(),
 		Name:        sql.NullString{String: role.Name, Valid: role.Name != ""},
 		Description: sql.NullString{String: role.Description, Valid: role.Description != ""},
 		Permissions: toPermissionIDs(role.Permissions),
@@ -50,20 +50,20 @@ func toRoleDA(role Role) RoleDA {
 	}
 }
 
-func toRoles(roleIDs []string) []Role {
+func toRoles(roleIDs []uuid.UUID) []Role {
 	var roles []Role
 	for _, id := range roleIDs {
 		roles = append(roles, Role{
-			Model: am.NewModel(am.WithID(uuid.MustParse(id))),
+			Model: am.NewModel(am.WithID(id)),
 		})
 	}
 	return roles
 }
 
-func toRoleIDs(roles []Role) []string {
-	var roleIDs []string
+func toRoleIDs(roles []Role) []uuid.UUID {
+	var roleIDs []uuid.UUID
 	for _, role := range roles {
-		roleIDs = append(roleIDs, role.ID().String())
+		roleIDs = append(roleIDs, role.ID())
 	}
 	return roleIDs
 }

@@ -9,13 +9,13 @@ import (
 
 // ResourceDA represents the data access layer for the Resource model.
 type ResourceDA struct {
-	ID          string         `db:"id"`
+	ID          uuid.UUID      `db:"id"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	Label       sql.NullString `db:"label"`
 	Type        sql.NullString `db:"type"`
 	URI         sql.NullString `db:"uri"`
-	Permissions []string       `db:"permissions"`
+	Permissions []uuid.UUID    `db:"permissions"`
 	CreatedBy   sql.NullString `db:"created_by"`
 	UpdatedBy   sql.NullString `db:"updated_by"`
 	CreatedAt   sql.NullTime   `db:"created_at"`
@@ -23,10 +23,11 @@ type ResourceDA struct {
 }
 
 // Convert ResourceDA to Resource
+// toModel methods do not preload relationships
 func toResource(da ResourceDA) Resource {
 	return Resource{
 		Model: am.NewModel(
-			am.WithID(uuid.MustParse(da.ID)),
+			am.WithID(da.ID),
 			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
 			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -37,14 +38,13 @@ func toResource(da ResourceDA) Resource {
 		Label:       da.Label.String,
 		Type:        da.Type.String,
 		URI:         da.URI.String,
-		Permissions: toPermissions(da.Permissions),
 	}
 }
 
 // Convert Resource to ResourceDA
 func toResourceDA(resource Resource) ResourceDA {
 	return ResourceDA{
-		ID:          resource.ID().String(),
+		ID:          resource.ID(),
 		Name:        sql.NullString{String: resource.Name, Valid: resource.Name != ""},
 		Description: sql.NullString{String: resource.Description, Valid: resource.Description != ""},
 		Label:       sql.NullString{String: resource.Label, Valid: resource.Label != ""},
@@ -57,3 +57,4 @@ func toResourceDA(resource Resource) ResourceDA {
 		UpdatedAt:   sql.NullTime{Time: resource.Model.UpdatedAt(), Valid: !resource.Model.UpdatedAt().IsZero()},
 	}
 }
+

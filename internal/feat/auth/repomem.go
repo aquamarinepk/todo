@@ -12,24 +12,30 @@ import (
 
 type BaseRepo struct {
 	*am.Repo
-	mu          sync.Mutex
-	users       map[uuid.UUID]UserDA
-	roles       map[string]RoleDA
-	permissions map[string]PermissionDA
-	resources   map[string]ResourceDA
-	userRoles   map[uuid.UUID][]string
-	order       []uuid.UUID
+	mu                  sync.Mutex
+	users               map[uuid.UUID]UserDA
+	roles               map[uuid.UUID]RoleDA
+	permissions         map[uuid.UUID]PermissionDA
+	resources           map[uuid.UUID]ResourceDA
+	userRoles           map[uuid.UUID][]uuid.UUID
+	userPermissions     map[uuid.UUID][]uuid.UUID
+	rolePermissions     map[uuid.UUID][]uuid.UUID
+	resourcePermissions map[uuid.UUID][]uuid.UUID
+	order               []uuid.UUID
 }
 
 func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	repo := &BaseRepo{
-		Repo:        am.NewRepo("todo-repo", qm, opts...),
-		users:       make(map[uuid.UUID]UserDA),
-		roles:       make(map[string]RoleDA),
-		permissions: make(map[string]PermissionDA),
-		resources:   make(map[string]ResourceDA),
-		userRoles:   make(map[uuid.UUID][]string),
-		order:       []uuid.UUID{},
+		Repo:                am.NewRepo("todo-repo", qm, opts...),
+		users:               make(map[uuid.UUID]UserDA),
+		roles:               make(map[uuid.UUID]RoleDA),
+		permissions:         make(map[uuid.UUID]PermissionDA),
+		resources:           make(map[uuid.UUID]ResourceDA),
+		userRoles:           make(map[uuid.UUID][]uuid.UUID),
+		userPermissions:     make(map[uuid.UUID][]uuid.UUID),
+		rolePermissions:     make(map[uuid.UUID][]uuid.UUID),
+		resourcePermissions: make(map[uuid.UUID][]uuid.UUID),
+		order:               []uuid.UUID{},
 	}
 
 	repo.addSampleData() // NOTE: Used for testing purposes only.
@@ -121,6 +127,7 @@ func (repo *BaseRepo) DeleteUser(ctx context.Context, slug string) error {
 		}
 	}
 	delete(repo.userRoles, id) // Remove user roles
+	delete(repo.userPermissions, id) // Remove user permissions
 	return nil
 }
 
@@ -171,7 +178,7 @@ func (repo *BaseRepo) AddRole(ctx context.Context, userSlug string, role Role) e
 	return nil
 }
 
-func (repo *BaseRepo) RemoveRole(ctx context.Context, userSlug string, roleID string) error {
+func (repo *BaseRepo) RemoveRole(ctx context.Context, userSlug string, roleID uuid.UUID) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -204,22 +211,29 @@ func (repo *BaseRepo) AddPermissionToUser(ctx context.Context, userSlug string, 
 		if userDA.Slug.String == userSlug {
 			userDA.Permissions = append(userDA.Permissions, permission.ID().String())
 			repo.users[userDA.ID] = userDA
+			repo.userPermissions[userDA.ID] = append(repo.userPermissions[userDA.ID], permission.ID())
 			return nil
 		}
 	}
 	return errors.New("user not found")
 }
 
-func (repo *BaseRepo) RemovePermissionFromUser(ctx context.Context, userSlug string, permissionID string) error {
+func (repo *BaseRepo) RemovePermissionFromUser(ctx context.Context, userSlug string, permissionID uuid.UUID) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
 	for _, userDA := range repo.users {
 		if userDA.Slug.String == userSlug {
 			for i, pid := range userDA.Permissions {
-				if pid == permissionID {
+				if pid == permissionID.String() {
 					userDA.Permissions = append(userDA.Permissions[:i], userDA.Permissions[i+1:]...)
 					repo.users[userDA.ID] = userDA
+					for j, upid := range repo.userPermissions[userDA.ID] {
+						if upid == permissionID {
+							repo.userPermissions[userDA.ID] = append(repo.userPermissions[userDA.ID][:j], repo.userPermissions[userDA.ID][j+1:]...)
+							break
+						}
+					}
 					return nil
 				}
 			}
@@ -230,7 +244,7 @@ func (repo *BaseRepo) RemovePermissionFromUser(ctx context.Context, userSlug str
 
 // Role methods
 
-func (repo *BaseRepo) GetRoleByID(ctx context.Context, userID uuid.UUID, roleID string) (Role, error) {
+func (repo *BaseRepo) GetRoleByID(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) (Role, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -316,7 +330,7 @@ func (repo *BaseRepo) DeleteRole(ctx context.Context, userSlug, roleSlug string)
 		return errors.New("user not found")
 	}
 
-	var roleID string
+	var roleID uuid.UUID
 	for _, rid := range repo.userRoles[userID] {
 		roleDA := repo.roles[rid]
 		if roleDA.Description.String == roleSlug {
@@ -324,7 +338,7 @@ func (repo *BaseRepo) DeleteRole(ctx context.Context, userSlug, roleSlug string)
 			break
 		}
 	}
-	if roleID == "" {
+	if roleID == uuid.Nil {
 		return errors.New("role not found")
 	}
 	delete(repo.roles, roleID)
@@ -335,6 +349,8 @@ func (repo *BaseRepo) DeleteRole(ctx context.Context, userSlug, roleSlug string)
 			break
 		}
 	}
+	// Remove role from rolePermissions
+	delete(repo.rolePermissions, roleID)
 	return nil
 }
 
@@ -346,22 +362,29 @@ func (repo *BaseRepo) AddPermissionToRole(ctx context.Context, roleSlug string, 
 		if roleDA.Description.String == roleSlug {
 			roleDA.Permissions = append(roleDA.Permissions, permission.ID().String())
 			repo.roles[roleDA.ID] = roleDA
+			repo.rolePermissions[roleDA.ID] = append(repo.rolePermissions[roleDA.ID], permission.ID())
 			return nil
 		}
 	}
 	return errors.New("role not found")
 }
 
-func (repo *BaseRepo) RemovePermissionFromRole(ctx context.Context, roleSlug string, permissionID string) error {
+func (repo *BaseRepo) RemovePermissionFromRole(ctx context.Context, roleSlug string, permissionID uuid.UUID) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
 	for _, roleDA := range repo.roles {
 		if roleDA.Description.String == roleSlug {
 			for i, pid := range roleDA.Permissions {
-				if pid == permissionID {
+				if pid == permissionID.String() {
 					roleDA.Permissions = append(roleDA.Permissions[:i], roleDA.Permissions[i+1:]...)
 					repo.roles[roleDA.ID] = roleDA
+					for j, rpid := range repo.rolePermissions[roleDA.ID] {
+						if rpid == permissionID {
+							repo.rolePermissions[roleDA.ID] = append(repo.rolePermissions[roleDA.ID][:j], repo.rolePermissions[roleDA.ID][j+1:]...)
+							break
+						}
+					}
 					return nil
 				}
 			}
@@ -383,7 +406,7 @@ func (repo *BaseRepo) GetAllPermissions(ctx context.Context) ([]Permission, erro
 	return permissions, nil
 }
 
-func (repo *BaseRepo) GetPermissionByID(ctx context.Context, id string) (Permission, error) {
+func (repo *BaseRepo) GetPermissionByID(ctx context.Context, id uuid.UUID) (Permission, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -398,10 +421,10 @@ func (repo *BaseRepo) CreatePermission(ctx context.Context, permission Permissio
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	if _, exists := repo.permissions[permission.ID().String()]; exists {
+	if _, exists := repo.permissions[permission.ID()]; exists {
 		return errors.New("permission already exists")
 	}
-	repo.permissions[permission.ID().String()] = toPermissionDA(permission)
+	repo.permissions[permission.ID()] = toPermissionDA(permission)
 	return nil
 }
 
@@ -417,7 +440,7 @@ func (repo *BaseRepo) UpdatePermission(ctx context.Context, permission Permissio
 	return nil
 }
 
-func (repo *BaseRepo) DeletePermission(ctx context.Context, id string) error {
+func (repo *BaseRepo) DeletePermission(ctx context.Context, id uuid.UUID) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -441,7 +464,7 @@ func (repo *BaseRepo) GetAllResources(ctx context.Context) ([]Resource, error) {
 	return resources, nil
 }
 
-func (repo *BaseRepo) GetResourceByID(ctx context.Context, id string) (Resource, error) {
+func (repo *BaseRepo) GetResourceByID(ctx context.Context, id uuid.UUID) (Resource, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -456,10 +479,10 @@ func (repo *BaseRepo) CreateResource(ctx context.Context, resource Resource) err
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	if _, exists := repo.resources[resource.ID().String()]; exists {
+	if _, exists := repo.resources[resource.ID()]; exists {
 		return errors.New("resource already exists")
 	}
-	repo.resources[resource.ID().String()] = toResourceDA(resource)
+	repo.resources[resource.ID()] = toResourceDA(resource)
 	return nil
 }
 
@@ -475,7 +498,7 @@ func (repo *BaseRepo) UpdateResource(ctx context.Context, resource Resource) err
 	return nil
 }
 
-func (repo *BaseRepo) DeleteResource(ctx context.Context, id string) error {
+func (repo *BaseRepo) DeleteResource(ctx context.Context, id uuid.UUID) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -486,7 +509,7 @@ func (repo *BaseRepo) DeleteResource(ctx context.Context, id string) error {
 	return nil
 }
 
-func (repo *BaseRepo) AddPermissionToResource(ctx context.Context, resourceID string, permission Permission) error {
+func (repo *BaseRepo) AddPermissionToResource(ctx context.Context, resourceID uuid.UUID, permission Permission) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -496,10 +519,11 @@ func (repo *BaseRepo) AddPermissionToResource(ctx context.Context, resourceID st
 	}
 	resourceDA.Permissions = append(resourceDA.Permissions, permission.ID().String())
 	repo.resources[resourceID] = resourceDA
+	repo.resourcePermissions[resourceID] = append(repo.resourcePermissions[resourceID], permission.ID())
 	return nil
 }
 
-func (repo *BaseRepo) RemovePermissionFromResource(ctx context.Context, resourceID string, permissionID string) error {
+func (repo *BaseRepo) RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -508,9 +532,15 @@ func (repo *BaseRepo) RemovePermissionFromResource(ctx context.Context, resource
 		return errors.New("resource not found")
 	}
 	for i, pid := range resourceDA.Permissions {
-		if pid == permissionID {
+		if pid == permissionID.String() {
 			resourceDA.Permissions = append(resourceDA.Permissions[:i], resourceDA.Permissions[i+1:]...)
 			repo.resources[resourceID] = resourceDA
+			for j, rpid := range repo.resourcePermissions[resourceID] {
+				if rpid == permissionID {
+					repo.resourcePermissions[resourceID] = append(repo.resourcePermissions[resourceID][:j], repo.resourcePermissions[resourceID][j+1:]...)
+					break
+				}
+			}
 			return nil
 		}
 	}
@@ -534,8 +564,7 @@ func (repo *BaseRepo) Debug() {
 	repo.Log().Info(result)
 }
 
-// Sample data for testing purposes
-
+// addSampleData adds sample data to the repository for testin purposes.
 func (repo *BaseRepo) addSampleData() {
 	for i := 1; i <= 5; i++ {
 		id := uuid.New()
