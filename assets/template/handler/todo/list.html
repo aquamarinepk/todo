@@ -22,13 +22,13 @@ Todo List
   {{ range .Data }}
   <tr>
     <td class="py-2 px-4 border-b">
-      <a href="/todo/{{ .Slug }}" class="text-blue-500 hover:underline">{{ .Name }}</a>
+      <a href="/todo/{{ .ID }}" class="text-blue-500 hover:underline">{{ .Name }}</a>
     </td>
     <td class="py-2 px-4 border-b">{{ .Description }}</td>
     <td class="py-2 px-4 border-b text-center">
-      <a href="/todo/{{ .Slug }}" class="inline-block bg-green-500 text-white px-4 py-2 rounded mr-2">Show</a>
-      <a href="/todo/{{ .Slug }}/edit" class="inline-block bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</a>
-      <form action="/todo/{{ .Slug }}" method="POST" class="inline-block">
+      <a href="/todo/{{ .ID }}" class="inline-block bg-green-500 text-white px-4 py-2 rounded mr-2">Show</a>
+      <a href="/todo/{{ .ID }}/edit" class="inline-block bg-yellow-500 text-white px-4 py-2 rounded mr-2">Edit</a>
+      <form action="/todo/{{ .ID }}" method="POST" class="inline-block">
         <input type="hidden" name="_method" value="DELETE">
         <input type="hidden" name="aquamarine.csrf.token" value="{{ $csrf }}">
         <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded">Delete</button>
