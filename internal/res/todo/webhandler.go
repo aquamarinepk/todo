@@ -7,6 +7,7 @@ import (
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/go-chi/chi/v5"
+	"github.com/google/uuid"
 )
 
 var (
@@ -99,7 +100,7 @@ func (h *WebHandler) Create(w http.ResponseWriter, r *http.Request) {
 	description := r.FormValue("description")
 	list := NewList(name, description)
 
-	err := h.service.CreateList(ctx, list)
+	err := h.service.Create(ctx, list)
 	if err != nil {
 		http.Error(w, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
@@ -109,11 +110,17 @@ func (h *WebHandler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Show todo ", slug)
+	id := chi.URLParam(r, "id")
+	h.Log().Info("Show todo ", id)
 	ctx := r.Context()
 
-	list, err := h.service.GetListBySlug(ctx, slug)
+	listID, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	list, err := h.service.Get(ctx, listID)
 	if err != nil {
 		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
@@ -127,8 +134,8 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(list)
 	page.SetActions([]am.Action{
 		{URL: todoResPath, Text: "Back to List", StyleClass: gray},
-		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "Edit", StyleClass: blue},
-		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "Delete", StyleClass: red},
+		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, id), Text: "Edit", StyleClass: blue},
+		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, id), Text: "Delete", StyleClass: red},
 	})
 
 	tmpl, err := h.tm.Get("todo", "show")
@@ -151,18 +158,24 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Edit todo ", slug)
+	id := chi.URLParam(r, "id")
+	h.Log().Info("Edit todo ", id)
 	ctx := r.Context()
 
-	list, err := h.service.GetListBySlug(ctx, slug)
+	listID, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	list, err := h.service.Get(ctx, listID)
 	if err != nil {
 		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
 	page := am.NewPage(list)
-	page.SetFormAction(fmt.Sprintf("%s/%s", todoResPath, slug))
+	page.SetFormAction(fmt.Sprintf("%s/%s", todoResPath, id))
 	page.SetFormMethod(method.PUT)
 	page.SetFormButtonText("Update")
 	page.GenCSRFToken(r)
@@ -187,11 +200,17 @@ func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Update todo ", slug)
+	id := chi.URLParam(r, "id")
+	h.Log().Info("Update todo ", id)
 	ctx := r.Context()
 
-	list, err := h.service.GetListBySlug(ctx, slug)
+	listID, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	list, err := h.service.Get(ctx, listID)
 	if err != nil {
 		http.Error(w, am.ErrResourceNotFound, http.StatusNotFound)
 		return
@@ -202,7 +221,7 @@ func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
 	list.Name = name
 	list.Description = description
 
-	err = h.service.UpdateList(ctx, list)
+	err = h.service.Update(ctx, list)
 	if err != nil {
 		http.Error(w, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
@@ -212,11 +231,17 @@ func (h *WebHandler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	slug := chi.URLParam(r, "slug")
-	h.Log().Info("Delete todo ", slug)
+	id := chi.URLParam(r, "id")
+	h.Log().Info("Delete todo ", id)
 	ctx := r.Context()
 
-	err := h.service.DeleteListBySlug(ctx, slug)
+	listID, err := uuid.Parse(id)
+	if err != nil {
+		http.Error(w, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.Delete(ctx, listID)
 	if err != nil {
 		http.Error(w, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return

@@ -37,7 +37,7 @@ func (h *APIHandler) Create(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err := h.service.CreateList(r.Context(), list); err != nil {
+	if err := h.service.Create(r.Context(), list); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -50,7 +50,7 @@ func (h *APIHandler) Show(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid ID", http.StatusBadRequest)
 		return
 	}
-	list, err := h.service.GetListByID(r.Context(), id)
+	list, err := h.service.Get(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -70,7 +70,7 @@ func (h *APIHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	list.SetID(id)
-	if err := h.service.UpdateList(r.Context(), list); err != nil {
+	if err := h.service.Update(r.Context(), list); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -83,7 +83,7 @@ func (h *APIHandler) Delete(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid ID", http.StatusBadRequest)
 		return
 	}
-	if err := h.service.DeleteList(r.Context(), id); err != nil {
+	if err := h.service.Delete(r.Context(), id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
