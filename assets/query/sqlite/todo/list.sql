@@ -1,14 +1,11 @@
--- res: List
+-- Res: List
 -- Table: lists
 
 -- GetAll
 SELECT id, name, slug FROM lists;
 
--- GetByID
+-- Get
 SELECT id, name, slug FROM lists WHERE id = ?;
-
--- GetBySlug
-SELECT id, name, slug FROM lists WHERE slug = ?;
 
 -- Create
 INSERT INTO lists (id, name, slug) VALUES (?, ?, ?);
