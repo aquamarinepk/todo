@@ -1,6 +1,7 @@
 package am
 
 const (
+	ErrInvalidID            = "Invalid ID"
 	ErrCannotGetResources   = "Cannot get resources"
 	ErrCannotCreateResource = "Cannot create resource"
 	ErrResourceNotFound     = "Resource not found"

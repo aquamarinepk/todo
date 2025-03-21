@@ -14,10 +14,10 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	r.Get("/", handler.List)
 	r.Get("/new", handler.New)
 	r.Post("/", handler.Create)
-	r.Get("/{slug}", handler.Show)
-	r.Get("/{slug}/edit", handler.Edit)
-	r.Put("/{slug}", handler.Update)
-	r.Delete("/{slug}", handler.Delete)
+	r.Get("/{id}", handler.Show)
+	r.Get("/{id}/edit", handler.Edit)
+	r.Put("/{id}", handler.Update)
+	r.Delete("/{id}", handler.Delete)
 
 	return r
 }
