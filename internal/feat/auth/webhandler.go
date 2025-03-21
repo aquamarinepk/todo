@@ -73,7 +73,7 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New user form")
 
-	user := &User{}
+	user := NewUser("", "", "")
 
 	page := am.NewPage(user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
@@ -120,11 +120,13 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	red, _ := cfg.StrVal(key.ButtonStyleRed)
 
 	page := am.NewPage(user)
+
+	page.GenCSRFToken(r)
 	page.SetActions([]am.Action{
-		{URL: authPath, Text: "Back to User", Style: gray},
-		{URL: fmt.Sprintf(userPathFmt, authPath, "edit", id), Text: "Edit User", Style: blue},
-		{URL: fmt.Sprintf(userPathFmt, authPath, "delete", id), Text: "Delete User", Style: red},
-		{URL: fmt.Sprintf("list-user-roles?id=%s", id), Text: "Manage Roles", Style: blue},
+		am.NewListAction(authPath, "user", gray),
+		am.NewEditAction(authPath, "user", id, blue),
+		am.NewDeleteAction(authPath, "user", id, red),
+		am.NewAction(fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), "Manage Roles", blue),
 	})
 
 	tmpl, err := h.tm.Get("auth", "show-user")

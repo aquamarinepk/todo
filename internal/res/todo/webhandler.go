@@ -125,10 +125,10 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 	red, _ := cfg.StrVal(key.ButtonStyleRed)
 
 	page := am.NewPage(list)
-	page.SetActions([]am.Action{ // NOTE: This is a WIP, it will be improved.
-		{URL: todoResPath, Text: "Back to List", Style: gray},
-		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "Edit", Style: blue},
-		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "Delete", Style: red},
+	page.SetActions([]am.Action{
+		{URL: todoResPath, Text: "Back to List", StyleClass: gray},
+		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, slug), Text: "Edit", StyleClass: blue},
+		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, slug), Text: "Delete", StyleClass: red},
 	})
 
 	tmpl, err := h.tm.Get("todo", "show")
