@@ -15,6 +15,7 @@ const (
 	name      = "todo"
 	version   = "v1"
 	namespace = "TODO"
+	engine    = "sqlite" // Define the engine here
 )
 
 var (
@@ -32,7 +33,7 @@ func main() {
 
 	app := core.NewApp(name, version, assetsFS, opts...)
 
-	queryManager := am.NewQueryManager(assetsFS, opts...)
+	queryManager := am.NewQueryManager(assetsFS, engine, opts...)
 	templateManager := am.NewTemplateManager(assetsFS, opts...)
 
 	// Start the FileServer
