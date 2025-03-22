@@ -14,13 +14,15 @@ type QueryManager struct {
 	Core
 	queries  sync.Map
 	assetsFS embed.FS
+	engine   string
 }
 
-func NewQueryManager(assetsFS embed.FS, opts ...Option) *QueryManager {
+func NewQueryManager(assetsFS embed.FS, engine string, opts ...Option) *QueryManager {
 	core := NewCore("query-manager", opts...)
 	qm := &QueryManager{
 		Core:     core,
 		assetsFS: assetsFS,
+		engine:   engine,
 	}
 	return qm
 }
@@ -53,8 +55,8 @@ func (qm *QueryManager) loadQueries(path string) {
 		return
 	}
 	engine := parts[2]
-	resource := parts[3]
-	res := strings.TrimSuffix(parts[4], ".sql")
+	feat := parts[3]
+	resource := strings.TrimSuffix(parts[4], ".sql")
 
 	queries := strings.Split(string(content), "-- ")
 	for _, query := range queries {
@@ -64,7 +66,7 @@ func (qm *QueryManager) loadQueries(path string) {
 			if !isValidQueryName(queryName) {
 				continue
 			}
-			key := engine + ":" + resource + ":" + res + ":" + queryName
+			key := engine + ":" + feat + ":" + resource + ":" + queryName
 			value := strings.Join(lines[1:], "\n")
 			qm.queries.Store(key, strings.TrimSpace(value))
 		}
@@ -75,8 +77,8 @@ func isValidQueryName(queryName string) bool {
 	return queryName != "" && !strings.HasPrefix(queryName, "res:") && !strings.HasPrefix(queryName, "Table:")
 }
 
-func (qm *QueryManager) Get(engine, resource, res, queryName string) (string, error) {
-	key := engine + ":" + resource + ":" + res + ":" + queryName
+func (qm *QueryManager) Get(feat, resource, queryName string) (string, error) {
+	key := qm.engine + ":" + feat + ":" + resource + ":" + queryName
 	if query, ok := qm.queries.Load(key); ok {
 		return query.(string), nil
 	}

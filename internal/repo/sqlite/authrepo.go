@@ -12,7 +12,18 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-var key = am.Key
+var (
+	key       = am.Key
+	featAuth  = "auth"
+	resUser   = "user"
+	resRole   = "role"
+	resPerm   = "permission"
+	resRes    = "resource"
+	resUserRole = "user_role"
+	resUserPerm = "user_permission"
+	resRolePerm = "role_permission"
+	resResPerm  = "resource_permission"
+)
 
 type AuthRepo struct {
 	*am.Repo
@@ -50,7 +61,7 @@ func (repo *AuthRepo) Stop(ctx context.Context) error {
 }
 
 func (repo *AuthRepo) GetAllUsers(ctx context.Context) ([]auth.User, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "user", "GetAll")
+	query, err := repo.Query.Get(featAuth, resUser, "GetAll")
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +75,7 @@ func (repo *AuthRepo) GetAllUsers(ctx context.Context) ([]auth.User, error) {
 }
 
 func (repo *AuthRepo) GetUser(ctx context.Context, id uuid.UUID) (auth.User, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "user", "Get")
+	query, err := repo.Query.Get(featAuth, resUser, "Get")
 	if err != nil {
 		return auth.User{}, err
 	}
@@ -81,7 +92,7 @@ func (repo *AuthRepo) GetUser(ctx context.Context, id uuid.UUID) (auth.User, err
 }
 
 func (repo *AuthRepo) CreateUser(ctx context.Context, user auth.User) error {
-	query, err := repo.Query.Get("sqlite", "auth", "user", "Create")
+	query, err := repo.Query.Get(featAuth, resUser, "Create")
 	if err != nil {
 		return err
 	}
@@ -91,7 +102,7 @@ func (repo *AuthRepo) CreateUser(ctx context.Context, user auth.User) error {
 }
 
 func (repo *AuthRepo) UpdateUser(ctx context.Context, user auth.User) error {
-	query, err := repo.Query.Get("sqlite", "auth", "user", "Update")
+	query, err := repo.Query.Get(featAuth, resUser, "Update")
 	if err != nil {
 		return err
 	}
@@ -101,7 +112,7 @@ func (repo *AuthRepo) UpdateUser(ctx context.Context, user auth.User) error {
 }
 
 func (repo *AuthRepo) DeleteUser(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query.Get("sqlite", "auth", "user", "Delete")
+	query, err := repo.Query.Get(featAuth, resUser, "Delete")
 	if err != nil {
 		return err
 	}
@@ -111,7 +122,7 @@ func (repo *AuthRepo) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 func (repo *AuthRepo) GetAllRoles(ctx context.Context) ([]auth.Role, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "role", "GetAll")
+	query, err := repo.Query.Get(featAuth, resRole, "GetAll")
 	if err != nil {
 		return nil, err
 	}
@@ -125,7 +136,7 @@ func (repo *AuthRepo) GetAllRoles(ctx context.Context) ([]auth.Role, error) {
 }
 
 func (repo *AuthRepo) GetRole(ctx context.Context, userID, roleID uuid.UUID) (auth.Role, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "role", "Get")
+	query, err := repo.Query.Get(featAuth, resRole, "Get")
 	if err != nil {
 		return auth.Role{}, err
 	}
@@ -142,7 +153,7 @@ func (repo *AuthRepo) GetRole(ctx context.Context, userID, roleID uuid.UUID) (au
 }
 
 func (repo *AuthRepo) CreateRole(ctx context.Context, role auth.Role) error {
-	query, err := repo.Query.Get("sqlite", "auth", "role", "Create")
+	query, err := repo.Query.Get(featAuth, resRole, "Create")
 	if err != nil {
 		return err
 	}
@@ -152,7 +163,7 @@ func (repo *AuthRepo) CreateRole(ctx context.Context, role auth.Role) error {
 }
 
 func (repo *AuthRepo) UpdateRole(ctx context.Context, userID uuid.UUID, role auth.Role) error {
-	query, err := repo.Query.Get("sqlite", "auth", "role", "Update")
+	query, err := repo.Query.Get(featAuth, resRole, "Update")
 	if err != nil {
 		return err
 	}
@@ -162,7 +173,7 @@ func (repo *AuthRepo) UpdateRole(ctx context.Context, userID uuid.UUID, role aut
 }
 
 func (repo *AuthRepo) DeleteRole(ctx context.Context, userID, roleID uuid.UUID) error {
-	query, err := repo.Query.Get("sqlite", "auth", "role", "Delete")
+	query, err := repo.Query.Get(featAuth, resRole, "Delete")
 	if err != nil {
 		return err
 	}
@@ -172,7 +183,7 @@ func (repo *AuthRepo) DeleteRole(ctx context.Context, userID, roleID uuid.UUID) 
 }
 
 func (repo *AuthRepo) GetAllPermissions(ctx context.Context) ([]auth.Permission, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "permission", "GetAll")
+	query, err := repo.Query.Get(featAuth, resPerm, "GetAll")
 	if err != nil {
 		return nil, err
 	}
@@ -186,7 +197,7 @@ func (repo *AuthRepo) GetAllPermissions(ctx context.Context) ([]auth.Permission,
 }
 
 func (repo *AuthRepo) GetPermission(ctx context.Context, id uuid.UUID) (auth.Permission, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "permission", "Get")
+	query, err := repo.Query.Get(featAuth, resPerm, "Get")
 	if err != nil {
 		return auth.Permission{}, err
 	}
@@ -203,7 +214,7 @@ func (repo *AuthRepo) GetPermission(ctx context.Context, id uuid.UUID) (auth.Per
 }
 
 func (repo *AuthRepo) CreatePermission(ctx context.Context, permission auth.Permission) error {
-	query, err := repo.Query.Get("sqlite", "auth", "permission", "Create")
+	query, err := repo.Query.Get(featAuth, resPerm, "Create")
 	if err != nil {
 		return err
 	}
@@ -213,7 +224,7 @@ func (repo *AuthRepo) CreatePermission(ctx context.Context, permission auth.Perm
 }
 
 func (repo *AuthRepo) UpdatePermission(ctx context.Context, permission auth.Permission) error {
-	query, err := repo.Query.Get("sqlite", "auth", "permission", "Update")
+	query, err := repo.Query.Get(featAuth, resPerm, "Update")
 	if err != nil {
 		return err
 	}
@@ -223,7 +234,7 @@ func (repo *AuthRepo) UpdatePermission(ctx context.Context, permission auth.Perm
 }
 
 func (repo *AuthRepo) DeletePermission(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query.Get("sqlite", "auth", "permission", "Delete")
+	query, err := repo.Query.Get(featAuth, resPerm, "Delete")
 	if err != nil {
 		return err
 	}
@@ -233,7 +244,7 @@ func (repo *AuthRepo) DeletePermission(ctx context.Context, id uuid.UUID) error 
 }
 
 func (repo *AuthRepo) GetAllResources(ctx context.Context) ([]auth.Resource, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "resource", "GetAll")
+	query, err := repo.Query.Get(featAuth, resRes, "GetAll")
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +258,7 @@ func (repo *AuthRepo) GetAllResources(ctx context.Context) ([]auth.Resource, err
 }
 
 func (repo *AuthRepo) GetResource(ctx context.Context, id uuid.UUID) (auth.Resource, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "resource", "Get")
+	query, err := repo.Query.Get(featAuth, resRes, "Get")
 	if err != nil {
 		return auth.Resource{}, err
 	}
@@ -264,7 +275,7 @@ func (repo *AuthRepo) GetResource(ctx context.Context, id uuid.UUID) (auth.Resou
 }
 
 func (repo *AuthRepo) CreateResource(ctx context.Context, resource auth.Resource) error {
-	query, err := repo.Query.Get("sqlite", "auth", "resource", "Create")
+	query, err := repo.Query.Get(featAuth, resRes, "Create")
 	if err != nil {
 		return err
 	}
@@ -274,7 +285,7 @@ func (repo *AuthRepo) CreateResource(ctx context.Context, resource auth.Resource
 }
 
 func (repo *AuthRepo) UpdateResource(ctx context.Context, resource auth.Resource) error {
-	query, err := repo.Query.Get("sqlite", "auth", "resource", "Update")
+	query, err := repo.Query.Get(featAuth, resRes, "Update")
 	if err != nil {
 		return err
 	}
@@ -284,7 +295,7 @@ func (repo *AuthRepo) UpdateResource(ctx context.Context, resource auth.Resource
 }
 
 func (repo *AuthRepo) DeleteResource(ctx context.Context, id uuid.UUID) error {
-	query, err := repo.Query.Get("sqlite", "auth", "resource", "Delete")
+	query, err := repo.Query.Get(featAuth, resRes, "Delete")
 	if err != nil {
 		return err
 	}
@@ -294,7 +305,7 @@ func (repo *AuthRepo) DeleteResource(ctx context.Context, id uuid.UUID) error {
 }
 
 func (repo *AuthRepo) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]auth.Role, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "user_role", "GetUserRoles")
+	query, err := repo.Query.Get(featAuth, resUserRole, "GetUserRoles")
 	if err != nil {
 		return nil, err
 	}
@@ -308,7 +319,7 @@ func (repo *AuthRepo) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]aut
 }
 
 func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, role auth.Role) error {
-	query, err := repo.Query.Get("sqlite", "auth", "user_role", "AddRole")
+	query, err := repo.Query.Get(featAuth, resUserRole, "AddRole")
 	if err != nil {
 		return err
 	}
@@ -318,7 +329,7 @@ func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, role auth.R
 }
 
 func (repo *AuthRepo) RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	query, err := repo.Query.Get("sqlite", "auth", "user_role", "RemoveRole")
+	query, err := repo.Query.Get(featAuth, resUserRole, "RemoveRole")
 	if err != nil {
 		return err
 	}
@@ -328,7 +339,7 @@ func (repo *AuthRepo) RemoveRole(ctx context.Context, userID uuid.UUID, roleID u
 }
 
 func (repo *AuthRepo) AddPermissionToUser(ctx context.Context, userID uuid.UUID, permission auth.Permission) error {
-	query, err := repo.Query.Get("sqlite", "auth", "user_permission", "AddPermissionToUser")
+	query, err := repo.Query.Get(featAuth, resUserPerm, "AddPermissionToUser")
 	if err != nil {
 		return err
 	}
@@ -338,7 +349,7 @@ func (repo *AuthRepo) AddPermissionToUser(ctx context.Context, userID uuid.UUID,
 }
 
 func (repo *AuthRepo) RemovePermissionFromUser(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) error {
-	query, err := repo.Query.Get("sqlite", "auth", "user_permission", "RemovePermissionFromUser")
+	query, err := repo.Query.Get(featAuth, resUserPerm, "RemovePermissionFromUser")
 	if err != nil {
 		return err
 	}
@@ -348,7 +359,7 @@ func (repo *AuthRepo) RemovePermissionFromUser(ctx context.Context, userID uuid.
 }
 
 func (repo *AuthRepo) GetUserRole(ctx context.Context, userID, roleID uuid.UUID) (auth.Role, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "user_role", "GetUserRole")
+	query, err := repo.Query.Get(featAuth, resUserRole, "GetUserRole")
 	if err != nil {
 		return auth.Role{}, err
 	}
@@ -365,7 +376,7 @@ func (repo *AuthRepo) GetUserRole(ctx context.Context, userID, roleID uuid.UUID)
 }
 
 func (repo *AuthRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permission auth.Permission) error {
-	query, err := repo.Query.Get("sqlite", "auth", "role_permission", "AddPermissionToRole")
+	query, err := repo.Query.Get(featAuth, resRolePerm, "AddPermissionToRole")
 	if err != nil {
 		return err
 	}
@@ -375,7 +386,7 @@ func (repo *AuthRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID,
 }
 
 func (repo *AuthRepo) RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error {
-	query, err := repo.Query.Get("sqlite", "auth", "role_permission", "RemovePermissionFromRole")
+	query, err := repo.Query.Get(featAuth, resRolePerm, "RemovePermissionFromRole")
 	if err != nil {
 		return err
 	}
@@ -385,7 +396,7 @@ func (repo *AuthRepo) RemovePermissionFromRole(ctx context.Context, roleID uuid.
 }
 
 func (repo *AuthRepo) AddPermissionToResource(ctx context.Context, resourceID uuid.UUID, permission auth.Permission) error {
-	query, err := repo.Query.Get("sqlite", "auth", "resource_permission", "AddPermissionToResource")
+	query, err := repo.Query.Get(featAuth, resResPerm, "AddPermissionToResource")
 	if err != nil {
 		return err
 	}
@@ -395,7 +406,7 @@ func (repo *AuthRepo) AddPermissionToResource(ctx context.Context, resourceID uu
 }
 
 func (repo *AuthRepo) RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error {
-	query, err := repo.Query.Get("sqlite", "auth", "resource_permission", "RemovePermissionFromResource")
+	query, err := repo.Query.Get(featAuth, resResPerm, "RemovePermissionFromResource")
 	if err != nil {
 		return err
 	}
@@ -405,7 +416,7 @@ func (repo *AuthRepo) RemovePermissionFromResource(ctx context.Context, resource
 }
 
 func (repo *AuthRepo) GetResourcePermissions(ctx context.Context, resourceID uuid.UUID) ([]auth.Permission, error) {
-	query, err := repo.Query.Get("sqlite", "auth", "resource_permission", "GetResourcePermissions")
+	query, err := repo.Query.Get(featAuth, resResPerm, "GetResourcePermissions")
 	if err != nil {
 		return nil, err
 	}
