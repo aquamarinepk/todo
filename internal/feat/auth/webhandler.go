@@ -115,6 +115,9 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cfg := h.Cfg()
+
+	// TODO: When a proper asset building pipeline for the client is implemented,
+	// we can remove this non-business style configuration from the controller.
 	gray, _ := cfg.StrVal(key.ButtonStyleGray)
 	blue, _ := cfg.StrVal(key.ButtonStyleBlue)
 	red, _ := cfg.StrVal(key.ButtonStyleRed)
