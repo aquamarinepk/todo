@@ -15,6 +15,25 @@ Although we refer to command-query, it is not in the pure CQRS sense; commands w
 
 Additionally, the kit aims to address observability and monitoring concerns by providing hooks and eventually some implementations to facilitate these aspects.
 
+## Expected Features
+- [ ] JSON API Support
+- [ ] Web support
+- [ ] RESTful routes
+- [ ] CQRS-like support
+- [ ] Sync and Async inter-feature communication (gRPC / pubsub)
+- [ ] Server-Side Rendering (SSR) navigation (initial)
+- [ ] htmx dynamic PWA-like behavior
+- [ ] Flag and environment variable configuration
+- [ ] Pub/Sub support
+- [ ] SQLite3 / PostgreSQL support
+- [ ] NoSQL support (Mongo)
+- [ ] Unit tests
+- [ ] Asset pipeline
+- [ ] Containerization and orchestration ready
+- [ ] More to come...
+
+These features will be included in this TODO example app and will later become part of the kit.
+
 ## Configuration
 ### Command-Line Flags
 You can pass the following flags to the application:  
