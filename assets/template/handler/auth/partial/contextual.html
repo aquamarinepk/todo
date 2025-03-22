@@ -5,10 +5,10 @@
         {{ if .IsForm }}
         <form action="{{ .URL }}" method="POST" class="inline">
             <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
-            <button type="submit" class="{{ .StyleClass }}">{{ .Text }}</button>
+            <button type="submit" class="{{ .Style }}">{{ .Text }}</button>
         </form>
         {{ else }}
-        <a href="{{ .URL }}" class="{{ .StyleClass }}">{{ .Text }}</a>
+        <a href="{{ .URL }}" class="{{ .Style }}">{{ .Text }}</a>
         {{ end }}
         {{ end }}
     </div>
