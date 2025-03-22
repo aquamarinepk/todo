@@ -7,6 +7,7 @@ import (
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/aquamarinepk/todo/internal/core"
 	"github.com/aquamarinepk/todo/internal/feat/auth"
+	"github.com/aquamarinepk/todo/internal/repo/sqlite"
 	"github.com/aquamarinepk/todo/internal/res/todo"
 )
 
@@ -39,7 +40,8 @@ func main() {
 	app.MountFileServer("/", fileServer)
 
 	// Start the Auth feature
-	authRepo := auth.NewRepo(queryManager, opts...)
+	// authRepo := auth.NewInMemoryRepo(queryManager, opts...) // in-memory implementation
+	authRepo := sqlite.NewAuthRepo(queryManager, opts...)
 	authService := auth.NewService(authRepo)
 	authWebHandler := auth.NewWebHandler(templateManager, authService, opts...)
 	authWebRouter := auth.NewWebRouter(authWebHandler, opts...)
@@ -62,6 +64,7 @@ func main() {
 
 	// Add deps
 	app.Add(fileServer)
+	app.Add(queryManager)
 	app.Add(templateManager)
 	app.Add(todoRepo)
 	app.Add(todoService)
@@ -76,7 +79,7 @@ func main() {
 		return
 	}
 
-	//queryManager.Debug()
+	queryManager.Debug()
 	//templateManager.Debug()
 
 	err = app.Start(ctx)
