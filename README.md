@@ -18,17 +18,17 @@ Additionally, the kit aims to address observability and monitoring concerns by p
 ## Expected Features
 - [ ] JSON API Support
 - [ ] Web support
-- [ ] RESTful routes
-- [ ] CQRS-like support
-- [ ] Sync and Async inter-feature communication (gRPC / pubsub)
-- [ ] Server-Side Rendering (SSR) navigation (initial)
-- [ ] htmx dynamic PWA-like behavior
+- [ ] RESTful support
+- [ ] CQRS support
+- [ ] Sync and Async inter-feature communication (gRPC / NATS)
+- [ ] Server-Side Rendering (SSR) 
+- [ ] htmx 
 - [ ] Flag and environment variable configuration
-- [ ] Pub/Sub support
-- [ ] SQLite3 / PostgreSQL support
+- [ ] Pub/Sub
+- [ ] SQL (SQLite3 / PostgreSQL)
 - [ ] NoSQL support (Mongo)
-- [ ] Unit tests
-- [ ] Asset pipeline
+- [ ] Unit testing
+- [ ] Assets processing pipeline
 - [ ] Containerization and orchestration ready
 - [ ] More to come...
 

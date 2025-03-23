@@ -15,7 +15,7 @@ const (
 	name      = "todo"
 	version   = "v1"
 	namespace = "TODO"
-	engine    = "sqlite" // Define the engine here
+	engine    = "sqlite"
 )
 
 var (
