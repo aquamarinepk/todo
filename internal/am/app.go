@@ -144,6 +144,25 @@ func (a *App) Setup(ctx context.Context) error {
 }
 
 func (a *App) Start(ctx context.Context) error {
+	// Start all dependencies
+	var errs []string
+	a.deps.Range(func(key, value interface{}) bool {
+		dep := value.(*Dep)
+		if coreDep, ok := dep.Core.(Core); ok {
+			err := coreDep.Start(ctx)
+			if err != nil {
+				msg := fmt.Sprintf("failed to start %s: %v", coreDep.Name(), err)
+				errs = append(errs, msg)
+			}
+		}
+		return true
+	})
+
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, "; "))
+	}
+
+	// Start the servers
 	webAddr := a.Cfg().WebAddr()
 	apiAddr := a.Cfg().APIAddr()
 

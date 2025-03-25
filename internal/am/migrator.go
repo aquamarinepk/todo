@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	_ "github.com/mattn/go-sqlite3" // SQLite driver
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const (
@@ -28,6 +28,18 @@ type Migrator struct {
 	assetsFS   embed.FS
 	engine     string
 	migrations sync.Map
+}
+
+type FileMigration struct {
+	Datetime string
+	Name     string
+	Up       string
+	Down     string
+}
+
+type DBMigration struct {
+	Datetime string
+	Name     string
 }
 
 func NewMigrator(assetsFS embed.FS, engine string, opts ...Option) *Migrator {
@@ -67,17 +79,6 @@ func (m *Migrator) setupSQLite() error {
 	return m.createMigrationsTable()
 }
 
-func (m *Migrator) Start(ctx context.Context) error {
-	if err := m.load(); err != nil {
-		return err
-	}
-	return m.Migrate()
-}
-
-func (m *Migrator) Stop(ctx context.Context) error {
-	return m.Close()
-}
-
 func (m *Migrator) createMigrationsTable() error {
 	query := `
 	CREATE TABLE IF NOT EXISTS migrations (
@@ -93,109 +94,155 @@ func (m *Migrator) createMigrationsTable() error {
 	return nil
 }
 
-func (m *Migrator) Close() error {
-	if m.db != nil {
-		return m.db.Close()
-	}
-	return nil
-}
-
-func (m *Migrator) load() error {
+func (m *Migrator) loadFileMigrations() ([]FileMigration, error) {
+	var migrations []FileMigration
 	migrationPath := fmt.Sprintf(MigrationPath, m.engine)
 	err := fs.WalkDir(m.assetsFS, migrationPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if !d.IsDir() && strings.HasSuffix(d.Name(), ".sql") {
-			return m.loadMigration(path)
+			filename := filepath.Base(path)
+			parts := strings.SplitN(filename, "-", 2)
+			if len(parts) < 2 {
+				return fmt.Errorf("invalid migration filename: %s", filename)
+			}
+
+			content, err := m.assetsFS.ReadFile(path)
+			if err != nil {
+				return fmt.Errorf("cannot read migration file %s: %w", path, err)
+			}
+
+			sections := strings.Split(string(content), "-- +migrate ")
+			var upSection, downSection string
+			for _, section := range sections {
+				if strings.HasPrefix(section, "Up") {
+					upSection = strings.TrimPrefix(section, "Up\n")
+				} else if strings.HasPrefix(section, "Down") {
+					downSection = strings.TrimPrefix(section, "Down\n")
+				}
+			}
+
+			migrations = append(migrations, FileMigration{
+				Datetime: parts[0],
+				Name:     strings.TrimSuffix(parts[1], ".sql"),
+				Up:       upSection,
+				Down:     downSection,
+			})
 		}
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("cannot load migrations: %w", err)
+		return nil, fmt.Errorf("cannot load file migrations: %w", err)
 	}
-	return nil
+	return migrations, nil
 }
 
-func (m *Migrator) loadMigration(path string) error {
-	content, err := m.assetsFS.ReadFile(path)
+func (m *Migrator) loadDBMigrations() ([]DBMigration, error) {
+	rows, err := m.db.Query("SELECT datetime, name FROM migrations ORDER BY datetime")
 	if err != nil {
-		return fmt.Errorf("cannot read migration file: %w", err)
+		return nil, fmt.Errorf("cannot load database migrations: %w", err)
+	}
+	defer rows.Close()
+
+	var migrations []DBMigration
+	for rows.Next() {
+		var migration DBMigration
+		if err := rows.Scan(&migration.Datetime, &migration.Name); err != nil {
+			return nil, fmt.Errorf("cannot scan migration row: %w", err)
+		}
+		migrations = append(migrations, migration)
+	}
+	return migrations, nil
+}
+
+// Note: We could optimize by only checking the latest migration to determine pending migrations.
+// However, for now, we are verifying all migrations to ensure completeness in certain scenarios.
+func (m *Migrator) findPendingMigrations(fileMigrations []FileMigration, dbMigrations []DBMigration) []FileMigration {
+	dbMigrationsMap := make(map[string]struct{})
+	for _, dbMigration := range dbMigrations {
+		dbMigrationsMap[dbMigration.Datetime+dbMigration.Name] = struct{}{}
 	}
 
-	parts := strings.Split(string(content), "-- +migrate ")
-	for _, part := range parts {
-		lines := strings.SplitN(part, "\n", 2)
-		if len(lines) < 2 {
-			continue
+	var pendingMigrations []FileMigration
+	for _, fileMigration := range fileMigrations {
+		if _, exists := dbMigrationsMap[fileMigration.Datetime+fileMigration.Name]; !exists {
+			pendingMigrations = append(pendingMigrations, fileMigration)
 		}
-		direction := strings.TrimSpace(lines[0])
-		script := strings.TrimSpace(lines[1])
-		m.migrations.Store(filepath.Base(path)+":"+direction, script)
 	}
+	return pendingMigrations
+}
+
+func (m *Migrator) logMigrations(fileMigrations []FileMigration, dbMigrations []DBMigration, pendingMigrations []FileMigration) {
+	m.Log().Info("File-based migrations:")
+	for _, migration := range fileMigrations {
+		m.Log().Info(fmt.Sprintf("  %s-%s", migration.Datetime, migration.Name))
+	}
+
+	m.Log().Info("Database migrations:")
+	for _, migration := range dbMigrations {
+		m.Log().Info(fmt.Sprintf("  %s-%s", migration.Datetime, migration.Name))
+	}
+
+	m.Log().Info("Pending migrations:")
+	for _, migration := range pendingMigrations {
+		m.Log().Info(fmt.Sprintf("  %s-%s", migration.Datetime, migration.Name))
+	}
+}
+
+func (m *Migrator) Start(ctx context.Context) error {
+	fileMigrations, err := m.loadFileMigrations()
+	if err != nil {
+		return err
+	}
+
+	dbMigrations, err := m.loadDBMigrations()
+	if err != nil {
+		return err
+	}
+
+	pendingMigrations := m.findPendingMigrations(fileMigrations, dbMigrations)
+	m.logMigrations(fileMigrations, dbMigrations, pendingMigrations)
+
+	return m.Migrate(pendingMigrations)
+}
+
+func (m *Migrator) Migrate(pendingMigrations []FileMigration) error {
+	if m.db == nil {
+		return errors.New("database connection is not initialized")
+	}
+
+	for _, migration := range pendingMigrations {
+		err := m.applyMigration(migration)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
-func (m *Migrator) Migrate() error {
-	if m.db == nil {
-		return errors.New("database connection is not initialized")
+func (m *Migrator) applyMigration(migration FileMigration) error {
+	if migration.Up == "" {
+		return fmt.Errorf("no Up section found in migration %s-%s", migration.Datetime, migration.Name)
 	}
 
-	// Get the last applied
-	var lastMigration string
-	err := m.db.QueryRow("SELECT name FROM migrations ORDER BY datetime DESC LIMIT 1").Scan(&lastMigration)
-	if err != nil && err != sql.ErrNoRows {
-		return fmt.Errorf("cannot get last migration: %w", err)
+	_, err := m.db.Exec(migration.Up)
+	if err != nil {
+		return fmt.Errorf("cannot execute migration %s-%s: %w", migration.Datetime, migration.Name, err)
 	}
 
-	// Apply pending
-	return m.exec("Up", lastMigration)
+	return m.recordMigration(migration)
 }
 
-func (m *Migrator) Rollback() error {
-	if m.db == nil {
-		return errors.New("database connection is not initialized")
-	}
-	return m.exec("Down", "")
-}
-
-func (m *Migrator) exec(direction, lastMigration string) error {
-	var err error
-	m.migrations.Range(func(key, value interface{}) bool {
-		migrationName := strings.Split(key.(string), ":")[0]
-		if migrationName > lastMigration && strings.HasSuffix(key.(string), ":"+direction) {
-			_, err = m.db.Exec(value.(string))
-			if err != nil {
-				err = fmt.Errorf("cannot execute migration %s: %w", key, err)
-				return false
-			}
-			if direction == "Up" {
-				err = m.rec(key.(string))
-				if err != nil {
-					return false
-				}
-			}
-		}
-		return true
-	})
-	return err
-}
-
-func (m *Migrator) rec(migration string) error {
-	parts := strings.Split(migration, ":")
-	if len(parts) < 2 {
-		return fmt.Errorf("invalid migration format: %s", migration)
-	}
-	filename := parts[0]
-	datetime := filename[:14]
-	name := strings.TrimSuffix(filename[15:], ".sql")
+func (m *Migrator) recordMigration(migration FileMigration) error {
 	id := uuid.New().String()
 	appliedAt := time.Now().Format(time.RFC3339)
 
 	query := `
 	INSERT INTO migrations (id, datetime, name, created_at)
 	VALUES (?, ?, ?, ?)`
-	_, err := m.db.Exec(query, id, datetime, name, appliedAt)
+	_, err := m.db.Exec(query, id, migration.Datetime, migration.Name, appliedAt)
 	if err != nil {
 		return fmt.Errorf("cannot record migration: %w", err)
 	}
