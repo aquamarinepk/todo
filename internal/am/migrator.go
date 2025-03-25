@@ -30,16 +30,11 @@ type Migrator struct {
 	migrations sync.Map
 }
 
-type FileMigration struct {
+type Migration struct {
 	Datetime string
 	Name     string
 	Up       string
 	Down     string
-}
-
-type DBMigration struct {
-	Datetime string
-	Name     string
 }
 
 func NewMigrator(assetsFS embed.FS, engine string, opts ...Option) *Migrator {
@@ -94,8 +89,8 @@ func (m *Migrator) createMigrationsTable() error {
 	return nil
 }
 
-func (m *Migrator) loadFileMigrations() ([]FileMigration, error) {
-	var migrations []FileMigration
+func (m *Migrator) loadFileMigrations() ([]Migration, error) {
+	var migrations []Migration
 	migrationPath := fmt.Sprintf(MigrationPath, m.engine)
 	err := fs.WalkDir(m.assetsFS, migrationPath, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -123,7 +118,7 @@ func (m *Migrator) loadFileMigrations() ([]FileMigration, error) {
 				}
 			}
 
-			migrations = append(migrations, FileMigration{
+			migrations = append(migrations, Migration{
 				Datetime: parts[0],
 				Name:     strings.TrimSuffix(parts[1], ".sql"),
 				Up:       upSection,
@@ -138,16 +133,16 @@ func (m *Migrator) loadFileMigrations() ([]FileMigration, error) {
 	return migrations, nil
 }
 
-func (m *Migrator) loadDBMigrations() ([]DBMigration, error) {
+func (m *Migrator) loadDBMigrations() ([]Migration, error) {
 	rows, err := m.db.Query("SELECT datetime, name FROM migrations ORDER BY datetime")
 	if err != nil {
 		return nil, fmt.Errorf("cannot load database migrations: %w", err)
 	}
 	defer rows.Close()
 
-	var migrations []DBMigration
+	var migrations []Migration
 	for rows.Next() {
-		var migration DBMigration
+		var migration Migration
 		if err := rows.Scan(&migration.Datetime, &migration.Name); err != nil {
 			return nil, fmt.Errorf("cannot scan migration row: %w", err)
 		}
@@ -156,15 +151,15 @@ func (m *Migrator) loadDBMigrations() ([]DBMigration, error) {
 	return migrations, nil
 }
 
-// Note: We could optimize by only checking the latest migration to determine pending migrations.
-// However, for now, we are verifying all migrations to ensure completeness in certain scenarios.
-func (m *Migrator) findPendingMigrations(fileMigrations []FileMigration, dbMigrations []DBMigration) []FileMigration {
+// Note: We could optimize by only checking the latest migration to determine pending ones.
+// However, for now, we are verifying all of them to ensure completeness in certain scenarios.
+func (m *Migrator) findPendingMigrations(fileMigrations []Migration, dbMigrations []Migration) []Migration {
 	dbMigrationsMap := make(map[string]struct{})
 	for _, dbMigration := range dbMigrations {
 		dbMigrationsMap[dbMigration.Datetime+dbMigration.Name] = struct{}{}
 	}
 
-	var pendingMigrations []FileMigration
+	var pendingMigrations []Migration
 	for _, fileMigration := range fileMigrations {
 		if _, exists := dbMigrationsMap[fileMigration.Datetime+fileMigration.Name]; !exists {
 			pendingMigrations = append(pendingMigrations, fileMigration)
@@ -173,7 +168,7 @@ func (m *Migrator) findPendingMigrations(fileMigrations []FileMigration, dbMigra
 	return pendingMigrations
 }
 
-func (m *Migrator) logMigrations(fileMigrations []FileMigration, dbMigrations []DBMigration, pendingMigrations []FileMigration) {
+func (m *Migrator) logMigrations(fileMigrations []Migration, dbMigrations []Migration, pendingMigrations []Migration) {
 	m.Log().Info("File-based migrations:")
 	for _, migration := range fileMigrations {
 		m.Log().Info(fmt.Sprintf("  %s-%s", migration.Datetime, migration.Name))
@@ -207,7 +202,7 @@ func (m *Migrator) Start(ctx context.Context) error {
 	return m.Migrate(pendingMigrations)
 }
 
-func (m *Migrator) Migrate(pendingMigrations []FileMigration) error {
+func (m *Migrator) Migrate(pendingMigrations []Migration) error {
 	if m.db == nil {
 		return errors.New("database connection is not initialized")
 	}
@@ -222,7 +217,7 @@ func (m *Migrator) Migrate(pendingMigrations []FileMigration) error {
 	return nil
 }
 
-func (m *Migrator) applyMigration(migration FileMigration) error {
+func (m *Migrator) applyMigration(migration Migration) error {
 	if migration.Up == "" {
 		return fmt.Errorf("no Up section found in migration %s-%s", migration.Datetime, migration.Name)
 	}
@@ -235,7 +230,7 @@ func (m *Migrator) applyMigration(migration FileMigration) error {
 	return m.recordMigration(migration)
 }
 
-func (m *Migrator) recordMigration(migration FileMigration) error {
+func (m *Migrator) recordMigration(migration Migration) error {
 	id := uuid.New().String()
 	appliedAt := time.Now().Format(time.RFC3339)
 

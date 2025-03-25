@@ -54,7 +54,7 @@ func (repo *BaseRepo) GetAllUsers(ctx context.Context) ([]User, error) {
 
 	var result []User
 	for _, id := range repo.order {
-		result = append(result, toUser(repo.users[id]))
+		result = append(result, ToUser(repo.users[id]))
 	}
 	return result, nil
 }
@@ -67,7 +67,7 @@ func (repo *BaseRepo) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 	if !exists {
 		return User{}, errors.New("user not found")
 	}
-	return toUser(userDA), nil
+	return ToUser(userDA), nil
 }
 
 func (repo *BaseRepo) CreateUser(ctx context.Context, user User) error {
