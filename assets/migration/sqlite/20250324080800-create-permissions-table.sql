@@ -1,6 +1,7 @@
 -- +migrate Up
 CREATE TABLE permissions (
                              id TEXT PRIMARY KEY,
+                             slug TEXT,
                              name TEXT,
                              description TEXT,
                              created_by TEXT,

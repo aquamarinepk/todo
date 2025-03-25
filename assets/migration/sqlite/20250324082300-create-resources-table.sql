@@ -1,6 +1,7 @@
 -- +migrate Up
 CREATE TABLE resources (
                            id TEXT PRIMARY KEY,
+                           slug TEXT,
                            name TEXT,
                            description TEXT,
                            label TEXT,
