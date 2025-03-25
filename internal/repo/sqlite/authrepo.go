@@ -13,12 +13,12 @@ import (
 )
 
 var (
-	key       = am.Key
-	featAuth  = "auth"
-	resUser   = "user"
-	resRole   = "role"
-	resPerm   = "permission"
-	resRes    = "resource"
+	key         = am.Key
+	featAuth    = "auth"
+	resUser     = "user"
+	resRole     = "role"
+	resPerm     = "permission"
+	resRes      = "resource"
 	resUserRole = "user_role"
 	resUserPerm = "user_permission"
 	resRolePerm = "role_permission"
@@ -80,14 +80,45 @@ func (repo *AuthRepo) GetUser(ctx context.Context, id uuid.UUID) (auth.User, err
 		return auth.User{}, err
 	}
 
-	var user auth.User
-	err = repo.db.GetContext(ctx, &user, query, id)
+	rows, err := repo.db.QueryxContext(ctx, query, id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return user, errors.New("user not found")
-		}
-		return user, err
+		return auth.User{}, err
 	}
+	defer rows.Close()
+
+	var userDA auth.UserExtDA
+	var roles []uuid.UUID
+	var permissions []uuid.UUID
+	userMap := make(map[uuid.UUID]auth.User)
+
+	for rows.Next() {
+		if err := rows.StructScan(&userDA); err != nil {
+			return auth.User{}, err
+		}
+
+		if _, exists := userMap[userDA.ID]; !exists {
+			userMap[userDA.ID] = auth.ToUserExt(userDA)
+		}
+
+		if userDA.RoleID.Valid {
+			roleID, err := uuid.Parse(userDA.RoleID.String)
+			if err == nil {
+				roles = append(roles, roleID)
+			}
+		}
+
+		if userDA.PermissionID.Valid {
+			permissionID, err := uuid.Parse(userDA.PermissionID.String)
+			if err == nil {
+				permissions = append(permissions, permissionID)
+			}
+		}
+	}
+
+	user := userMap[userDA.ID]
+	user.RoleIDs = roles
+	user.PermissionIDs = permissions
+
 	return user, nil
 }
 
