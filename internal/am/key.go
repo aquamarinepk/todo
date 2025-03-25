@@ -10,7 +10,7 @@ type Keys struct {
 	ServerFeatPath     string
 	ServerIndexEnabled string
 	
-	DBAuthSQLiteDSN string
+	DBSQLiteDSN string
 
 	SecCSRFKey      string
 	SecCSRFRedirect string
@@ -41,7 +41,7 @@ var Key = Keys{
 	ServerFeatPath:     "server.feat.path",
 	ServerIndexEnabled: "server.index.enabled",
 
-	DBAuthSQLiteDSN: "db.auth.sqlite.dsn",
+	DBSQLiteDSN: "db.sqlite.dsn",
 
 	SecCSRFKey:      "sec.csrf.key",
 	SecCSRFRedirect: "sec.csrf.redirect",

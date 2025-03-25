@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	_ "github.com/mattn/go-sqlite3" // SQLite driver
 )
 
 const (
@@ -42,30 +43,39 @@ func NewMigrator(assetsFS embed.FS, engine string, opts ...Option) *Migrator {
 func (m *Migrator) Setup(ctx context.Context) error {
 	switch m.engine {
 	case EngSQLite:
-		// TODO: Setup SQLite
+		return m.setupSQLite()
 	case EngPostgres:
+		// NOTE:: Will be implemented later
 		return fmt.Errorf("unsupported engine: %s", m.engine)
 	default:
 		return fmt.Errorf("unsupported engine: %s", m.engine)
 	}
-	return m.load()
+}
+
+func (m *Migrator) setupSQLite() error {
+	dsn, ok := m.Cfg().StrVal(Key.DBSQLiteDSN)
+	if !ok {
+		return errors.New("database DSN not found in configuration")
+	}
+
+	db, err := sql.Open("sqlite3", dsn)
+	if err != nil {
+		return fmt.Errorf("cannot connect to SQLite: %w", err)
+	}
+
+	m.db = db
+	return m.createMigrationsTable()
 }
 
 func (m *Migrator) Start(ctx context.Context) error {
-	return nil
+	if err := m.load(); err != nil {
+		return err
+	}
+	return m.Migrate()
 }
 
 func (m *Migrator) Stop(ctx context.Context) error {
 	return m.Close()
-}
-
-func (m *Migrator) ConnectSQLite(dataSourceName string) error {
-	db, err := sql.Open("sqlite3", dataSourceName)
-	if err != nil {
-		return fmt.Errorf("cannot connect to SQLite: %w", err)
-	}
-	m.db = db
-	return m.createMigrationsTable()
 }
 
 func (m *Migrator) createMigrationsTable() error {
@@ -130,20 +140,30 @@ func (m *Migrator) Migrate() error {
 	if m.db == nil {
 		return errors.New("database connection is not initialized")
 	}
-	return m.exec("Up")
+
+	// Get the last applied
+	var lastMigration string
+	err := m.db.QueryRow("SELECT name FROM migrations ORDER BY datetime DESC LIMIT 1").Scan(&lastMigration)
+	if err != nil && err != sql.ErrNoRows {
+		return fmt.Errorf("cannot get last migration: %w", err)
+	}
+
+	// Apply pending
+	return m.exec("Up", lastMigration)
 }
 
 func (m *Migrator) Rollback() error {
 	if m.db == nil {
 		return errors.New("database connection is not initialized")
 	}
-	return m.exec("Down")
+	return m.exec("Down", "")
 }
 
-func (m *Migrator) exec(direction string) error {
+func (m *Migrator) exec(direction, lastMigration string) error {
 	var err error
 	m.migrations.Range(func(key, value interface{}) bool {
-		if strings.HasSuffix(key.(string), ":"+direction) {
+		migrationName := strings.Split(key.(string), ":")[0]
+		if migrationName > lastMigration && strings.HasSuffix(key.(string), ":"+direction) {
 			_, err = m.db.Exec(value.(string))
 			if err != nil {
 				err = fmt.Errorf("cannot execute migration %s: %w", key, err)
