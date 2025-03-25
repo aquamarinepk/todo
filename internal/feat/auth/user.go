@@ -11,23 +11,27 @@ const (
 
 type User struct {
 	am.Model
-	Username    string `json:"username"`
-	Email       string `json:"email"`
-	Name        string `json:"name"`
-	EncPassword string
-	Roles       []Role
-	Permissions []Permission
+	Username      string        `json:"username"`
+	Email         string        `json:"email"`
+	Name          string        `json:"name"`
+	EncPassword   string
+	RoleIDs       []uuid.UUID
+	PermissionIDs []uuid.UUID
+	Roles         []Role
+	Permissions   []Permission
 }
 
 // NewUser creates a new user.
 func NewUser(username, email, name string) User {
 	return User{
-		Model:    am.NewModel(am.WithType(userType)),
-		Username: username,
-		Email:    email,
-		Name:     name,
-		Roles:    []Role{},
-		Permissions: []Permission{},
+		Model:         am.NewModel(am.WithType(userType)),
+		Username:      username,
+		Email:         email,
+		Name:          name,
+		Roles:         []Role{},
+		Permissions:   []Permission{},
+		RoleIDs:       []uuid.UUID{},
+		PermissionIDs: []uuid.UUID{},
 	}
 }
 
