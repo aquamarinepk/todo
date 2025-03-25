@@ -1,6 +1,7 @@
 -- +migrate Up
 CREATE TABLE roles (
                        id TEXT PRIMARY KEY,
+                       slug TEXT,
                        name TEXT,
                        description TEXT,
                        status TEXT,
