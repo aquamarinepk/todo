@@ -211,7 +211,7 @@ func (repo *BaseRepo) AddPermissionToUser(ctx context.Context, userID uuid.UUID,
 	if !exists {
 		return errors.New("user not found")
 	}
-	userDA.Permissions = append(userDA.Permissions, permission.ID())
+	userDA.PermissionIDs = append(userDA.PermissionIDs, permission.ID())
 	repo.users[userDA.ID] = userDA
 	repo.userPermissions[userDA.ID] = append(repo.userPermissions[userDA.ID], permission.ID())
 	return nil
@@ -226,9 +226,9 @@ func (repo *BaseRepo) RemovePermissionFromUser(ctx context.Context, userID uuid.
 		return errors.New("user not found")
 	}
 
-	for i, pid := range userDA.Permissions {
+	for i, pid := range userDA.PermissionIDs {
 		if pid == permissionID {
-			userDA.Permissions = append(userDA.Permissions[:i], userDA.Permissions[i+1:]...)
+			userDA.PermissionIDs = append(userDA.PermissionIDs[:i], userDA.PermissionIDs[i+1:]...)
 			repo.users[userDA.ID] = userDA
 			for j, upid := range repo.userPermissions[userDA.ID] {
 				if upid == permissionID {
