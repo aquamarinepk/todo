@@ -5,8 +5,13 @@
 SELECT id, username, email, slug FROM users;
 
 -- Get
+SELECT id, name, username, email, password, slug, created_by, updated_by, created_at, updated_at
+FROM users
+WHERE id = ?;
+
+-- GetPreload
 SELECT DISTINCT
-    u.id, u.username, u.email, u.slug,
+    u.id, u.name, u.username, u.email, u.password, u.slug, u.created_by, u.updated_by, u.created_at, u.updated_at,
     r.id AS role_id, r.name AS role_name,
     p.id AS permission_id, p.name AS permission_name
 FROM users u
