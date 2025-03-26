@@ -18,10 +18,10 @@ type Repo interface {
 	AddPermissionToUser(ctx context.Context, userID uuid.UUID, permission Permission) error
 	RemovePermissionFromUser(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) error
 	GetUserRole(ctx context.Context, userID, roleID uuid.UUID) (Role, error)
-	GetRole(ctx context.Context, userID, roleID uuid.UUID) (Role, error)
+	GetRole(ctx context.Context, roleID uuid.UUID, preload ...bool) (Role, error)
 	CreateRole(ctx context.Context, role Role) error
-	UpdateRole(ctx context.Context, userID uuid.UUID, role Role) error
-	DeleteRole(ctx context.Context, userID, roleID uuid.UUID) error
+	UpdateRole(ctx context.Context, role Role) error
+	DeleteRole(ctx context.Context, roleID uuid.UUID) error
 	AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permission Permission) error
 	RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error
 	GetAllPermissions(ctx context.Context) ([]Permission, error)
@@ -30,7 +30,7 @@ type Repo interface {
 	UpdatePermission(ctx context.Context, permission Permission) error
 	DeletePermission(ctx context.Context, id uuid.UUID) error
 	GetAllResources(ctx context.Context) ([]Resource, error)
-	GetResource(ctx context.Context, id uuid.UUID) (Resource, error)
+	GetResource(ctx context.Context, id uuid.UUID, preload ...bool) (Resource, error)
 	CreateResource(ctx context.Context, resource Resource) error
 	UpdateResource(ctx context.Context, resource Resource) error
 	DeleteResource(ctx context.Context, id uuid.UUID) error

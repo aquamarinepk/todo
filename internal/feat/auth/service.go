@@ -15,9 +15,9 @@ type Service interface {
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	CreateRole(ctx context.Context, role Role) error
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
-	GetRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) (Role, error)
+	GetRole(ctx context.Context, roleID uuid.UUID) (Role, error)
 	UpdateRole(ctx context.Context, role Role) error
-	DeleteRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
+	DeleteRole(ctx context.Context, roleID uuid.UUID) error
 	AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	CreatePermission(ctx context.Context, permission Permission) error
@@ -78,32 +78,20 @@ func (svc *BaseService) CreateRole(ctx context.Context, role Role) error {
 	return svc.repo.CreateRole(ctx, role)
 }
 
-func (svc *BaseService) GetRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) (Role, error) {
-	_, err := svc.repo.GetUser(ctx, userID)
-	if err != nil {
-		return Role{}, err
-	}
-	return svc.repo.GetRole(ctx, userID, roleID)
+func (svc *BaseService) GetRole(ctx context.Context, roleID uuid.UUID) (Role, error) {
+	return svc.repo.GetRole(ctx, roleID)
 }
 
 func (svc *BaseService) UpdateRole(ctx context.Context, role Role) error {
-	_, err := svc.repo.GetUser(ctx, role.UserID)
-	if err != nil {
-		return err
-	}
-	return svc.repo.UpdateRole(ctx, role.UserID, role)
+	return svc.repo.UpdateRole(ctx, role)
 }
 
-func (svc *BaseService) DeleteRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	_, err := svc.repo.GetUser(ctx, userID)
-	if err != nil {
-		return err
-	}
-	return svc.repo.DeleteRole(ctx, userID, roleID)
+func (svc *BaseService) DeleteRole(ctx context.Context, roleID uuid.UUID) error {
+	return svc.repo.DeleteRole(ctx, roleID)
 }
 
 func (svc *BaseService) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	role, err := svc.repo.GetRole(ctx, userID, roleID)
+	role, err := svc.repo.GetRole(ctx, roleID)
 	if err != nil {
 		return err
 	}

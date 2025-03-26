@@ -188,14 +188,22 @@ func (repo *AuthRepo) GetAllRoles(ctx context.Context) ([]auth.Role, error) {
 	return roles, nil
 }
 
-func (repo *AuthRepo) GetRole(ctx context.Context, userID, roleID uuid.UUID) (auth.Role, error) {
-	query, err := repo.Query.Get(featAuth, resRole, "Get")
+// GetRole retrieves a role by its ID, optionally preloading its associated permissions.
+func (repo *AuthRepo) GetRole(ctx context.Context, id uuid.UUID, preload ...bool) (auth.Role, error) {
+	if len(preload) > 0 && preload[0] {
+		return repo.getRolePreload(ctx, id)
+	}
+	return repo.getRole(ctx, id)
+}
+
+func (repo *AuthRepo) getRole(ctx context.Context, id uuid.UUID) (auth.Role, error) {
+	query, err := repo.Query.Get("auth", "role", "Get")
 	if err != nil {
 		return auth.Role{}, err
 	}
 
 	var role auth.Role
-	err = repo.db.GetContext(ctx, &role, query, userID, roleID)
+	err = repo.db.GetContext(ctx, &role, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return role, errors.New("role not found")
@@ -203,6 +211,44 @@ func (repo *AuthRepo) GetRole(ctx context.Context, userID, roleID uuid.UUID) (au
 		return role, err
 	}
 	return role, nil
+}
+
+func (repo *AuthRepo) getRolePreload(ctx context.Context, id uuid.UUID) (auth.Role, error) {
+	query, err := repo.Query.Get("auth", "role", "GetPreload")
+	if err != nil {
+		return auth.Role{}, err
+	}
+
+	rows, err := repo.db.QueryxContext(ctx, query, id)
+	if err != nil {
+		return auth.Role{}, err
+	}
+	defer rows.Close()
+
+	var roleDA auth.RoleExtDA
+	roleMap := make(map[uuid.UUID]auth.Role)
+
+	for rows.Next() {
+		if err := rows.StructScan(&roleDA); err != nil {
+			return auth.Role{}, err
+		}
+
+		role, exists := roleMap[roleDA.ID]
+		if !exists {
+			role = auth.ToRoleExt(roleDA)
+		}
+
+		if roleDA.PermissionID.Valid {
+			permissionID, err := uuid.Parse(roleDA.PermissionID.String)
+			if err == nil {
+				role.PermissionIDs = append(role.PermissionIDs, permissionID)
+			}
+		}
+
+		roleMap[roleDA.ID] = role
+	}
+
+	return roleMap[roleDA.ID], nil
 }
 
 func (repo *AuthRepo) CreateRole(ctx context.Context, role auth.Role) error {
@@ -215,23 +261,23 @@ func (repo *AuthRepo) CreateRole(ctx context.Context, role auth.Role) error {
 	return err
 }
 
-func (repo *AuthRepo) UpdateRole(ctx context.Context, userID uuid.UUID, role auth.Role) error {
+func (repo *AuthRepo) UpdateRole(ctx context.Context, role auth.Role) error {
 	query, err := repo.Query.Get(featAuth, resRole, "Update")
 	if err != nil {
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, role.Name, role.Description, role.Slug(), userID, role.ID())
+	_, err = repo.db.ExecContext(ctx, query, role.Name, role.Description, role.Slug(), role.ID())
 	return err
 }
 
-func (repo *AuthRepo) DeleteRole(ctx context.Context, userID, roleID uuid.UUID) error {
+func (repo *AuthRepo) DeleteRole(ctx context.Context, roleID uuid.UUID) error {
 	query, err := repo.Query.Get(featAuth, resRole, "Delete")
 	if err != nil {
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, userID, roleID)
+	_, err = repo.db.ExecContext(ctx, query, roleID)
 	return err
 }
 
@@ -310,8 +356,16 @@ func (repo *AuthRepo) GetAllResources(ctx context.Context) ([]auth.Resource, err
 	return resources, nil
 }
 
-func (repo *AuthRepo) GetResource(ctx context.Context, id uuid.UUID) (auth.Resource, error) {
-	query, err := repo.Query.Get(featAuth, resRes, "Get")
+// GetResource retrieves a resource by its ID, optionally preloading its associated permissions.
+func (repo *AuthRepo) GetResource(ctx context.Context, id uuid.UUID, preload ...bool) (auth.Resource, error) {
+	if len(preload) > 0 && preload[0] {
+		return repo.getResourcePreload(ctx, id)
+	}
+	return repo.getResource(ctx, id)
+}
+
+func (repo *AuthRepo) getResource(ctx context.Context, id uuid.UUID) (auth.Resource, error) {
+	query, err := repo.Query.Get("auth", "resource", "Get")
 	if err != nil {
 		return auth.Resource{}, err
 	}
@@ -325,6 +379,44 @@ func (repo *AuthRepo) GetResource(ctx context.Context, id uuid.UUID) (auth.Resou
 		return resource, err
 	}
 	return resource, nil
+}
+
+func (repo *AuthRepo) getResourcePreload(ctx context.Context, id uuid.UUID) (auth.Resource, error) {
+	query, err := repo.Query.Get("auth", "resource", "GetPreload")
+	if err != nil {
+		return auth.Resource{}, err
+	}
+
+	rows, err := repo.db.QueryxContext(ctx, query, id)
+	if err != nil {
+		return auth.Resource{}, err
+	}
+	defer rows.Close()
+
+	var resourceDA auth.ResourceExtDA
+	resourceMap := make(map[uuid.UUID]auth.Resource)
+
+	for rows.Next() {
+		if err := rows.StructScan(&resourceDA); err != nil {
+			return auth.Resource{}, err
+		}
+
+		resource, exists := resourceMap[resourceDA.ID]
+		if !exists {
+			resource = auth.ToResourceExt(resourceDA)
+		}
+
+		if resourceDA.PermissionID.Valid {
+			permissionID, err := uuid.Parse(resourceDA.PermissionID.String)
+			if err == nil {
+				resource.PermissionIDs = append(resource.PermissionIDs, permissionID)
+			}
+		}
+
+		resourceMap[resourceDA.ID] = resource
+	}
+
+	return resourceMap[resourceDA.ID], nil
 }
 
 func (repo *AuthRepo) CreateResource(ctx context.Context, resource auth.Resource) error {

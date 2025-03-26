@@ -13,6 +13,7 @@ type Role struct {
 	Name        string
 	Description string
 	Status      string
+	PermissionIDs []uuid.UUID
 	Permissions []Permission
 }
 
@@ -23,6 +24,7 @@ func NewRole(name, description, status string) Role {
 		Name:        name,
 		Description: description,
 		Status:      status,
+		PermissionIDs: []uuid.UUID{},
 		Permissions: []Permission{},
 	}
 }

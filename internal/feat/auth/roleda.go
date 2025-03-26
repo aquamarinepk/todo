@@ -67,3 +67,33 @@ func toRoleIDs(roles []Role) []uuid.UUID {
 	}
 	return roleIDs
 }
+
+// RoleExtDA represents the data access layer for the Role with associated permissions.
+type RoleExtDA struct {
+	ID             uuid.UUID      `db:"id"`
+	Name           sql.NullString `db:"name"`
+	Description    sql.NullString `db:"description"`
+	Slug           sql.NullString `db:"slug"`
+	PermissionID   sql.NullString `db:"permission_id"`
+	PermissionName sql.NullString `db:"permission_name"`
+	CreatedBy      sql.NullString `db:"created_by"`
+	UpdatedBy      sql.NullString `db:"updated_by"`
+	CreatedAt      sql.NullTime   `db:"created_at"`
+	UpdatedAt      sql.NullTime   `db:"updated_at"`
+}
+
+// ToRoleExt converts RoleExtDA to Role including permissions.
+func ToRoleExt(da RoleExtDA) Role {
+	return Role{
+		Model: am.NewModel(
+			am.WithID(da.ID),
+			am.WithSlug(da.Slug.String),
+			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
+			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
+			am.WithCreatedAt(da.CreatedAt.Time),
+			am.WithUpdatedAt(da.UpdatedAt.Time),
+		),
+		Name:        da.Name.String,
+		Description: da.Description.String,
+	}
+}

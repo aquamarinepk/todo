@@ -146,7 +146,7 @@ func (h *APIHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	role, err := h.service.GetRole(r.Context(), payload.UserID, payload.RoleID)
+	role, err := h.service.GetRole(r.Context(), payload.RoleID)
 	if err != nil {
 		res := am.NewErrorResponse("Role not found", am.ErrorCodeNotFound, err.Error())
 		am.Respond(w, http.StatusNotFound, res)
@@ -173,7 +173,7 @@ func (h *APIHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	if err := h.service.DeleteRole(r.Context(), payload.UserID, payload.RoleID); err != nil {
+	if err := h.service.DeleteRole(r.Context(), payload.RoleID); err != nil {
 		res := am.NewErrorResponse("Failed to delete role", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)
 		return
