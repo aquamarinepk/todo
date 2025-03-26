@@ -449,13 +449,7 @@ func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Edit role", userID, roleID)
 	ctx := r.Context()
 
-	user, err := h.service.GetUser(ctx, userID)
-	if err != nil {
-		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
-		return
-	}
-
-	role, err := h.service.GetRole(ctx, user.ID(), roleID)
+	role, err := h.service.GetRole(ctx, roleID)
 	if err != nil {
 		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
@@ -518,13 +512,7 @@ func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Update role", userID, roleID)
 	ctx := r.Context()
 
-	user, err := h.service.GetUser(ctx, userID)
-	if err != nil {
-		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
-		return
-	}
-
-	role, err := h.service.GetRole(ctx, user.ID(), roleID)
+	role, err := h.service.GetRole(ctx, roleID)
 	if err != nil {
 		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
@@ -558,7 +546,7 @@ func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Delete role", userID, roleID)
 	ctx := r.Context()
 
-	err = h.service.DeleteRole(ctx, userID, roleID)
+	err = h.service.DeleteRole(ctx, roleID)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return

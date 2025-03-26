@@ -2,6 +2,7 @@ package auth
 
 import (
 	"github.com/aquamarinepk/todo/internal/am"
+	"github.com/google/uuid"
 )
 
 const (
@@ -15,6 +16,7 @@ type Resource struct {
 	Label       string `json:"label"`
 	Type        string `json:"type"`
 	URI         string `json:"uri"`
+	PermissionIDs []uuid.UUID
 	Permissions []Permission
 }
 
@@ -23,5 +25,7 @@ func NewResource(name, description string) Resource {
 		Model:       am.NewModel(am.WithType(resourceType)),
 		Name:        name,
 		Description: description,
+		PermissionIDs: []uuid.UUID{},
+		Permissions: []Permission{},
 	}
 }

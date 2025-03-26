@@ -58,3 +58,32 @@ func toResourceDA(resource Resource) ResourceDA {
 	}
 }
 
+// ResourceExtDA represents the data access layer for the Resource with associated permissions.
+type ResourceExtDA struct {
+	ID             uuid.UUID      `db:"id"`
+	Name           sql.NullString `db:"name"`
+	Description    sql.NullString `db:"description"`
+	Slug           sql.NullString `db:"slug"`
+	PermissionID   sql.NullString `db:"permission_id"`
+	PermissionName sql.NullString `db:"permission_name"`
+	CreatedBy      sql.NullString `db:"created_by"`
+	UpdatedBy      sql.NullString `db:"updated_by"`
+	CreatedAt      sql.NullTime   `db:"created_at"`
+	UpdatedAt      sql.NullTime   `db:"updated_at"`
+}
+
+// ToResourceExt converts ResourceExtDA to Resource including permissions.
+func ToResourceExt(da ResourceExtDA) Resource {
+	return Resource{
+		Model: am.NewModel(
+			am.WithID(da.ID),
+			am.WithSlug(da.Slug.String),
+			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
+			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
+			am.WithCreatedAt(da.CreatedAt.Time),
+			am.WithUpdatedAt(da.UpdatedAt.Time),
+		),
+		Name:        da.Name.String,
+		Description: da.Description.String,
+	}
+}
