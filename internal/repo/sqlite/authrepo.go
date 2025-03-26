@@ -74,8 +74,30 @@ func (repo *AuthRepo) GetAllUsers(ctx context.Context) ([]auth.User, error) {
 	return users, nil
 }
 
-func (repo *AuthRepo) GetUser(ctx context.Context, id uuid.UUID) (auth.User, error) {
+func (repo *AuthRepo) GetUser(ctx context.Context, id uuid.UUID, preload ...bool) (auth.User, error) {
+	if len(preload) > 0 && preload[0] {
+		return repo.getUserPreload(ctx, id)
+	}
+	return repo.getUser(ctx, id)
+}
+
+func (repo *AuthRepo) getUser(ctx context.Context, id uuid.UUID) (auth.User, error) {
 	query, err := repo.Query.Get(featAuth, resUser, "Get")
+	if err != nil {
+		return auth.User{}, err
+	}
+
+	var user auth.User
+	err = repo.db.GetContext(ctx, &user, query, id)
+	if err != nil {
+		return auth.User{}, err
+	}
+
+	return user, nil
+}
+
+func (repo *AuthRepo) getUserPreload(ctx context.Context, id uuid.UUID) (auth.User, error) {
+	query, err := repo.Query.Get(featAuth, resUser, "GetPreload")
 	if err != nil {
 		return auth.User{}, err
 	}

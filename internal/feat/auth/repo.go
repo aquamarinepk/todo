@@ -8,7 +8,7 @@ import (
 
 type Repo interface {
 	GetAllUsers(ctx context.Context) ([]User, error)
-	GetUser(ctx context.Context, id uuid.UUID) (User, error)
+	GetUser(ctx context.Context, id uuid.UUID, preload ...bool) (User, error)
 	CreateUser(ctx context.Context, user User) error
 	UpdateUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
