@@ -33,38 +33,38 @@ func main() {
 
 	app := core.NewApp(name, version, assetsFS, opts...)
 
-	queryManager := am.NewQueryManager(assetsFS, engine, opts...)
-	templateManager := am.NewTemplateManager(assetsFS, opts...)
+	queryManager := am.NewQueryManager(assetsFS, engine)
+	templateManager := am.NewTemplateManager(assetsFS)
 
 	// Migrator
-	migrator := am.NewMigrator(assetsFS, engine, opts...)
+	migrator := am.NewMigrator(assetsFS, engine)
 
 	// Seeder
-	seeder := am.NewSeeder(assetsFS, engine, opts...)
+	seeder := am.NewSeeder(assetsFS, engine)
 
 	// FileServer
-	fileServer := am.NewFileServer(assetsFS, opts...)
+	fileServer := am.NewFileServer(assetsFS)
 	app.MountFileServer("/", fileServer)
 
 	// Auth feature
-	// authRepo := auth.NewInMemoryRepo(queryManager, opts...) // in-memory implementation
-	authRepo := sqlite.NewAuthRepo(queryManager, opts...)
+	// authRepo := auth.NewInMemoryRepo(queryManager) // in-memory implementation
+	authRepo := sqlite.NewAuthRepo(queryManager)
 	authService := auth.NewService(authRepo)
-	authWebHandler := auth.NewWebHandler(templateManager, authService, opts...)
-	authWebRouter := auth.NewWebRouter(authWebHandler, opts...)
-	authAPIHandler := auth.NewAPIHandler(authService, opts...)
-	authAPIRouter := auth.NewAPIRouter(authAPIHandler, opts...)
+	authWebHandler := auth.NewWebHandler(templateManager, authService)
+	authWebRouter := auth.NewWebRouter(authWebHandler)
+	authAPIHandler := auth.NewAPIHandler(authService)
+	authAPIRouter := auth.NewAPIRouter(authAPIHandler)
 
 	app.MountFeatWeb("/auth", authWebRouter)
 	app.MountFeatAPI(version, "/auth", authAPIRouter)
 
 	// Todo resource
-	todoRepo := todo.NewRepo(queryManager, opts...)
+	todoRepo := todo.NewRepo(queryManager)
 	todoService := todo.NewService(todoRepo)
-	todoWebHandler := todo.NewWebHandler(templateManager, todoService, opts...)
-	todoWebRouter := todo.NewWebRouter(todoWebHandler, opts...)
-	todoAPIHandler := todo.NewAPIHandler(todoService, opts...)
-	todoAPIRouter := todo.NewAPIRouter(todoAPIHandler, opts...)
+	todoWebHandler := todo.NewWebHandler(templateManager, todoService)
+	todoWebRouter := todo.NewWebRouter(todoWebHandler)
+	todoAPIHandler := todo.NewAPIHandler(todoService)
+	todoAPIRouter := todo.NewAPIRouter(todoAPIHandler)
 
 	app.MountWeb("/todo", todoWebRouter)
 	app.MountAPI(version, "/todo", todoAPIRouter)
