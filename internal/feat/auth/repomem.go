@@ -59,15 +59,52 @@ func (repo *BaseRepo) GetAllUsers(ctx context.Context) ([]User, error) {
 	return result, nil
 }
 
-func (repo *BaseRepo) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
+func (repo *BaseRepo) GetUser(ctx context.Context, id uuid.UUID, preload ...bool) (User, error) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
+	if len(preload) > 0 && preload[0] {
+		return repo.getUserPreload(ctx, id)
+	}
+	return repo.getUser(ctx, id)
+}
+
+func (repo *BaseRepo) getUser(ctx context.Context, id uuid.UUID) (User, error) {
 	userDA, exists := repo.users[id]
 	if !exists {
 		return User{}, errors.New("user not found")
 	}
 	return ToUser(userDA), nil
+}
+
+func (repo *BaseRepo) getUserPreload(ctx context.Context, id uuid.UUID) (User, error) {
+	userDA, exists := repo.users[id]
+	if !exists {
+		return User{}, errors.New("user not found")
+	}
+
+	user := ToUser(userDA)
+	user.Roles = repo.getUserRolesByID(id)
+	user.Permissions = repo.getUserPermissionsByID(id)
+	return user, nil
+}
+
+func (repo *BaseRepo) getUserRolesByID(userID uuid.UUID) []Role {
+	var roles []Role
+	for _, roleID := range repo.userRoles[userID] {
+		roleDA := repo.roles[roleID]
+		roles = append(roles, toRole(roleDA))
+	}
+	return roles
+}
+
+func (repo *BaseRepo) getUserPermissionsByID(userID uuid.UUID) []Permission {
+	var permissions []Permission
+	for _, permissionID := range repo.userPermissions[userID] {
+		permissionDA := repo.permissions[permissionID]
+		permissions = append(permissions, toPermission(permissionDA))
+	}
+	return permissions
 }
 
 func (repo *BaseRepo) CreateUser(ctx context.Context, user User) error {
