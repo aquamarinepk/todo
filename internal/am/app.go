@@ -84,6 +84,8 @@ func (a *App) Add(dep Core) {
 		dep.SetName(genName())
 	}
 
+	dep.SetOpts(a.opts...)
+
 	dep.SetLog(a.Log())
 	dep.SetCfg(a.Cfg())
 

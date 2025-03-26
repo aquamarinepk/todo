@@ -5,6 +5,7 @@ import (
 )
 
 type Core interface {
+	SetOpts(opts ...Option)
 	Naming
 	Logging
 	Configuring
@@ -45,6 +46,13 @@ func NewCore(name string, opts ...Option) *BaseCore {
 		opt(core)
 	}
 	return core
+}
+
+// SetOpts sets the options in BaseCore.
+func (c *BaseCore) SetOpts(opts ...Option) {
+	for _, opt := range opts {
+		opt(c)
+	}
 }
 
 // Name returns the name in BaseCore.
