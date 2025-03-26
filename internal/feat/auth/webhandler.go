@@ -129,7 +129,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 		am.NewListAction(authPath, "user", gray),
 		am.NewEditAction(authPath, "user", id, blue),
 		am.NewDeleteAction(authPath, "user", id, red),
-		am.NewAction(fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), "Manage Roles", blue),
+		am.NewAction(fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), "Manage RoleIDs", blue),
 	})
 
 	tmpl, err := h.tm.Get("auth", "show-user")

@@ -66,12 +66,13 @@ func (repo *AuthRepo) GetAllUsers(ctx context.Context) ([]auth.User, error) {
 		return nil, err
 	}
 
-	var users []auth.User
+	var users []auth.UserDA
 	err = repo.db.SelectContext(ctx, &users, query)
 	if err != nil {
 		return nil, err
 	}
-	return users, nil
+
+	return auth.ToUsers(users), nil
 }
 
 func (repo *AuthRepo) GetUser(ctx context.Context, id uuid.UUID, preload ...bool) (auth.User, error) {
@@ -87,13 +88,13 @@ func (repo *AuthRepo) getUser(ctx context.Context, id uuid.UUID) (auth.User, err
 		return auth.User{}, err
 	}
 
-	var user auth.User
+	var user auth.UserDA
 	err = repo.db.GetContext(ctx, &user, query, id)
 	if err != nil {
 		return auth.User{}, err
 	}
 
-	return user, nil
+	return auth.ToUser(user), nil
 }
 
 func (repo *AuthRepo) getUserPreload(ctx context.Context, id uuid.UUID) (auth.User, error) {
@@ -160,7 +161,7 @@ func (repo *AuthRepo) UpdateUser(ctx context.Context, user auth.User) error {
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, user.Username, user.Email, user.Slug(), user.ID())
+	_, err = repo.db.ExecContext(ctx, query, user.Username, user.Email, user.Name, user.EncPassword, user.Slug(), user.UpdatedBy(), user.UpdatedAt(), user.ID())
 	return err
 }
 
