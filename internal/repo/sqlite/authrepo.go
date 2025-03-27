@@ -151,7 +151,8 @@ func (repo *AuthRepo) CreateUser(ctx context.Context, user auth.User) error {
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, user.ID(), user.Username, user.Email, user.Slug())
+	userDA := auth.ToUserDA(user)
+	_, err = repo.db.ExecContext(ctx, query, userDA.ID, userDA.Username, userDA.Email, userDA.Slug)
 	return err
 }
 
@@ -161,7 +162,9 @@ func (repo *AuthRepo) UpdateUser(ctx context.Context, user auth.User) error {
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, user.Username, user.Email, user.Name, user.EncPassword, user.Slug(), user.UpdatedBy(), user.UpdatedAt(), user.ID())
+	userDA := auth.ToUserDA(user)
+	_, err = repo.db.ExecContext(ctx, query, userDA.Username, userDA.Email, userDA.Name, 
+		userDA.EncPassword, userDA.Slug, userDA.UpdatedBy, userDA.UpdatedAt, userDA.ID)
 	return err
 }
 
@@ -181,12 +184,12 @@ func (repo *AuthRepo) GetAllRoles(ctx context.Context) ([]auth.Role, error) {
 		return nil, err
 	}
 
-	var roles []auth.Role
-	err = repo.db.SelectContext(ctx, &roles, query)
+	var rolesDA []auth.RoleDA
+	err = repo.db.SelectContext(ctx, &rolesDA, query)
 	if err != nil {
 		return nil, err
 	}
-	return roles, nil
+	return auth.ToRoles(rolesDA), nil
 }
 
 // GetRole retrieves a role by its ID, optionally preloading its associated permissions.
@@ -203,15 +206,15 @@ func (repo *AuthRepo) getRole(ctx context.Context, id uuid.UUID) (auth.Role, err
 		return auth.Role{}, err
 	}
 
-	var role auth.Role
-	err = repo.db.GetContext(ctx, &role, query, id)
+	var roleDA auth.RoleDA
+	err = repo.db.GetContext(ctx, &roleDA, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return role, errors.New("role not found")
+			return auth.Role{}, errors.New("role not found")
 		}
-		return role, err
+		return auth.Role{}, err
 	}
-	return role, nil
+	return auth.ToRole(roleDA), nil
 }
 
 func (repo *AuthRepo) getRolePreload(ctx context.Context, id uuid.UUID) (auth.Role, error) {
@@ -258,7 +261,8 @@ func (repo *AuthRepo) CreateRole(ctx context.Context, role auth.Role) error {
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, role.ID(), role.Name, role.Description, role.Slug())
+	roleDA := auth.ToRoleDA(role)
+	_, err = repo.db.ExecContext(ctx, query, roleDA.ID, roleDA.Name, roleDA.Description, roleDA.Slug)
 	return err
 }
 
@@ -268,7 +272,8 @@ func (repo *AuthRepo) UpdateRole(ctx context.Context, role auth.Role) error {
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, role.Name, role.Description, role.Slug(), role.ID())
+	roleDA := auth.ToRoleDA(role)
+	_, err = repo.db.ExecContext(ctx, query, roleDA.Name, roleDA.Description, roleDA.Slug, roleDA.ID)
 	return err
 }
 
@@ -288,12 +293,12 @@ func (repo *AuthRepo) GetAllPermissions(ctx context.Context) ([]auth.Permission,
 		return nil, err
 	}
 
-	var permissions []auth.Permission
-	err = repo.db.SelectContext(ctx, &permissions, query)
+	var permissionsDA []auth.PermissionDA
+	err = repo.db.SelectContext(ctx, &permissionsDA, query)
 	if err != nil {
 		return nil, err
 	}
-	return permissions, nil
+	return auth.ToPermissions(permissionsDA), nil
 }
 
 func (repo *AuthRepo) GetPermission(ctx context.Context, id uuid.UUID) (auth.Permission, error) {
@@ -302,15 +307,15 @@ func (repo *AuthRepo) GetPermission(ctx context.Context, id uuid.UUID) (auth.Per
 		return auth.Permission{}, err
 	}
 
-	var permission auth.Permission
-	err = repo.db.GetContext(ctx, &permission, query, id)
+	var permissionDA auth.PermissionDA
+	err = repo.db.GetContext(ctx, &permissionDA, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return permission, errors.New("permission not found")
+			return auth.Permission{}, errors.New("permission not found")
 		}
-		return permission, err
+		return auth.Permission{}, err
 	}
-	return permission, nil
+	return auth.ToPermission(permissionDA), nil
 }
 
 func (repo *AuthRepo) CreatePermission(ctx context.Context, permission auth.Permission) error {
@@ -319,7 +324,8 @@ func (repo *AuthRepo) CreatePermission(ctx context.Context, permission auth.Perm
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, permission.ID(), permission.Name, permission.Description, permission.Slug())
+	permissionDA := auth.ToPermissionDA(permission)
+	_, err = repo.db.ExecContext(ctx, query, permissionDA.ID, permissionDA.Name, permissionDA.Description, permissionDA.Slug)
 	return err
 }
 
@@ -329,7 +335,8 @@ func (repo *AuthRepo) UpdatePermission(ctx context.Context, permission auth.Perm
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, permission.Name, permission.Description, permission.Slug(), permission.ID())
+	permissionDA := auth.ToPermissionDA(permission)
+	_, err = repo.db.ExecContext(ctx, query, permissionDA.Name, permissionDA.Description, permissionDA.Slug, permissionDA.ID)
 	return err
 }
 
@@ -349,12 +356,12 @@ func (repo *AuthRepo) GetAllResources(ctx context.Context) ([]auth.Resource, err
 		return nil, err
 	}
 
-	var resources []auth.Resource
-	err = repo.db.SelectContext(ctx, &resources, query)
+	var resourcesDA []auth.ResourceDA
+	err = repo.db.SelectContext(ctx, &resourcesDA, query)
 	if err != nil {
 		return nil, err
 	}
-	return resources, nil
+	return auth.ToResources(resourcesDA), nil
 }
 
 // GetResource retrieves a resource by its ID, optionally preloading its associated permissions.
@@ -371,15 +378,15 @@ func (repo *AuthRepo) getResource(ctx context.Context, id uuid.UUID) (auth.Resou
 		return auth.Resource{}, err
 	}
 
-	var resource auth.Resource
-	err = repo.db.GetContext(ctx, &resource, query, id)
+	var resourceDA auth.ResourceDA
+	err = repo.db.GetContext(ctx, &resourceDA, query, id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return resource, errors.New("resource not found")
+			return auth.Resource{}, errors.New("resource not found")
 		}
-		return resource, err
+		return auth.Resource{}, err
 	}
-	return resource, nil
+	return auth.ToResource(resourceDA), nil
 }
 
 func (repo *AuthRepo) getResourcePreload(ctx context.Context, id uuid.UUID) (auth.Resource, error) {
@@ -426,7 +433,8 @@ func (repo *AuthRepo) CreateResource(ctx context.Context, resource auth.Resource
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, resource.ID(), resource.Name, resource.Description, resource.Slug())
+	resourceDA := auth.ToResourceDA(resource)
+	_, err = repo.db.ExecContext(ctx, query, resourceDA.ID, resourceDA.Name, resourceDA.Description, resourceDA.Slug)
 	return err
 }
 
@@ -436,7 +444,8 @@ func (repo *AuthRepo) UpdateResource(ctx context.Context, resource auth.Resource
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, resource.Name, resource.Description, resource.Slug(), resource.ID())
+	resourceDA := auth.ToResourceDA(resource)
+	_, err = repo.db.ExecContext(ctx, query, resourceDA.Name, resourceDA.Description, resourceDA.Slug, resourceDA.ID)
 	return err
 }
 
@@ -456,12 +465,12 @@ func (repo *AuthRepo) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]aut
 		return nil, err
 	}
 
-	var roles []auth.Role
-	err = repo.db.SelectContext(ctx, &roles, query, userID)
+	var rolesDA []auth.RoleDA
+	err = repo.db.SelectContext(ctx, &rolesDA, query, userID)
 	if err != nil {
 		return nil, err
 	}
-	return roles, nil
+	return auth.ToRoles(rolesDA), nil
 }
 
 func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, role auth.Role) error {
@@ -470,7 +479,8 @@ func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, role auth.R
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, userID, role.ID())
+	roleDA := auth.ToRoleDA(role)
+	_, err = repo.db.ExecContext(ctx, query, userID, roleDA.ID)
 	return err
 }
 
@@ -490,7 +500,8 @@ func (repo *AuthRepo) AddPermissionToUser(ctx context.Context, userID uuid.UUID,
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, userID, permission.ID())
+	permissionDA := auth.ToPermissionDA(permission)
+	_, err = repo.db.ExecContext(ctx, query, userID, permissionDA.ID)
 	return err
 }
 
@@ -510,15 +521,15 @@ func (repo *AuthRepo) GetUserRole(ctx context.Context, userID, roleID uuid.UUID)
 		return auth.Role{}, err
 	}
 
-	var role auth.Role
-	err = repo.db.GetContext(ctx, &role, query, userID, roleID)
+	var roleDA auth.RoleDA
+	err = repo.db.GetContext(ctx, &roleDA, query, userID, roleID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return role, errors.New("role not found")
+			return auth.Role{}, errors.New("role not found")
 		}
-		return role, err
+		return auth.Role{}, err
 	}
-	return role, nil
+	return auth.ToRole(roleDA), nil
 }
 
 func (repo *AuthRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permission auth.Permission) error {
@@ -527,7 +538,8 @@ func (repo *AuthRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID,
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, roleID, permission.ID())
+	permissionDA := auth.ToPermissionDA(permission)
+	_, err = repo.db.ExecContext(ctx, query, roleID, permissionDA.ID)
 	return err
 }
 
@@ -547,7 +559,8 @@ func (repo *AuthRepo) AddPermissionToResource(ctx context.Context, resourceID uu
 		return err
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, resourceID, permission.ID())
+	permissionDA := auth.ToPermissionDA(permission)
+	_, err = repo.db.ExecContext(ctx, query, resourceID, permissionDA.ID)
 	return err
 }
 
@@ -567,10 +580,10 @@ func (repo *AuthRepo) GetResourcePermissions(ctx context.Context, resourceID uui
 		return nil, err
 	}
 
-	var permissions []auth.Permission
-	err = repo.db.SelectContext(ctx, &permissions, query, resourceID)
+	var permissionsDA []auth.PermissionDA
+	err = repo.db.SelectContext(ctx, &permissionsDA, query, resourceID)
 	if err != nil {
 		return nil, err
 	}
-	return permissions, nil
+	return auth.ToPermissions(permissionsDA), nil
 }
