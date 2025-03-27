@@ -10,3 +10,7 @@ Edit {{ .Data.Name }}
 <h1>Edit Todo</h1>
 {{ template "form" . }}
 {{ end }}
+
+{{ define "submenu" }}
+{{ template "contextual" . }}
+{{ end }}
