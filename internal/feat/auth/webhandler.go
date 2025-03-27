@@ -47,9 +47,14 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	blue, _ := h.Cfg().StrVal(key.ButtonStyleBlue)
+
 	page := am.NewPage(users)
 	page.SetFormAction(authPath)
 	page.GenCSRFToken(r)
+	page.SetActions([]am.Action{
+		am.NewAction(fmt.Sprintf("%s/new-user", authPath), "New User", blue),
+	})
 
 	tmpl, err := h.tm.Get("auth", "list-users")
 	if err != nil {
@@ -75,9 +80,15 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 
 	user := NewUser("", "", "")
 
+	cfg := h.Cfg()
+	gray, _ := cfg.StrVal(key.ButtonStyleGray)
+
 	page := am.NewPage(user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
 	page.GenCSRFToken(r)
+	page.SetActions([]am.Action{
+		am.NewListAction(authPath, "user", gray),
+	})
 
 	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
@@ -129,7 +140,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 		am.NewListAction(authPath, "user", gray),
 		am.NewEditAction(authPath, "user", id, blue),
 		am.NewDeleteAction(authPath, "user", id, red),
-		am.NewAction(fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), "Manage RoleIDs", blue),
+		am.NewAction(fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), "Roles", blue),
 	})
 
 	tmpl, err := h.tm.Get("auth", "show-user")
@@ -167,9 +178,15 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	cfg := h.Cfg()
+	gray, _ := cfg.StrVal(key.ButtonStyleGray)
+
 	page := am.NewPage(&user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "update", am.NoSlug))
 	page.GenCSRFToken(r)
+	page.SetActions([]am.Action{
+		am.NewListAction(authPath, "user", gray),
+	})
 
 	tmpl, err := h.tm.Get("auth", "edit-user")
 	if err != nil {
@@ -192,20 +209,39 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Create user")
-	ctx := r.Context()
 
 	username := r.FormValue("username")
 	email := r.FormValue("email")
 	name := r.FormValue("name")
 	user := NewUser(username, email, name)
 
-	err := h.service.CreateUser(ctx, user)
+	cfg := h.Cfg()
+	gray, _ := cfg.StrVal(key.ButtonStyleGray)
+
+	page := am.NewPage(user)
+	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
+	page.GenCSRFToken(r)
+	page.SetActions([]am.Action{
+		am.NewListAction(authPath, "user", gray),
+	})
+
+	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, authPath, http.StatusSeeOther)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
