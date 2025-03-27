@@ -72,6 +72,25 @@ func (repo *AuthRepo) GetAllUsers(ctx context.Context) ([]auth.User, error) {
 		return nil, err
 	}
 
+	for _, user := range users {
+		repo.Log().Infof("User: %+v", user)
+	}
+
+	return auth.ToUsers(users), nil
+}
+
+func (repo *AuthRepo) GetAllUsers2(ctx context.Context) ([]auth.User, error) {
+	query, err := repo.Query.Get(featAuth, resUser, "GetAll")
+	if err != nil {
+		return nil, err
+	}
+
+	var users []auth.UserDA
+	err = repo.db.SelectContext(ctx, &users, query)
+	if err != nil {
+		return nil, err
+	}
+
 	return auth.ToUsers(users), nil
 }
 
@@ -163,7 +182,7 @@ func (repo *AuthRepo) UpdateUser(ctx context.Context, user auth.User) error {
 	}
 
 	userDA := auth.ToUserDA(user)
-	_, err = repo.db.ExecContext(ctx, query, userDA.Username, userDA.Email, userDA.Name, 
+	_, err = repo.db.ExecContext(ctx, query, userDA.Username, userDA.Email, userDA.Name,
 		userDA.EncPassword, userDA.Slug, userDA.UpdatedBy, userDA.UpdatedAt, userDA.ID)
 	return err
 }
