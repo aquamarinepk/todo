@@ -16,7 +16,7 @@ type UserDA struct {
 	EncPassword   sql.NullString `db:"password"`
 	RoleIDs       []uuid.UUID
 	PermissionIDs []uuid.UUID
-	CreatedBy     sql.NullString `"created_by"`
+	CreatedBy     sql.NullString `db:"created_by"`
 	UpdatedBy     sql.NullString `db:"updated_by"`
 	CreatedAt     sql.NullTime   `db:"created_at"`
 	UpdatedAt     sql.NullTime   `db:"updated_at"`
@@ -33,10 +33,10 @@ func toUserDA(user User) UserDA {
 		EncPassword:   sql.NullString{String: user.EncPassword, Valid: user.EncPassword != ""},
 		RoleIDs:       toRoleIDs(user.Roles),
 		PermissionIDs: toPermissionIDs(user.Permissions),
-		CreatedBy:     sql.NullString{String: user.Model.CreatedBy().String(), Valid: user.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:     sql.NullString{String: user.Model.UpdatedBy().String(), Valid: user.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:     sql.NullTime{Time: user.Model.CreatedAt(), Valid: !user.Model.CreatedAt().IsZero()},
-		UpdatedAt:     sql.NullTime{Time: user.Model.UpdatedAt(), Valid: !user.Model.UpdatedAt().IsZero()},
+		CreatedBy:     sql.NullString{String: user.CreatedBy().String(), Valid: user.Model.CreatedBy() != uuid.Nil},
+		UpdatedBy:     sql.NullString{String: user.UpdatedBy().String(), Valid: user.UpdatedBy() != uuid.Nil},
+		CreatedAt:     sql.NullTime{Time: user.CreatedAt(), Valid: !user.CreatedAt().IsZero()},
+		UpdatedAt:     sql.NullTime{Time: user.UpdatedAt(), Valid: !user.UpdatedAt().IsZero()},
 	}
 }
 
