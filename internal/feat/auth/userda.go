@@ -3,7 +3,6 @@ package auth
 import (
 	"database/sql"
 
-	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/google/uuid"
 )
 
@@ -17,38 +16,10 @@ type UserDA struct {
 	EncPassword   sql.NullString `db:"password"`
 	RoleIDs       []uuid.UUID
 	PermissionIDs []uuid.UUID
-	CreatedBy     sql.NullString `db:"created_by"`
+	CreatedBy     sql.NullString `"created_by"`
 	UpdatedBy     sql.NullString `db:"updated_by"`
 	CreatedAt     sql.NullTime   `db:"created_at"`
 	UpdatedAt     sql.NullTime   `db:"updated_at"`
-}
-
-// Convert UserDA to User
-// toModel methods do not preload relationships
-
-func ToUser(da UserDA) User {
-	return User{
-		Model: am.NewModel(
-			am.WithID(da.ID),
-			am.WithSlug(da.Slug.String),
-			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
-			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
-			am.WithCreatedAt(da.CreatedAt.Time),
-			am.WithUpdatedAt(da.UpdatedAt.Time),
-		),
-		Name:        da.Name.String,
-		Username:    da.Username.String,
-		Email:       da.Email.String,
-		EncPassword: da.EncPassword.String,
-	}
-}
-
-func ToUsers(das []UserDA) []User {
-	users := make([]User, len(das))
-	for i, da := range das {
-		users[i] = ToUser(da)
-	}
-	return users
 }
 
 // Convert User to UserDA
@@ -85,22 +56,4 @@ type UserExtDA struct {
 	UpdatedBy      sql.NullString `db:"updated_by"`
 	CreatedAt      sql.NullTime   `db:"created_at"`
 	UpdatedAt      sql.NullTime   `db:"updated_at"`
-}
-
-// ToUserExt converts UserExtDA to User including roles and permissions.
-func ToUserExt(da UserExtDA) User {
-	return User{
-		Model: am.NewModel(
-			am.WithID(da.ID),
-			am.WithSlug(da.Slug.String),
-			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
-			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
-			am.WithCreatedAt(da.CreatedAt.Time),
-			am.WithUpdatedAt(da.UpdatedAt.Time),
-		),
-		Name:        da.Name.String,
-		Username:    da.Username.String,
-		Email:       da.Email.String,
-		EncPassword: da.EncPassword.String,
-	}
 }

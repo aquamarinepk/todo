@@ -102,7 +102,7 @@ func (repo *BaseRepo) getUserPermissionsByID(userID uuid.UUID) []Permission {
 	var permissions []Permission
 	for _, permissionID := range repo.userPermissions[userID] {
 		permissionDA := repo.permissions[permissionID]
-		permissions = append(permissions, toPermission(permissionDA))
+		permissions = append(permissions, ToPermission(permissionDA))
 	}
 	return permissions
 }
@@ -378,7 +378,7 @@ func (repo *BaseRepo) GetAllPermissions(ctx context.Context) ([]Permission, erro
 
 	var permissions []Permission
 	for _, permissionDA := range repo.permissions {
-		permissions = append(permissions, toPermission(permissionDA))
+		permissions = append(permissions, ToPermission(permissionDA))
 	}
 	return permissions, nil
 }
@@ -391,7 +391,7 @@ func (repo *BaseRepo) GetPermission(ctx context.Context, id uuid.UUID) (Permissi
 	if !exists {
 		return Permission{}, errors.New("permission not found")
 	}
-	return toPermission(permissionDA), nil
+	return ToPermission(permissionDA), nil
 }
 
 func (repo *BaseRepo) CreatePermission(ctx context.Context, permission Permission) error {
@@ -401,7 +401,7 @@ func (repo *BaseRepo) CreatePermission(ctx context.Context, permission Permissio
 	if _, exists := repo.permissions[permission.ID()]; exists {
 		return errors.New("permission already exists")
 	}
-	repo.permissions[permission.ID()] = toPermissionDA(permission)
+	repo.permissions[permission.ID()] = ToPermissionDA(permission)
 	return nil
 }
 
@@ -409,7 +409,7 @@ func (repo *BaseRepo) UpdatePermission(ctx context.Context, permission Permissio
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	permissionDA := toPermissionDA(permission)
+	permissionDA := ToPermissionDA(permission)
 	if _, exists := repo.permissions[permissionDA.ID]; !exists {
 		return errors.New("permission not found")
 	}
@@ -536,7 +536,7 @@ func (repo *BaseRepo) GetResourcePermissions(ctx context.Context, resourceID uui
 	var permissions []Permission
 	for _, permissionID := range repo.resourcePermissions[resourceID] {
 		permissionDA := repo.permissions[permissionID]
-		permissions = append(permissions, toPermission(permissionDA))
+		permissions = append(permissions, ToPermission(permissionDA))
 	}
 	return permissions, nil
 }
@@ -602,7 +602,7 @@ func (repo *BaseRepo) addSampleData() {
 		permission := NewPermission(name, description)
 		permission.GenSlug()
 		permission.GenCreationValues()
-		permissionDA := toPermissionDA(permission)
+		permissionDA := ToPermissionDA(permission)
 		permissionDA.ID = id
 		repo.permissions[id] = permissionDA
 		repo.Log().Info("Created permission with ID: ", id)
