@@ -14,7 +14,22 @@ const (
 	userPathFmt = "%s/%s-user%s"
 )
 
-var authPath = "/feat/auth"
+const (
+	featBasePath = "/feat"
+	authFeatPath = "/auth"
+)
+
+var (
+	authPath = fmt.Sprintf("%s%s", featBasePath, authFeatPath)
+)
+
+const (
+	ActionListUsers     = "list-users"
+	ActionEditUser      = "edit-user"
+	ActionDeleteUser    = "delete-user"
+	ActionListUserRoles = "list-user-roles"
+	TextRoles           = "Roles"
+)
 
 var (
 	key    = am.Key
@@ -36,7 +51,6 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 	}
 }
 
-// User handlers
 func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("List of users")
 	ctx := r.Context()
@@ -47,14 +61,14 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	blue, _ := h.Cfg().StrVal(key.ButtonStyleBlue)
+	//blue, _ := h.Cfg().StrVal(key.ButtonStyleBlue)
 
 	page := am.NewPage(users)
 	page.SetFormAction(authPath)
 	page.GenCSRFToken(r)
-	page.SetActions([]am.Action{
-		am.NewAction(fmt.Sprintf("%s/new-user", authPath), "New User", blue),
-	})
+	//page.SetActions([]am.Action{
+	//	am.NewAction(fmt.Sprintf("%s/new-user", authPath), "New User", blue),
+	//})
 
 	tmpl, err := h.tm.Get("auth", "list-users")
 	if err != nil {
@@ -80,15 +94,15 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 
 	user := NewUser("", "", "")
 
-	cfg := h.Cfg()
-	gray, _ := cfg.StrVal(key.ButtonStyleGray)
+	//cfg := h.Cfg()
+	//gray, _ := cfg.StrVal(key.ButtonStyleGray)
 
 	page := am.NewPage(user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
 	page.GenCSRFToken(r)
-	page.SetActions([]am.Action{
-		am.NewListAction(authPath, "user", gray),
-	})
+	//page.SetActions([]am.Action{
+	//	am.NewListAction(authPath, "user", gray),
+	//})
 
 	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
@@ -125,23 +139,19 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg := h.Cfg()
-
-	// TODO: When a proper asset building pipeline for the client is implemented,
-	// we can remove this non-business style configuration from the controller.
-	gray, _ := cfg.StrVal(key.ButtonStyleGray)
-	blue, _ := cfg.StrVal(key.ButtonStyleBlue)
-	red, _ := cfg.StrVal(key.ButtonStyleRed)
-
 	page := am.NewPage(user)
-
 	page.GenCSRFToken(r)
-	page.SetActions([]am.Action{
-		am.NewListAction(authPath, "user", gray),
-		am.NewEditAction(authPath, "user", id, blue),
-		am.NewDeleteAction(authPath, "user", id, red),
-		am.NewAction(fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), "Roles", blue),
-	})
+
+	// Create a new menu and add items
+	menu := am.NewMenu(featBasePath, authFeatPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddListItem(ActionListUsers)
+	menu.AddEditItem(ActionEditUser, id)
+	menu.AddDeleteItem(ActionDeleteUser, id)
+	menu.AddGenericItem(ActionListUserRoles, fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), TextRoles)
+
+	// Set the menu in the page
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-user")
 	if err != nil {
@@ -178,15 +188,15 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg := h.Cfg()
-	gray, _ := cfg.StrVal(key.ButtonStyleGray)
+	//cfg := h.Cfg()
+	//gray, _ := cfg.StrVal(key.ButtonStyleGray)
 
 	page := am.NewPage(&user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "update", am.NoSlug))
 	page.GenCSRFToken(r)
-	page.SetActions([]am.Action{
-		am.NewListAction(authPath, "user", gray),
-	})
+	//page.SetActions([]am.Action{
+	//	am.NewListAction(authPath, "user", gray),
+	//})
 
 	tmpl, err := h.tm.Get("auth", "edit-user")
 	if err != nil {
@@ -215,15 +225,15 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	user := NewUser(username, email, name)
 
-	cfg := h.Cfg()
-	gray, _ := cfg.StrVal(key.ButtonStyleGray)
+	//cfg := h.Cfg()
+	//gray, _ := cfg.StrVal(key.ButtonStyleGray)
 
 	page := am.NewPage(user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
 	page.GenCSRFToken(r)
-	page.SetActions([]am.Action{
-		am.NewListAction(authPath, "user", gray),
-	})
+	//page.SetActions([]am.Action{
+	//	am.NewListAction(authPath, "user", gray),
+	//})
 
 	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
