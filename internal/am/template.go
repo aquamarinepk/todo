@@ -96,7 +96,10 @@ func (tm *TemplateManager) loadTemplate(key, path, handler string) {
 	allPaths := append([]string{layoutPath, path}, partialPaths...)
 	tm.Log().Infof("All template paths: %v", allPaths)
 
-	tmpl, err := template.New(mainTemplate).ParseFS(tm.assetsFS, allPaths...)
+	tmpl := template.New(mainTemplate)
+	//RegisterTemplateFuncs(tmpl) // Register the template functions here
+
+	tmpl, err = tmpl.ParseFS(tm.assetsFS, allPaths...)
 	if err != nil {
 		tm.Log().Error("Failed to load template: ", err)
 		return

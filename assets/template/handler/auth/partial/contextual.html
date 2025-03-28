@@ -1,14 +1,14 @@
 {{ define "contextual" }}
 <div class="mx-auto p-4">
     <div class="flex space-x-4 justify-center">
-        {{ range .Actions }}
+        {{ range .Menu.Items }}
         {{ if .IsForm }}
-        <form action="{{ .URL }}" method="POST" class="inline">
+        <form action="{{ $.GenerateHref $.Feat . }}" method="POST" class="inline">
             <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
             <button type="submit" class="{{ .Style }}">{{ .Text }}</button>
         </form>
         {{ else }}
-        <a href="{{ .URL }}" class="{{ .Style }}">{{ .Text }}</a>
+        <a href="{{ $.GenerateHref $.Feat . }}" class="{{ .Style }}">{{ .Text }}</a>
         {{ end }}
         {{ end }}
     </div>
