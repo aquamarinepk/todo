@@ -30,6 +30,7 @@ func ToUser(da UserDA) User {
 	return User{
 		Model: am.NewModel(
 			am.WithID(da.ID),
+			am.WithType(userType),
 			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
@@ -57,6 +58,7 @@ func ToUserExt(da UserExtDA) User {
 	return User{
 		Model: am.NewModel(
 			am.WithID(da.ID),
+			am.WithType(userType),
 			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
