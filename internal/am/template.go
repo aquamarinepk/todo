@@ -97,7 +97,7 @@ func (tm *TemplateManager) loadTemplate(key, path, handler string) {
 	tm.Log().Infof("All template paths: %v", allPaths)
 
 	tmpl := template.New(mainTemplate)
-	//RegisterTemplateFuncs(tmpl) // Register the template functions here
+	//RegisterTemplateFuncs(tmpl)
 
 	tmpl, err = tmpl.ParseFS(tm.assetsFS, allPaths...)
 	if err != nil {
