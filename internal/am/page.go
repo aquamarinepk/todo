@@ -33,20 +33,9 @@ type Button struct {
 
 // Feat struct represents a feature with base path, feature name, and action.
 type Feat struct {
-	BasePath   string // The root path for features
-	FeatPath   string // The path of a particular feature
-	Action     string // Action name (command or query)
-	PathSuffix string // The path suffix for the feature
-}
-
-// NewFeat creates a new Feat with the given parameters.
-func NewFeat(basePath, featName, action, pathSufix string) Feat {
-	return Feat{
-		BasePath:   basePath,
-		FeatPath:   featName,
-		Action:     action,
-		PathSuffix: pathSufix,
-	}
+	Path       string // The base path for the action (i.e. `/feat/auth`)
+	Action     string // Action name (command or query, i.e. `edit-user`)
+	PathSuffix string // The path suffix for the feature (i.e.: `/edit`)
 }
 
 // NewPage creates a new Page with the given data.
@@ -112,9 +101,9 @@ func (p *Page) GenCSRFToken(r *http.Request) {
 	p.Form.CSRF = csrf.Token(r)
 }
 
-// GenerateHref generates the href for a menu item based on the feature and menu item data.
-func (p *Page) GenerateHref(feat Feat, item MenuItem) string {
-	basePath := path.Join(feat.BasePath, feat.FeatPath, feat.Action)
+// Href generates the href for a menu item based on the feature and menu item data.
+func (p *Page) Href(feat Feat, item MenuItem) string {
+	basePath := path.Join(feat.Path, feat.Action)
 
 	if len(item.QueryParams) == 0 {
 		return basePath

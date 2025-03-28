@@ -11,12 +11,9 @@ import (
 )
 
 const (
-	userPathFmt = "%s/%s-user%s"
-)
-
-const (
 	featBasePath = "/feat"
 	authFeatPath = "/auth"
+	userPathFmt  = "%s/%s-user%s"
 )
 
 var (
@@ -24,16 +21,8 @@ var (
 )
 
 const (
-	ActionListUsers     = "list-users"
-	ActionEditUser      = "edit-user"
-	ActionDeleteUser    = "delete-user"
 	ActionListUserRoles = "list-user-roles"
 	TextRoles           = "Roles"
-)
-
-var (
-	key    = am.Key
-	method = am.HTTPMethod
 )
 
 type WebHandler struct {
@@ -61,14 +50,14 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//blue, _ := h.Cfg().StrVal(key.ButtonStyleBlue)
-
 	page := am.NewPage(users)
 	page.SetFormAction(authPath)
 	page.GenCSRFToken(r)
-	//page.SetActions([]am.Action{
-	//	am.NewAction(fmt.Sprintf("%s/new-user", authPath), "New User", blue),
-	//})
+
+	menu := am.NewMenu(authPath)
+	menu.AddNewItem(userType)
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-users")
 	if err != nil {
@@ -94,15 +83,14 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 
 	user := NewUser("", "", "")
 
-	//cfg := h.Cfg()
-	//gray, _ := cfg.StrVal(key.ButtonStyleGray)
-
 	page := am.NewPage(user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
 	page.GenCSRFToken(r)
-	//page.SetActions([]am.Action{
-	//	am.NewListAction(authPath, "user", gray),
-	//})
+
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(user)
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
@@ -142,15 +130,13 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(user)
 	page.GenCSRFToken(r)
 
-	// Create a new menu and add items
-	menu := am.NewMenu(featBasePath, authFeatPath)
+	menu := am.NewMenu(authPath)
 	menu.SetCSRFToken(page.Form.CSRF)
-	menu.AddListItem(ActionListUsers)
-	menu.AddEditItem(ActionEditUser, id)
-	menu.AddDeleteItem(ActionDeleteUser, id)
+	menu.AddListItem(user)
+	menu.AddEditItem(user)
+	menu.AddDeleteItem(user)
 	menu.AddGenericItem(ActionListUserRoles, fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), TextRoles)
 
-	// Set the menu in the page
 	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-user")
@@ -188,15 +174,14 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//cfg := h.Cfg()
-	//gray, _ := cfg.StrVal(key.ButtonStyleGray)
-
 	page := am.NewPage(&user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "update", am.NoSlug))
 	page.GenCSRFToken(r)
-	//page.SetActions([]am.Action{
-	//	am.NewListAction(authPath, "user", gray),
-	//})
+
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(user)
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "edit-user")
 	if err != nil {
@@ -225,15 +210,14 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	user := NewUser(username, email, name)
 
-	//cfg := h.Cfg()
-	//gray, _ := cfg.StrVal(key.ButtonStyleGray)
-
 	page := am.NewPage(user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
 	page.GenCSRFToken(r)
-	//page.SetActions([]am.Action{
-	//	am.NewListAction(authPath, "user", gray),
-	//})
+
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(user)
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
