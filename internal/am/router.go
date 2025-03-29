@@ -28,6 +28,11 @@ func NewRouter(name string, opts ...Option) *Router {
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	r.Log().Info(req.Method, " ", req.URL.Path)
+	defer func() {
+		if err := recover(); err != nil {
+			r.Log().Error("Error serving request: ", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		}
+	}()
 	r.Router.ServeHTTP(w, req)
 }

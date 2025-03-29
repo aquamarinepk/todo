@@ -11,14 +11,18 @@ import (
 )
 
 const (
-	userPathFmt = "%s/%s-user%s"
+	featBasePath = "/feat"
+	authFeatPath = "/auth"
+	userPathFmt  = "%s/%s-user%s"
 )
 
-var authPath = "/feat/auth"
-
 var (
-	key    = am.Key
-	method = am.HTTPMethod
+	authPath = fmt.Sprintf("%s%s", featBasePath, authFeatPath)
+)
+
+const (
+	ActionListUserRoles = "list-user-roles"
+	TextRoles           = "Roles"
 )
 
 type WebHandler struct {
@@ -36,7 +40,6 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 	}
 }
 
-// User handlers
 func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("List of users")
 	ctx := r.Context()
@@ -50,6 +53,11 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(users)
 	page.SetFormAction(authPath)
 	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.AddNewItem(userType)
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-users")
 	if err != nil {
@@ -78,6 +86,11 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
 	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(user)
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
@@ -114,23 +127,17 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg := h.Cfg()
-
-	// TODO: When a proper asset building pipeline for the client is implemented,
-	// we can remove this non-business style configuration from the controller.
-	gray, _ := cfg.StrVal(key.ButtonStyleGray)
-	blue, _ := cfg.StrVal(key.ButtonStyleBlue)
-	red, _ := cfg.StrVal(key.ButtonStyleRed)
-
 	page := am.NewPage(user)
-
 	page.GenCSRFToken(r)
-	page.SetActions([]am.Action{
-		am.NewListAction(authPath, "user", gray),
-		am.NewEditAction(authPath, "user", id, blue),
-		am.NewDeleteAction(authPath, "user", id, red),
-		am.NewAction(fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), "Manage Roles", blue),
-	})
+
+	menu := am.NewMenu(authPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddListItem(user)
+	menu.AddEditItem(user)
+	menu.AddDeleteItem(user)
+	menu.AddGenericItem(ActionListUserRoles, fmt.Sprintf("%s/list-user-roles?id=%s", authPath, id), TextRoles)
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-user")
 	if err != nil {
@@ -171,6 +178,11 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "update", am.NoSlug))
 	page.GenCSRFToken(r)
 
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(user)
+
+	page.Menu = *menu
+
 	tmpl, err := h.tm.Get("auth", "edit-user")
 	if err != nil {
 		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
@@ -192,20 +204,38 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Create user")
-	ctx := r.Context()
 
 	username := r.FormValue("username")
 	email := r.FormValue("email")
 	name := r.FormValue("name")
 	user := NewUser(username, email, name)
 
-	err := h.service.CreateUser(ctx, user)
+	page := am.NewPage(user)
+	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(user)
+
+	page.Menu = *menu
+
+	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, authPath, http.StatusSeeOther)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {

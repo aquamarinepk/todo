@@ -20,7 +20,7 @@ const (
 )
 
 type TemplateManager struct {
-	core      Core
+	Core
 	assetsFS  embed.FS
 	templates sync.Map
 }
@@ -28,7 +28,7 @@ type TemplateManager struct {
 func NewTemplateManager(assetsFS embed.FS, opts ...Option) *TemplateManager {
 	core := NewCore("template-manager", opts...)
 	tm := &TemplateManager{
-		core:     core,
+		Core:     core,
 		assetsFS: assetsFS,
 	}
 
@@ -96,7 +96,10 @@ func (tm *TemplateManager) loadTemplate(key, path, handler string) {
 	allPaths := append([]string{layoutPath, path}, partialPaths...)
 	tm.Log().Infof("All template paths: %v", allPaths)
 
-	tmpl, err := template.New(mainTemplate).ParseFS(tm.assetsFS, allPaths...)
+	tmpl := template.New(mainTemplate)
+	//RegisterTemplateFuncs(tmpl)
+
+	tmpl, err = tmpl.ParseFS(tm.assetsFS, allPaths...)
 	if err != nil {
 		tm.Log().Error("Failed to load template: ", err)
 		return
@@ -165,39 +168,7 @@ func (tm *TemplateManager) Debug() {
 	})
 }
 
-func (tm *TemplateManager) Name() string {
-	return tm.core.Name()
-}
-
-func (tm *TemplateManager) SetName(name string) {
-	tm.core.SetName(name)
-}
-
-func (tm *TemplateManager) Log() Logger {
-	return tm.core.Log()
-}
-
-func (tm *TemplateManager) SetLog(log Logger) {
-	tm.core.SetLog(log)
-}
-
-func (tm *TemplateManager) Cfg() *Config {
-	return tm.core.Cfg()
-}
-
-func (tm *TemplateManager) SetCfg(cfg *Config) {
-	tm.core.SetCfg(cfg)
-}
-
 func (tm *TemplateManager) Setup(ctx context.Context) error {
 	tm.Load()
 	return nil
-}
-
-func (tm *TemplateManager) Start(ctx context.Context) error {
-	return tm.core.Start(ctx)
-}
-
-func (tm *TemplateManager) Stop(ctx context.Context) error {
-	return tm.core.Stop(ctx)
 }

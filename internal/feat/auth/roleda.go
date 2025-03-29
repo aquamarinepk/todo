@@ -10,6 +10,7 @@ import (
 // RoleDA represents the data access layer for the Role model.
 type RoleDA struct {
 	ID          uuid.UUID      `db:"id"`
+	Slug        sql.NullString `db:"slug"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	Status      sql.NullString `db:"status"`
@@ -50,24 +51,6 @@ func toRoleDA(role Role) RoleDA {
 	}
 }
 
-func toRoles(roleIDs []uuid.UUID) []Role {
-	var roles []Role
-	for _, id := range roleIDs {
-		roles = append(roles, Role{
-			Model: am.NewModel(am.WithID(id)),
-		})
-	}
-	return roles
-}
-
-func toRoleIDs(roles []Role) []uuid.UUID {
-	var roleIDs []uuid.UUID
-	for _, role := range roles {
-		roleIDs = append(roleIDs, role.ID())
-	}
-	return roleIDs
-}
-
 // RoleExtDA represents the data access layer for the Role with associated permissions.
 type RoleExtDA struct {
 	ID             uuid.UUID      `db:"id"`
@@ -80,20 +63,4 @@ type RoleExtDA struct {
 	UpdatedBy      sql.NullString `db:"updated_by"`
 	CreatedAt      sql.NullTime   `db:"created_at"`
 	UpdatedAt      sql.NullTime   `db:"updated_at"`
-}
-
-// ToRoleExt converts RoleExtDA to Role including permissions.
-func ToRoleExt(da RoleExtDA) Role {
-	return Role{
-		Model: am.NewModel(
-			am.WithID(da.ID),
-			am.WithSlug(da.Slug.String),
-			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
-			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
-			am.WithCreatedAt(da.CreatedAt.Time),
-			am.WithUpdatedAt(da.UpdatedAt.Time),
-		),
-		Name:        da.Name.String,
-		Description: da.Description.String,
-	}
 }

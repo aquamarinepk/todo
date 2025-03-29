@@ -126,17 +126,12 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	cfg := h.Cfg()
-	gray, _ := cfg.StrVal(key.ButtonStyleGray)
-	blue, _ := cfg.StrVal(key.ButtonStyleBlue)
-	red, _ := cfg.StrVal(key.ButtonStyleRed)
-
 	page := am.NewPage(list)
-	page.SetActions([]am.Action{
-		{URL: todoResPath, Text: "Back to List", Style: gray},
-		{URL: fmt.Sprintf("%s/%s/edit", todoResPath, id), Text: "Edit", Style: blue},
-		{URL: fmt.Sprintf("%s/%s/delete", todoResPath, id), Text: "Delete", Style: red},
-	})
+	//page.SetActions([]am.Action{
+	//	{URL: todoResPath, Text: "Back to List", Style: gray},
+	//	{URL: fmt.Sprintf("%s/%s/edit", todoResPath, id), Text: "Edit", Style: blue},
+	//	{URL: fmt.Sprintf("%s/%s/delete", todoResPath, id), Text: "Delete", Style: red},
+	//})
 
 	tmpl, err := h.tm.Get("todo", "show")
 	if err != nil {

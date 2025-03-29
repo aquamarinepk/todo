@@ -10,6 +10,7 @@ import (
 // ResourceDA represents the data access layer for the Resource model.
 type ResourceDA struct {
 	ID          uuid.UUID      `db:"id"`
+	Slug        sql.NullString `db:"slug"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	Label       sql.NullString `db:"label"`
@@ -70,20 +71,4 @@ type ResourceExtDA struct {
 	UpdatedBy      sql.NullString `db:"updated_by"`
 	CreatedAt      sql.NullTime   `db:"created_at"`
 	UpdatedAt      sql.NullTime   `db:"updated_at"`
-}
-
-// ToResourceExt converts ResourceExtDA to Resource including permissions.
-func ToResourceExt(da ResourceExtDA) Resource {
-	return Resource{
-		Model: am.NewModel(
-			am.WithID(da.ID),
-			am.WithSlug(da.Slug.String),
-			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
-			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
-			am.WithCreatedAt(da.CreatedAt.Time),
-			am.WithUpdatedAt(da.UpdatedAt.Time),
-		),
-		Name:        da.Name.String,
-		Description: da.Description.String,
-	}
 }

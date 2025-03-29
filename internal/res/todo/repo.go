@@ -33,23 +33,7 @@ func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 		order: []uuid.UUID{},
 	}
 
-	repo.addSampleData() // NOTE: Used for testing purposes only.
-
 	return repo
-}
-
-func (repo *BaseRepo) addSampleData() {
-	for i := 1; i <= 5; i++ {
-		id := uuid.New()
-		list := NewList(fmt.Sprintf("Sample List %d", i), fmt.Sprintf("This is the description for sample list %d", i))
-		list.GenSlug()
-		list.GenCreationValues()
-		listDA := toListDA(list)
-		listDA.ID = id
-		repo.lists[id] = listDA
-		repo.order = append(repo.order, id)
-		repo.Log().Info("Created list with ID: ", id)
-	}
 }
 
 func (repo *BaseRepo) GetAll(ctx context.Context) ([]List, error) {
@@ -122,7 +106,7 @@ func (repo *BaseRepo) Debug() {
 	defer repo.mu.Unlock()
 
 	var result string
-	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n", "Type", "ID", "NameID", "Slug", "Name", "Description")
+	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n", "Type", "ID", "NameID", "Slug", "Action", "Description")
 	for _, id := range repo.order {
 		listDA := repo.lists[id]
 		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n",
