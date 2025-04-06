@@ -156,7 +156,18 @@ func (repo *AuthRepo) CreateUser(ctx context.Context, user auth.User) error {
 	}
 
 	userDA := auth.ToUserDA(user)
-	_, err = repo.db.ExecContext(ctx, query, userDA.ID, userDA.Username, userDA.Email, userDA.Slug)
+	_, err = repo.db.ExecContext(ctx, query,
+		userDA.ID,
+		userDA.Username,
+		userDA.Email,
+		userDA.Name,
+		userDA.EncPassword,
+		userDA.Slug,
+		userDA.CreatedBy,
+		userDA.UpdatedBy,
+		userDA.CreatedAt,
+		userDA.UpdatedAt,
+	)
 	return err
 }
 
