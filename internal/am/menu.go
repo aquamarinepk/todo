@@ -10,7 +10,7 @@ import (
 type MenuItemStyle string
 
 // Define constants for button styles.
-// These styles are expected to be configurable by editing some Sass/CSS when the assets pipeline is in place.
+// These styles are expected to be configurable by editing some SCSS when the assets pipeline is in place.
 const (
 	// BtnPrimaryStyle is the main action style (e.g., "Save", "Submit").
 	BtnPrimaryStyle MenuItemStyle = "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
@@ -39,7 +39,7 @@ type MenuItem struct {
 	Method      string            // "GET" or "POST"
 	IsForm      bool              // Indicates if the action should be triggered via a form submission (POST)
 	Style       MenuItemStyle     // The style of the menu item
-	QueryParams map[string]string // Query parameters for the URL
+	QueryParams map[string]string // Query parameters for the Path
 	CSRFToken   string            // Only applicable for POST requests
 }
 
