@@ -3,12 +3,12 @@
     <div class="flex space-x-4 justify-center">
         {{ range .Menu.Items }}
         {{ if .IsForm }}
-        <form action="{{ .Href }}" method="POST" class="inline">
+        <form action="{{ .Path }}" method="POST" class="inline">
             <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
             <button type="submit" class="{{ .Style }}">{{ .Text }}</button>
         </form>
         {{ else }}
-        <a href="{{ .Href }}" class="{{ .Style }}">{{ .Text }}</a>
+        <a href="{{ .Path }}" class="{{ .Style }}">{{ .Text }}</a>
         {{ end }}
         {{ end }}
     </div>

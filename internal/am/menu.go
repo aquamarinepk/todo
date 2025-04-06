@@ -52,8 +52,8 @@ type Menu struct {
 	CSRFToken string
 }
 
-// GenHref constructs the Href from the MenuItem data.
-func (i *MenuItem) GenHref() string {
+// GenPath constructs the href path from the MenuItem data.
+func (i *MenuItem) GenPath() string {
 	basePath := path.Join(i.Feat.Path, i.Feat.Action)
 
 	if i.Feat.PathSuffix != "" {
@@ -74,12 +74,12 @@ func (i *MenuItem) GenHref() string {
 
 // GenLinkButton generates an HTML link button.
 func (i *MenuItem) GenLinkButton() string {
-	href := i.GenHref()
+	href := i.GenPath()
 	return fmt.Sprintf(`<a href="%s" class="%s">%s</a>`, href, i.Style, i.Text)
 }
 
-// Href generates the href for a menu item based on the feature and menu item data.
-func (i *MenuItem) Href() string {
+// Path generates the href path for a menu item based on the feature and menu item data.
+func (i *MenuItem) Path() string {
 	basePath := path.Join(i.Feat.Path, i.Feat.Action)
 
 	if i.Feat.PathSuffix != "" {
