@@ -4,7 +4,7 @@ This is a TODO application. This simple app is an exploratory attempt to create 
 
 This reference app is designed to showcase the features and patterns that the kit generator should later replicate for other specific projects.
 
-<img src="docs/img/todo.png" alt="TODO Application" />
+<img src="docs/img/todo-list.png" alt="TODO Application" />
 
 ## Overview
 This is a sample app using the common example of a todo list. The example is designed to express the desired outcome for the generator library.
