@@ -1,37 +1,35 @@
 package am
 
 import (
-	"fmt"
-
 	"github.com/google/uuid"
 )
 
 type Action struct {
-	URL    string
+	Path   string
 	Text   string
 	Style  string
 	IsForm bool
 }
 
-func NewListAction(basePath, resName, style string) Action {
+func ListAction(basePath, resName, style string) Action {
 	return Action{
-		URL:   fmt.Sprintf("%s/list-%ss", basePath, resName),
+		Path:  ListPath(basePath, resName),
 		Text:  "Back",
 		Style: style,
 	}
 }
 
-func NewEditAction(basePath, resName string, id uuid.UUID, style string) Action {
+func EditAction(basePath, resName string, id uuid.UUID, style string) Action {
 	return Action{
-		URL:   fmt.Sprintf("%s/edit-%s?id=%s", basePath, resName, id),
+		Path:  EditPath(basePath, resName, id),
 		Text:  "Edit",
 		Style: style,
 	}
 }
 
-func NewDeleteAction(basePath, resName string, id uuid.UUID, style string) Action {
+func DeleteAction(basePath, resName string, id uuid.UUID, style string) Action {
 	return Action{
-		URL:    fmt.Sprintf("%s/delete-%s?id=%s", basePath, resName, id),
+		Path:   DeletePath(basePath, resName),
 		Text:   "Delete",
 		Style:  style,
 		IsForm: true,
@@ -40,7 +38,7 @@ func NewDeleteAction(basePath, resName string, id uuid.UUID, style string) Actio
 
 func NewAction(url, text, style string) Action {
 	return Action{
-		URL:   url,
+		Path:  url,
 		Text:  text,
 		Style: style,
 	}

@@ -127,11 +127,6 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(list)
-	//page.SetActions([]am.Action{
-	//	{URL: todoResPath, Text: "Back to List", Style: gray},
-	//	{URL: fmt.Sprintf("%s/%s/edit", todoResPath, id), Text: "Edit", Style: blue},
-	//	{URL: fmt.Sprintf("%s/%s/delete", todoResPath, id), Text: "Delete", Style: red},
-	//})
 
 	tmpl, err := h.tm.Get("todo", "show")
 	if err != nil {
