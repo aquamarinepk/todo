@@ -101,8 +101,8 @@ func (p *Page) GenCSRFToken(r *http.Request) {
 	p.Form.CSRF = csrf.Token(r)
 }
 
-// Href generates the href for a menu item based on the feature and menu item data.
-func (p *Page) Href(feat Feat, item MenuItem) string {
+// Path generates the href path for a menu item based on the feature and menu item data.
+func (p *Page) Path(feat Feat, item MenuItem) string {
 	basePath := path.Join(feat.Path, feat.Action)
 
 	if len(item.QueryParams) == 0 {
