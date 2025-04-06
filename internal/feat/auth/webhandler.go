@@ -85,6 +85,7 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
+	page.SetFormButtonText("Create")
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
@@ -176,6 +177,7 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(&user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "update", am.NoSlug))
+	page.SetFormButtonText("Update")
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
@@ -204,38 +206,23 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Create user")
+	ctx := r.Context()
 
 	username := r.FormValue("username")
 	email := r.FormValue("email")
 	name := r.FormValue("name")
 	user := NewUser(username, email, name)
+	user.GenID()
+	user.GenSlug()
+	user.GenCreationValues()
 
-	page := am.NewPage(user)
-	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
-	page.GenCSRFToken(r)
-
-	menu := am.NewMenu(authPath)
-	menu.AddListItem(user)
-
-	page.Menu = *menu
-
-	tmpl, err := h.tm.Get("auth", "new-user")
+	err := h.service.CreateUser(ctx, user)
 	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
 	}
 
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, page)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
-		return
-	}
-
-	_, err = buf.WriteTo(w)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
-	}
+	http.Redirect(w, r, am.ListPath(authPath, "user"), http.StatusSeeOther)
 }
 
 func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
