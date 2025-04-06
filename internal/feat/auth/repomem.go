@@ -559,11 +559,21 @@ func (repo *BaseRepo) addSampleData() {
 	defer repo.mu.Unlock()
 
 	// Add sample users
-	for i := 1; i <= 5; i++ {
+	users := []struct {
+		username string
+		email    string
+		name     string
+	}{
+		{"johndoe", "john.doe@example.com", "John Doe"},
+		{"janesmith", "jane.smith@example.com", "Jane Smith"},
+		{"robertjohnson", "robert.johnson@example.com", "Robert Johnson"},
+		{"sarahwilliams", "sarah.williams@example.com", "Sarah Williams"},
+		{"michaelbrown", "michael.brown@example.com", "Michael Brown"},
+	}
+
+	for _, u := range users {
 		id := uuid.New()
-		username := fmt.Sprintf("sampleuser%d", i)
-		email := fmt.Sprintf("sampleuser%d@example.com", i)
-		user := NewUser(username, email, username)
+		user := NewUser(u.username, u.email, u.name)
 		user.GenSlug()
 		user.GenCreationValues()
 		userDA := toUserDA(user)
@@ -574,11 +584,17 @@ func (repo *BaseRepo) addSampleData() {
 	}
 
 	// Add sample roles
-	for i := 1; i <= 3; i++ {
+	roles := []struct {
+		name        string
+		description string
+	}{
+		{"Admin", "Administrator role with full access"},
+		{"User", "Regular user role with basic access"},
+	}
+
+	for _, r := range roles {
 		id := uuid.New()
-		name := fmt.Sprintf("role%d", i)
-		description := fmt.Sprintf("%s description", name)
-		role := NewRole(name, description, description)
+		role := NewRole(r.name, r.description, r.description)
 		role.GenSlug()
 		role.GenCreationValues()
 		roleDA := toRoleDA(role)
@@ -588,18 +604,28 @@ func (repo *BaseRepo) addSampleData() {
 	}
 
 	// Assign roles to users
-	for userID := range repo.users {
-		for roleID := range repo.roles {
-			repo.userRoles[userID] = append(repo.userRoles[userID], roleID)
+	// Only John Doe (first user) gets both Admin and User roles
+	for i, userID := range repo.order {
+		if i == 0 { // John Doe
+			for roleID := range repo.roles {
+				repo.userRoles[userID] = append(repo.userRoles[userID], roleID)
+			}
 		}
 	}
 
 	// Add sample permissions
-	for i := 1; i <= 3; i++ {
+	permissions := []struct {
+		name        string
+		description string
+	}{
+		{"Read", "Permission to read resources"},
+		{"Write", "Permission to write resources"},
+		{"Execute", "Permission to execute actions"},
+	}
+
+	for _, p := range permissions {
 		id := uuid.New()
-		name := fmt.Sprintf("permission%d", i)
-		description := fmt.Sprintf("%s description", name)
-		permission := NewPermission(name, description)
+		permission := NewPermission(p.name, p.description)
 		permission.GenSlug()
 		permission.GenCreationValues()
 		permissionDA := ToPermissionDA(permission)
