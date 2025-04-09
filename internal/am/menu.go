@@ -176,9 +176,8 @@ func (m *Menu) AddDeleteItem(resource Resource) {
 func (m *Menu) AddGenericItem(action, url, text string) {
 	m.Items = append(m.Items, MenuItem{
 		Feat: Feat{
-			Path:       m.Path,
-			Action:     action,
-			PathSuffix: action,
+			Path:   m.Path,
+			Action: action,
 		},
 		Text:  text,
 		Style: BtnGenericStyle,

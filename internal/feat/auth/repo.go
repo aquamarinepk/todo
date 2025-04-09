@@ -13,7 +13,8 @@ type Repo interface {
 	UpdateUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
-	AddRole(ctx context.Context, userID uuid.UUID, role Role) error
+	GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
+	AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	AddPermissionToUser(ctx context.Context, userID uuid.UUID, permission Permission) error
 	RemovePermissionFromUser(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) error

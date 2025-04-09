@@ -646,7 +646,7 @@ func (repo *BaseRepo) addSampleData() {
 		id := uuid.New()
 		name := fmt.Sprintf("resource%d", i)
 		description := fmt.Sprintf("%s description", name)
-		resource := NewResource(name, description)
+		resource := NewResource(name, description, "entity")
 		resource.GenSlug()
 		resource.GenCreationValues()
 		resourceDA := toResourceDA(resource)
