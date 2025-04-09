@@ -18,10 +18,10 @@ func ToUserDA(user User) UserDA {
 		EncPassword:   sql.NullString{String: user.EncPassword, Valid: user.EncPassword != ""},
 		RoleIDs:       toRoleIDs(user.Roles),
 		PermissionIDs: toPermissionIDs(user.Permissions),
-		CreatedBy:     sql.NullString{String: user.Model.CreatedBy().String(), Valid: user.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:     sql.NullString{String: user.Model.UpdatedBy().String(), Valid: user.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:     sql.NullTime{Time: user.Model.CreatedAt(), Valid: !user.Model.CreatedAt().IsZero()},
-		UpdatedAt:     sql.NullTime{Time: user.Model.UpdatedAt(), Valid: !user.Model.UpdatedAt().IsZero()},
+		CreatedBy:     sql.NullString{String: user.CreatedBy().String(), Valid: user.CreatedBy() != uuid.Nil},
+		UpdatedBy:     sql.NullString{String: user.UpdatedBy().String(), Valid: user.UpdatedBy() != uuid.Nil},
+		CreatedAt:     sql.NullTime{Time: user.CreatedAt(), Valid: !user.CreatedAt().IsZero()},
+		UpdatedAt:     sql.NullTime{Time: user.UpdatedAt(), Valid: !user.UpdatedAt().IsZero()},
 	}
 }
 
@@ -81,10 +81,10 @@ func ToRoleDA(role Role) RoleDA {
 		Slug:        sql.NullString{String: role.Slug(), Valid: role.Slug() != ""},
 		Status:      sql.NullString{String: role.Status, Valid: role.Status != ""},
 		Permissions: toPermissionIDs(role.Permissions),
-		CreatedBy:   sql.NullString{String: role.Model.CreatedBy().String(), Valid: role.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:   sql.NullString{String: role.Model.UpdatedBy().String(), Valid: role.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:   sql.NullTime{Time: role.Model.CreatedAt(), Valid: !role.Model.CreatedAt().IsZero()},
-		UpdatedAt:   sql.NullTime{Time: role.Model.UpdatedAt(), Valid: !role.Model.UpdatedAt().IsZero()},
+		CreatedBy:   sql.NullString{String: role.CreatedBy().String(), Valid: role.CreatedBy() != uuid.Nil},
+		UpdatedBy:   sql.NullString{String: role.UpdatedBy().String(), Valid: role.UpdatedBy() != uuid.Nil},
+		CreatedAt:   sql.NullTime{Time: role.CreatedAt(), Valid: !role.CreatedAt().IsZero()},
+		UpdatedAt:   sql.NullTime{Time: role.UpdatedAt(), Valid: !role.UpdatedAt().IsZero()},
 	}
 }
 
@@ -93,15 +93,18 @@ func ToRole(da RoleDA) Role {
 	return Role{
 		Model: am.NewModel(
 			am.WithID(da.ID),
+			am.WithType(roleType),
 			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
 			am.WithUpdatedAt(da.UpdatedAt.Time),
 		),
-		Name:        da.Name.String,
-		Description: da.Description.String,
-		Status:      da.Status.String,
+		Name:          da.Name.String,
+		Description:   da.Description.String,
+		Status:        da.Status.String,
+		PermissionIDs: da.Permissions,
+		Permissions:   []Permission{},
 	}
 }
 
@@ -116,9 +119,18 @@ func ToRoles(das []RoleDA) []Role {
 
 // ToRoleExt converts RoleExtDA to Role including permissions
 func ToRoleExt(da RoleExtDA) Role {
+	permission := Permission{
+		Model: am.NewModel(
+			am.WithID(am.ParseUUID(da.PermissionID)),
+			am.WithType(permissionType),
+		),
+		Name: da.PermissionName.String,
+	}
+
 	return Role{
 		Model: am.NewModel(
 			am.WithID(da.ID),
+			am.WithType(roleType),
 			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
@@ -127,6 +139,8 @@ func ToRoleExt(da RoleExtDA) Role {
 		),
 		Name:        da.Name.String,
 		Description: da.Description.String,
+		Status:      "active", // Default status since it's not in RoleExtDA
+		Permissions: []Permission{permission},
 	}
 }
 
@@ -137,10 +151,10 @@ func ToPermissionDA(permission Permission) PermissionDA {
 		Name:        sql.NullString{String: permission.Name, Valid: permission.Name != ""},
 		Description: sql.NullString{String: permission.Description, Valid: permission.Description != ""},
 		Slug:        sql.NullString{String: permission.Slug(), Valid: permission.Slug() != ""},
-		CreatedBy:   sql.NullString{String: permission.Model.CreatedBy().String(), Valid: permission.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:   sql.NullString{String: permission.Model.UpdatedBy().String(), Valid: permission.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:   sql.NullTime{Time: permission.Model.CreatedAt(), Valid: !permission.Model.CreatedAt().IsZero()},
-		UpdatedAt:   sql.NullTime{Time: permission.Model.UpdatedAt(), Valid: !permission.Model.UpdatedAt().IsZero()},
+		CreatedBy:   sql.NullString{String: permission.CreatedBy().String(), Valid: permission.CreatedBy() != uuid.Nil},
+		UpdatedBy:   sql.NullString{String: permission.UpdatedBy().String(), Valid: permission.UpdatedBy() != uuid.Nil},
+		CreatedAt:   sql.NullTime{Time: permission.CreatedAt(), Valid: !permission.CreatedAt().IsZero()},
+		UpdatedAt:   sql.NullTime{Time: permission.UpdatedAt(), Valid: !permission.UpdatedAt().IsZero()},
 	}
 }
 
@@ -149,6 +163,7 @@ func ToPermission(da PermissionDA) Permission {
 	return Permission{
 		Model: am.NewModel(
 			am.WithID(da.ID),
+			am.WithType(permissionType),
 			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
@@ -176,14 +191,14 @@ func ToResourceDA(resource Resource) ResourceDA {
 		Name:        sql.NullString{String: resource.Name, Valid: resource.Name != ""},
 		Description: sql.NullString{String: resource.Description, Valid: resource.Description != ""},
 		Label:       sql.NullString{String: resource.Label, Valid: resource.Label != ""},
-		Type:        sql.NullString{String: resource.Type, Valid: resource.Type != ""},
+		Type:        sql.NullString{String: resource.ResourceType, Valid: resource.ResourceType != ""},
 		URI:         sql.NullString{String: resource.URI, Valid: resource.URI != ""},
 		Slug:        sql.NullString{String: resource.Slug(), Valid: resource.Slug() != ""},
 		Permissions: toPermissionIDs(resource.Permissions),
-		CreatedBy:   sql.NullString{String: resource.Model.CreatedBy().String(), Valid: resource.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:   sql.NullString{String: resource.Model.UpdatedBy().String(), Valid: resource.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:   sql.NullTime{Time: resource.Model.CreatedAt(), Valid: !resource.Model.CreatedAt().IsZero()},
-		UpdatedAt:   sql.NullTime{Time: resource.Model.UpdatedAt(), Valid: !resource.Model.UpdatedAt().IsZero()},
+		CreatedBy:   sql.NullString{String: resource.CreatedBy().String(), Valid: resource.CreatedBy() != uuid.Nil},
+		UpdatedBy:   sql.NullString{String: resource.UpdatedBy().String(), Valid: resource.UpdatedBy() != uuid.Nil},
+		CreatedAt:   sql.NullTime{Time: resource.CreatedAt(), Valid: !resource.CreatedAt().IsZero()},
+		UpdatedAt:   sql.NullTime{Time: resource.UpdatedAt(), Valid: !resource.UpdatedAt().IsZero()},
 	}
 }
 
@@ -192,17 +207,20 @@ func ToResource(da ResourceDA) Resource {
 	return Resource{
 		Model: am.NewModel(
 			am.WithID(da.ID),
+			am.WithType(resourceEntityType),
 			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
 			am.WithUpdatedAt(da.UpdatedAt.Time),
 		),
-		Name:        da.Name.String,
-		Description: da.Description.String,
-		Label:       da.Label.String,
-		Type:        da.Type.String,
-		URI:         da.URI.String,
+		Name:          da.Name.String,
+		Description:   da.Description.String,
+		Label:         da.Label.String,
+		ResourceType:  da.Type.String,
+		URI:           da.URI.String,
+		PermissionIDs: da.Permissions,
+		Permissions:   []Permission{},
 	}
 }
 
@@ -217,17 +235,29 @@ func ToResources(das []ResourceDA) []Resource {
 
 // ToResourceExt converts ResourceExtDA to Resource including permissions
 func ToResourceExt(da ResourceExtDA) Resource {
+	permission := Permission{
+		Model: am.NewModel(
+			am.WithID(am.ParseUUID(da.PermissionID)),
+			am.WithType(permissionType),
+		),
+		Name: da.PermissionName.String,
+	}
+
 	return Resource{
 		Model: am.NewModel(
 			am.WithID(da.ID),
+			am.WithType(resourceEntityType),
 			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
 			am.WithUpdatedAt(da.UpdatedAt.Time),
 		),
-		Name:        da.Name.String,
-		Description: da.Description.String,
+		Name:          da.Name.String,
+		Description:   da.Description.String,
+		ResourceType:  "entity", // Default type since it's not in ResourceExtDA
+		PermissionIDs: []uuid.UUID{am.ParseUUID(da.PermissionID)},
+		Permissions:   []Permission{permission},
 	}
 }
 
@@ -236,7 +266,10 @@ func toRoles(roleIDs []uuid.UUID) []Role {
 	var roles []Role
 	for _, id := range roleIDs {
 		roles = append(roles, Role{
-			Model: am.NewModel(am.WithID(id)),
+			Model: am.NewModel(
+				am.WithID(id),
+				am.WithType(roleType),
+			),
 		})
 	}
 	return roles
@@ -255,7 +288,10 @@ func toPermissions(permissionIDs []uuid.UUID) []Permission {
 	var permissions []Permission
 	for _, id := range permissionIDs {
 		permissions = append(permissions, Permission{
-			Model: am.NewModel(am.WithID(id)),
+			Model: am.NewModel(
+				am.WithID(id),
+				am.WithType(permissionType),
+			),
 		})
 	}
 	return permissions
@@ -267,4 +303,24 @@ func toPermissionIDs(permissions []Permission) []uuid.UUID {
 		ids = append(ids, permission.ID())
 	}
 	return ids
+}
+
+// ToUserRole converts RoleDA to Role
+func ToUserRole(da RoleDA) Role {
+	return Role{
+		Model: am.NewModel(
+			am.WithID(da.ID),
+			am.WithType(roleType),
+			am.WithSlug(da.Slug.String),
+			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
+			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
+			am.WithCreatedAt(da.CreatedAt.Time),
+			am.WithUpdatedAt(da.UpdatedAt.Time),
+		),
+		Name:          da.Name.String,
+		Description:   da.Description.String,
+		Status:        da.Status.String,
+		PermissionIDs: da.Permissions,
+		Permissions:   []Permission{},
+	}
 }

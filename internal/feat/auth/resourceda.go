@@ -29,16 +29,18 @@ func toResource(da ResourceDA) Resource {
 	return Resource{
 		Model: am.NewModel(
 			am.WithID(da.ID),
-			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
-			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
+			am.WithType(resourceEntityType),
+			am.WithSlug(da.Slug.String),
+			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
+			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
 			am.WithUpdatedAt(da.UpdatedAt.Time),
 		),
-		Name:        da.Name.String,
-		Description: da.Description.String,
-		Label:       da.Label.String,
-		Type:        da.Type.String,
-		URI:         da.URI.String,
+		Name:         da.Name.String,
+		Description:  da.Description.String,
+		Label:        da.Label.String,
+		ResourceType: da.Type.String,
+		URI:          da.URI.String,
 	}
 }
 
@@ -49,13 +51,14 @@ func toResourceDA(resource Resource) ResourceDA {
 		Name:        sql.NullString{String: resource.Name, Valid: resource.Name != ""},
 		Description: sql.NullString{String: resource.Description, Valid: resource.Description != ""},
 		Label:       sql.NullString{String: resource.Label, Valid: resource.Label != ""},
-		Type:        sql.NullString{String: resource.Type, Valid: resource.Type != ""},
+		Type:        sql.NullString{String: resource.ResourceType, Valid: resource.ResourceType != ""},
 		URI:         sql.NullString{String: resource.URI, Valid: resource.URI != ""},
+		Slug:        sql.NullString{String: resource.Slug(), Valid: resource.Slug() != ""},
 		Permissions: toPermissionIDs(resource.Permissions),
-		CreatedBy:   sql.NullString{String: resource.Model.CreatedBy().String(), Valid: resource.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:   sql.NullString{String: resource.Model.UpdatedBy().String(), Valid: resource.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:   sql.NullTime{Time: resource.Model.CreatedAt(), Valid: !resource.Model.CreatedAt().IsZero()},
-		UpdatedAt:   sql.NullTime{Time: resource.Model.UpdatedAt(), Valid: !resource.Model.UpdatedAt().IsZero()},
+		CreatedBy:   sql.NullString{String: resource.CreatedBy().String(), Valid: resource.CreatedBy() != uuid.Nil},
+		UpdatedBy:   sql.NullString{String: resource.UpdatedBy().String(), Valid: resource.UpdatedBy() != uuid.Nil},
+		CreatedAt:   sql.NullTime{Time: resource.CreatedAt(), Valid: !resource.CreatedAt().IsZero()},
+		UpdatedAt:   sql.NullTime{Time: resource.UpdatedAt(), Valid: !resource.UpdatedAt().IsZero()},
 	}
 }
 
