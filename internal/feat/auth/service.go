@@ -15,11 +15,13 @@ type Service interface {
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	CreateRole(ctx context.Context, role Role) error
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
+	GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
 	GetRole(ctx context.Context, roleID uuid.UUID) (Role, error)
 	UpdateRole(ctx context.Context, role Role) error
 	DeleteRole(ctx context.Context, roleID uuid.UUID) error
 	AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
+	GetAllPermissions(ctx context.Context) ([]Permission, error)
 	CreatePermission(ctx context.Context, permission Permission) error
 	GetPermission(ctx context.Context, id uuid.UUID) (Permission, error)
 	UpdatePermission(ctx context.Context, permission Permission) error
@@ -74,6 +76,10 @@ func (svc *BaseService) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]R
 	return svc.repo.GetUserRoles(ctx, userID)
 }
 
+func (svc *BaseService) GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error) {
+	return svc.repo.GetUserUnassignedRoles(ctx, userID)
+}
+
 func (svc *BaseService) CreateRole(ctx context.Context, role Role) error {
 	return svc.repo.CreateRole(ctx, role)
 }
@@ -91,15 +97,15 @@ func (svc *BaseService) DeleteRole(ctx context.Context, roleID uuid.UUID) error 
 }
 
 func (svc *BaseService) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	role, err := svc.repo.GetRole(ctx, roleID)
-	if err != nil {
-		return err
-	}
-	return svc.repo.AddRole(ctx, userID, role)
+	return svc.repo.AddRole(ctx, userID, roleID)
 }
 
 func (svc *BaseService) RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
 	return svc.repo.RemoveRole(ctx, userID, roleID)
+}
+
+func (svc *BaseService) GetAllPermissions(ctx context.Context) ([]Permission, error) {
+	return svc.repo.GetAllPermissions(ctx)
 }
 
 func (svc *BaseService) CreatePermission(ctx context.Context, permission Permission) error {

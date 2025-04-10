@@ -58,10 +58,10 @@ func (qm *QueryManager) loadQueries(path string) {
 	feat := parts[3]
 	resource := strings.TrimSuffix(parts[4], ".sql")
 
-	queries := strings.Split(string(content), "-- ")
+	queries := strings.Split(string(content), "\n-- ")
 	for _, query := range queries {
 		lines := strings.Split(query, "\n")
-		if len(lines) > 1 {
+		if len(lines) > 0 {
 			queryName := strings.TrimSpace(lines[0])
 			if !isValidQueryName(queryName) {
 				continue

@@ -488,14 +488,28 @@ func (repo *AuthRepo) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]aut
 	return auth.ToRoles(rolesDA), nil
 }
 
-func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, role auth.Role) error {
+func (repo *AuthRepo) GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]auth.Role, error) {
+	query, err := repo.Query.Get(featAuth, resUserRole, "GetUserUnassignedRoles")
+	if err != nil {
+		return nil, err
+	}
+
+	var rolesDA []auth.RoleDA
+	err = repo.db.SelectContext(ctx, &rolesDA, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return auth.ToRoles(rolesDA), nil
+}
+
+func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
 	query, err := repo.Query.Get(featAuth, resUserRole, "AddRole")
 	if err != nil {
 		return err
 	}
 
-	roleDA := auth.ToRoleDA(role)
-	_, err = repo.db.ExecContext(ctx, query, userID, roleDA.ID)
+	_, err = repo.db.ExecContext(ctx, query, userID, roleID, roleID)
 	return err
 }
 
