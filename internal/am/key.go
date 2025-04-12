@@ -7,9 +7,9 @@ type Keys struct {
 	ServerAPIHost      string
 	ServerAPIPort      string
 	ServerAPIEnabled   string
-	ServerFeatPath     string
+	ServerResPath      string
 	ServerIndexEnabled string
-	
+
 	DBSQLiteDSN string
 
 	SecCSRFKey      string
@@ -38,7 +38,7 @@ var Key = Keys{
 	ServerAPIHost:      "server.api.host",
 	ServerAPIPort:      "server.api.port",
 	ServerAPIEnabled:   "server.api.enabled",
-	ServerFeatPath:     "server.feat.path",
+	ServerResPath:      "server.res.path",
 	ServerIndexEnabled: "server.index.enabled",
 
 	DBSQLiteDSN: "db.sqlite.dsn",

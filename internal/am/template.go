@@ -15,7 +15,7 @@ const (
 	layoutPath    = "assets/template/layout"
 	handlerPath   = "assets/template/handler"
 	partialDir    = "partial"
-	defaultLayout = "layout.html"
+	defaultLayout = "layout.tmpl"
 	mainTemplate  = "page"
 )
 

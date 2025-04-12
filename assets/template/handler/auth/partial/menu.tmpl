@@ -1,0 +1,18 @@
+{{ define "menu" }}
+<div class="mx-auto p-4">
+  <div class="flex space-x-4 justify-center">
+    {{ range .Menu.Items }} {{ if .IsForm }}
+    <form action="{{ .Path }}" method="POST" class="inline">
+      <input
+        type="hidden"
+        name="aquamarine.csrf.token"
+        value="{{ $.Form.CSRF }}"
+      />
+      <button type="submit" class="{{ .Style }}">{{ .Text }}</button>
+    </form>
+    {{ else }}
+    <a href="{{ .Path }}" class="{{ .Style }}">{{ .Text }}</a>
+    {{ end }} {{ end }}
+  </div>
+</div>
+{{ end }}

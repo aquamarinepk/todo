@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	featPath = "/feat"
+	resPath = "/res"
 )
 
 type App struct {
@@ -27,9 +27,9 @@ type App struct {
 	Router        *Router
 	APIRouter     *Router
 	APIRouters    map[string]*Router
-	FeatRouter    *Router
-	FeatAPIRouter *Router
-	FeatPIRouters map[string]*Router
+	ResRouter     *Router
+	ResAPIRouter  *Router
+	ResAPIRouters map[string]*Router
 	deps          sync.Map
 	depsMutex     sync.Mutex
 	fs            embed.FS
@@ -58,17 +58,17 @@ func NewApp(name, version string, fs embed.FS, opts ...Option) *App {
 		Router:        NewRouter("web-router", opts...),
 		APIRouter:     NewRouter("api-router", opts...),
 		APIRouters:    make(map[string]*Router),
-		FeatRouter:    NewRouter("feat-router", opts...),
-		FeatAPIRouter: NewRouter("feat-api-router", opts...),
-		FeatPIRouters: make(map[string]*Router),
+		ResRouter:     NewRouter("res-router", opts...),
+		ResAPIRouter:  NewRouter("res-api-router", opts...),
+		ResAPIRouters: make(map[string]*Router),
 		fs:            fs,
 	}
 
-	featPath := app.Cfg().StrValOrDef(Key.ServerFeatPath, featPath)
+	resPath := app.Cfg().StrValOrDef(Key.ServerResPath, resPath)
 
 	app.Router.Mount("/api", app.APIRouter)
-	app.Router.Mount(featPath, app.FeatRouter)
-	app.FeatRouter.Mount(featPath, app.FeatAPIRouter)
+	app.Router.Mount(resPath, app.ResRouter)
+	app.ResRouter.Mount(resPath, app.ResAPIRouter)
 
 	return app
 }
@@ -230,21 +230,21 @@ func (a *App) MountAPI(version, path string, handler http.Handler) {
 	a.APIRouter.Mount(version, router)
 }
 
-func (a *App) MountFeat(path string, handler http.Handler) {
-	a.FeatRouter.Mount(path, handler)
+func (a *App) MountRes(path string, handler http.Handler) {
+	a.ResRouter.Mount(path, handler)
 }
 
-func (a *App) MountFeatAPI(version, path string, handler http.Handler) {
+func (a *App) MountResAPI(version, path string, handler http.Handler) {
 	version = fmt.Sprintf("/%s", version)
 	versionPath := fmt.Sprintf("%s%s", path, version)
-	router, exists := a.FeatPIRouters[version]
+	router, exists := a.ResAPIRouters[version]
 	if !exists {
-		name := fmt.Sprintf("feat-api-router-%s", versionPath)
+		name := fmt.Sprintf("res-api-router-%s", versionPath)
 		router = NewRouter(name, a.opts...)
 		router.Mount(path, handler)
-		a.FeatPIRouters[versionPath] = router
+		a.ResAPIRouters[versionPath] = router
 	}
-	a.FeatAPIRouter.Mount(version, router)
+	a.ResAPIRouter.Mount(version, router)
 }
 
 func (a *App) MountFileServer(path string, fs *FileServer) {
@@ -263,14 +263,15 @@ func (app *App) MountWeb(path string, router *Router) {
 	app.Mount(path, router)
 }
 
-func (app *App) MountFeatWeb(path string, router *Router) {
-	app.MountFeat(path, router)
+func (app *App) MountResWeb(path string, router *Router) {
+	app.MountRes(path, router)
 }
 
 func (a *App) checkSetup() error {
 	if a.Log() == nil {
 		return errors.New("logging services not available")
 	}
+
 	if a.Cfg() == nil {
 		return errors.New("config not available")
 	}

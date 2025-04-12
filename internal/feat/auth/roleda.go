@@ -22,17 +22,23 @@ type RoleDA struct {
 }
 
 // Convert RoleDA to Role
+// toModel methods do not preload relationships
 func toRole(da RoleDA) Role {
 	return Role{
 		Model: am.NewModel(
 			am.WithID(da.ID),
-			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
-			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
+			am.WithType(roleType),
+			am.WithSlug(da.Slug.String),
+			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
+			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
 			am.WithUpdatedAt(da.UpdatedAt.Time),
 		),
-		Description: da.Description.String,
-		Status:      da.Status.String,
+		Name:          da.Name.String,
+		Description:   da.Description.String,
+		Status:        da.Status.String,
+		PermissionIDs: da.Permissions,
+		Permissions:   []Permission{},
 	}
 }
 

@@ -1,0 +1,15 @@
+{{ define "header" }}
+<header class="bg-blue-600 text-white p-2 flex items-center">
+    <div class="w-12 h-12 bg-gray-300 mr-4"></div>
+    <nav class="flex-1">
+        <ul class="flex space-x-4">
+            <li><a href="/auth/list-users" class="text-white">Home</a></li>
+            <li><a href="/auth/list-users" class="text-white">Users</a></li>
+            <li><a href="/auth/list-roles" class="text-white">Roles</a></li>
+            <li><a href="/auth/list-permissions" class="text-white">Permissions</a></li>
+            <li><a href="/auth/list-resources" class="text-white">Resources</a></li>
+            <li><a href="/res/todo" class="text-white">Todo</a></li>
+        </ul>
+    </nav>
+</header>
+{{ end }}

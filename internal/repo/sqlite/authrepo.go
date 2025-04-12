@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/aquamarinepk/todo/internal/feat/auth"
@@ -277,7 +278,15 @@ func (repo *AuthRepo) CreateRole(ctx context.Context, role auth.Role) error {
 	}
 
 	roleDA := auth.ToRoleDA(role)
-	_, err = repo.db.ExecContext(ctx, query, roleDA.ID, roleDA.Name, roleDA.Description, roleDA.Slug)
+	_, err = repo.db.ExecContext(ctx, query,
+		roleDA.ID,
+		roleDA.Name,
+		roleDA.Description,
+		roleDA.Slug,
+		roleDA.CreatedBy,
+		roleDA.UpdatedBy,
+		roleDA.CreatedAt,
+		roleDA.UpdatedAt)
 	return err
 }
 
@@ -288,7 +297,13 @@ func (repo *AuthRepo) UpdateRole(ctx context.Context, role auth.Role) error {
 	}
 
 	roleDA := auth.ToRoleDA(role)
-	_, err = repo.db.ExecContext(ctx, query, roleDA.Name, roleDA.Description, roleDA.Slug, roleDA.ID)
+	_, err = repo.db.ExecContext(ctx, query,
+		roleDA.Name,
+		roleDA.Description,
+		roleDA.Slug,
+		roleDA.UpdatedBy,
+		roleDA.UpdatedAt,
+		roleDA.ID)
 	return err
 }
 
@@ -340,7 +355,15 @@ func (repo *AuthRepo) CreatePermission(ctx context.Context, permission auth.Perm
 	}
 
 	permissionDA := auth.ToPermissionDA(permission)
-	_, err = repo.db.ExecContext(ctx, query, permissionDA.ID, permissionDA.Name, permissionDA.Description, permissionDA.Slug)
+	_, err = repo.db.ExecContext(ctx, query,
+		permissionDA.ID,
+		permissionDA.Name,
+		permissionDA.Description,
+		permissionDA.Slug,
+		permissionDA.CreatedBy,
+		permissionDA.UpdatedBy,
+		permissionDA.CreatedAt,
+		permissionDA.UpdatedAt)
 	return err
 }
 
@@ -351,7 +374,13 @@ func (repo *AuthRepo) UpdatePermission(ctx context.Context, permission auth.Perm
 	}
 
 	permissionDA := auth.ToPermissionDA(permission)
-	_, err = repo.db.ExecContext(ctx, query, permissionDA.Name, permissionDA.Description, permissionDA.Slug, permissionDA.ID)
+	_, err = repo.db.ExecContext(ctx, query,
+		permissionDA.Name,
+		permissionDA.Description,
+		permissionDA.Slug,
+		permissionDA.UpdatedBy,
+		permissionDA.UpdatedAt,
+		permissionDA.ID)
 	return err
 }
 
@@ -449,7 +478,15 @@ func (repo *AuthRepo) CreateResource(ctx context.Context, resource auth.Resource
 	}
 
 	resourceDA := auth.ToResourceDA(resource)
-	_, err = repo.db.ExecContext(ctx, query, resourceDA.ID, resourceDA.Name, resourceDA.Description, resourceDA.Slug)
+	_, err = repo.db.ExecContext(ctx, query,
+		resourceDA.ID,
+		resourceDA.Name,
+		resourceDA.Description,
+		resourceDA.Slug,
+		resourceDA.CreatedBy,
+		resourceDA.UpdatedBy,
+		resourceDA.CreatedAt,
+		resourceDA.UpdatedAt)
 	return err
 }
 
@@ -460,7 +497,13 @@ func (repo *AuthRepo) UpdateResource(ctx context.Context, resource auth.Resource
 	}
 
 	resourceDA := auth.ToResourceDA(resource)
-	_, err = repo.db.ExecContext(ctx, query, resourceDA.Name, resourceDA.Description, resourceDA.Slug, resourceDA.ID)
+	_, err = repo.db.ExecContext(ctx, query,
+		resourceDA.Name,
+		resourceDA.Description,
+		resourceDA.Slug,
+		resourceDA.UpdatedBy,
+		resourceDA.UpdatedAt,
+		resourceDA.ID)
 	return err
 }
 
@@ -488,14 +531,28 @@ func (repo *AuthRepo) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]aut
 	return auth.ToRoles(rolesDA), nil
 }
 
-func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, role auth.Role) error {
+func (repo *AuthRepo) GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]auth.Role, error) {
+	query, err := repo.Query.Get(featAuth, resUserRole, "GetUserUnassignedRoles")
+	if err != nil {
+		return nil, err
+	}
+
+	var rolesDA []auth.RoleDA
+	err = repo.db.SelectContext(ctx, &rolesDA, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return auth.ToRoles(rolesDA), nil
+}
+
+func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
 	query, err := repo.Query.Get(featAuth, resUserRole, "AddRole")
 	if err != nil {
 		return err
 	}
 
-	roleDA := auth.ToRoleDA(role)
-	_, err = repo.db.ExecContext(ctx, query, userID, roleDA.ID)
+	_, err = repo.db.ExecContext(ctx, query, userID, roleID, roleID)
 	return err
 }
 
@@ -547,25 +604,40 @@ func (repo *AuthRepo) GetUserRole(ctx context.Context, userID, roleID uuid.UUID)
 	return auth.ToRole(roleDA), nil
 }
 
+// AddPermissionToRole adds a permission to a role.
 func (repo *AuthRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permission auth.Permission) error {
-	query, err := repo.Query.Get(featAuth, resRolePerm, "AddPermissionToRole")
+	query := `
+		INSERT INTO role_permissions (role_id, permission_id)
+		VALUES (?, ?)
+	`
+	_, err := repo.db.ExecContext(ctx, query, roleID, permission.ID())
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to add permission to role: %w", err)
 	}
-
-	permissionDA := auth.ToPermissionDA(permission)
-	_, err = repo.db.ExecContext(ctx, query, roleID, permissionDA.ID)
-	return err
+	return nil
 }
 
+// RemovePermissionFromRole removes a permission from a role.
 func (repo *AuthRepo) RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error {
-	query, err := repo.Query.Get(featAuth, resRolePerm, "RemovePermissionFromRole")
+	query := `
+		DELETE FROM role_permissions
+		WHERE role_id = ? AND permission_id = ?
+	`
+	result, err := repo.db.ExecContext(ctx, query, roleID, permissionID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to remove permission from role: %w", err)
 	}
 
-	_, err = repo.db.ExecContext(ctx, query, roleID, permissionID)
-	return err
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("failed to get rows affected: %w", err)
+	}
+
+	if rowsAffected == 0 {
+		return errors.New(am.ErrResourceNotFound)
+	}
+
+	return nil
 }
 
 func (repo *AuthRepo) AddPermissionToResource(ctx context.Context, resourceID uuid.UUID, permission auth.Permission) error {
@@ -601,4 +673,33 @@ func (repo *AuthRepo) GetResourcePermissions(ctx context.Context, resourceID uui
 		return nil, err
 	}
 	return auth.ToPermissions(permissionsDA), nil
+}
+
+func (repo *AuthRepo) GetRolePermissions(ctx context.Context, roleID uuid.UUID) ([]auth.Permission, error) {
+	query, err := repo.Query.Get(featAuth, resRolePerm, "GetRolePermissions")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := repo.db.QueryContext(ctx, query, roleID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get role permissions: %w", err)
+	}
+	defer rows.Close()
+
+	var permissions []auth.Permission
+	for rows.Next() {
+		var p auth.PermissionDA
+		err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Slug, &p.CreatedBy, &p.UpdatedBy, &p.CreatedAt, &p.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan permission: %w", err)
+		}
+		permissions = append(permissions, auth.ToPermission(p))
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating permissions: %w", err)
+	}
+
+	return permissions, nil
 }

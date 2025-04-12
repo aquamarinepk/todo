@@ -331,43 +331,37 @@ func (repo *BaseRepo) DeleteRole(ctx context.Context, userID, roleID uuid.UUID) 
 	return nil
 }
 
-func (repo *BaseRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permission Permission) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	roleDA, exists := repo.roles[roleID]
-	if !exists {
-		return errors.New("role not found")
+// AddPermissionToRole adds a permission to a role.
+func (repo *BaseRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error {
+	role, err := repo.GetRole(ctx, roleID, roleID)
+	if err != nil {
+		return err
 	}
-	roleDA.Permissions = append(roleDA.Permissions, permission.ID())
-	repo.roles[roleDA.ID] = roleDA
-	repo.rolePermissions[roleDA.ID] = append(repo.rolePermissions[roleDA.ID], permission.ID())
+
+	permission, err := repo.GetPermission(ctx, permissionID)
+	if err != nil {
+		return err
+	}
+
+	role.Permissions = append(role.Permissions, permission)
 	return nil
 }
 
+// RemovePermissionFromRole removes a permission from a role.
 func (repo *BaseRepo) RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error {
-	repo.mu.Lock()
-	defer repo.mu.Unlock()
-
-	roleDA, exists := repo.roles[roleID]
-	if !exists {
-		return errors.New("role not found")
+	role, err := repo.GetRole(ctx, roleID, roleID)
+	if err != nil {
+		return err
 	}
 
-	for i, pid := range roleDA.Permissions {
-		if pid == permissionID {
-			roleDA.Permissions = append(roleDA.Permissions[:i], roleDA.Permissions[i+1:]...)
-			repo.roles[roleDA.ID] = roleDA
-			for j, rpid := range repo.rolePermissions[roleDA.ID] {
-				if rpid == permissionID {
-					repo.rolePermissions[roleDA.ID] = append(repo.rolePermissions[roleDA.ID][:j], repo.rolePermissions[roleDA.ID][j+1:]...)
-					break
-				}
-			}
+	for i, p := range role.Permissions {
+		if p.ID() == permissionID {
+			role.Permissions = append(role.Permissions[:i], role.Permissions[i+1:]...)
 			return nil
 		}
 	}
-	return errors.New("permission not found")
+
+	return errors.New(am.ErrResourceNotFound)
 }
 
 // Permission methods
@@ -646,7 +640,7 @@ func (repo *BaseRepo) addSampleData() {
 		id := uuid.New()
 		name := fmt.Sprintf("resource%d", i)
 		description := fmt.Sprintf("%s description", name)
-		resource := NewResource(name, description)
+		resource := NewResource(name, description, "entity")
 		resource.GenSlug()
 		resource.GenCreationValues()
 		resourceDA := toResourceDA(resource)
@@ -661,4 +655,15 @@ func (repo *BaseRepo) addSampleData() {
 			repo.resourcePermissions[resourceID] = append(repo.resourcePermissions[resourceID], permissionID)
 		}
 	}
+}
+
+func (repo *BaseRepo) GetAllRoles(ctx context.Context) ([]Role, error) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
+	var roles []Role
+	for _, roleDA := range repo.roles {
+		roles = append(roles, toRole(roleDA))
+	}
+	return roles, nil
 }

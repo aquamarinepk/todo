@@ -112,41 +112,73 @@ func (m *Menu) SetCSRFToken(csrfToken string) {
 }
 
 // AddListItem adds a new MenuItem for listing resources.
-func (m *Menu) AddListItem(resource Resource) {
+func (m *Menu) AddListItem(resource Resource, text ...string) {
 	// TODO: Use a pluralization library to get the plural form of the resource type.
 	action := fmt.Sprintf("list-%ss", resource.Type())
+	btnText := "Back"
+	if len(text) > 0 {
+		btnText = text[0]
+	}
 	m.Items = append(m.Items, MenuItem{
 		Feat: Feat{
 			Path:   m.Path,
 			Action: action,
 		},
-		Text:  "Back",
+		Text:  btnText,
 		Style: BtnSecondaryStyle,
 	})
 }
 
 // AddNewItem adds a new MenuItem for creating a new resource.
-func (m *Menu) AddNewItem(resourceType string) {
+func (m *Menu) AddNewItem(resourceType string, text ...string) {
 	action := fmt.Sprintf("new-%s", resourceType)
+	btnText := "New"
+	if len(text) > 0 {
+		btnText = text[0]
+	}
 	m.Items = append(m.Items, MenuItem{
 		Feat: Feat{
 			Path:   m.Path,
 			Action: action,
 		},
-		Text:  "New",
+		Text:  btnText,
 		Style: BtnPrimaryStyle,
 	})
 }
 
-// AddEditItem adds a new MenuItem for editing a resource.
-func (m *Menu) AddEditItem(resource Resource) {
-	action := fmt.Sprintf("edit-%s", resource.Type())
+// AddShowItem adds a new MenuItem for showing a resource.
+func (m *Menu) AddShowItem(resource Resource, text ...string) {
+	action := fmt.Sprintf("show-%s", resource.Type())
+	btnText := "Show"
+	if len(text) > 0 {
+		btnText = text[0]
+	}
 	m.Items = append(m.Items, MenuItem{
 		Feat: Feat{
 			Path:   m.Path,
 			Action: action,
 		},
-		Text:  "Edit",
+		Text:  btnText,
+		Style: BtnPrimaryStyle,
+		QueryParams: map[string]string{
+			"id": resource.ID().String(),
+		},
+	})
+}
+
+// AddEditItem adds a new MenuItem for editing a resource.
+func (m *Menu) AddEditItem(resource Resource, text ...string) {
+	action := fmt.Sprintf("edit-%s", resource.Type())
+	btnText := "Edit"
+	if len(text) > 0 {
+		btnText = text[0]
+	}
+	m.Items = append(m.Items, MenuItem{
+		Feat: Feat{
+			Path:   m.Path,
+			Action: action,
+		},
+		Text:  btnText,
 		Style: BtnPrimaryStyle,
 		QueryParams: map[string]string{
 			"id": resource.ID().String(),
@@ -155,14 +187,18 @@ func (m *Menu) AddEditItem(resource Resource) {
 }
 
 // AddDeleteItem adds a new MenuItem for deleting a resource.
-func (m *Menu) AddDeleteItem(resource Resource) {
+func (m *Menu) AddDeleteItem(resource Resource, text ...string) {
 	action := fmt.Sprintf("delete-%s", resource.Type())
+	btnText := "Delete"
+	if len(text) > 0 {
+		btnText = text[0]
+	}
 	m.Items = append(m.Items, MenuItem{
 		Feat: Feat{
 			Path:   m.Path,
 			Action: action,
 		},
-		Text:      "Delete",
+		Text:      btnText,
 		Style:     BtnDangerStyle,
 		IsForm:    true,
 		CSRFToken: m.CSRFToken,
@@ -173,14 +209,17 @@ func (m *Menu) AddDeleteItem(resource Resource) {
 }
 
 // AddGenericItem adds a new generic MenuItem.
-func (m *Menu) AddGenericItem(action, url, text string) {
+func (m *Menu) AddGenericItem(action, url string, text ...string) {
+	btnText := "Generic"
+	if len(text) > 0 {
+		btnText = text[0]
+	}
 	m.Items = append(m.Items, MenuItem{
 		Feat: Feat{
-			Path:       m.Path,
-			Action:     action,
-			PathSuffix: action,
+			Path:   m.Path,
+			Action: action,
 		},
-		Text:  text,
+		Text:  btnText,
 		Style: BtnGenericStyle,
 		QueryParams: map[string]string{
 			"id": url,
