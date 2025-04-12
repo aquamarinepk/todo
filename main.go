@@ -47,7 +47,6 @@ func main() {
 	app.MountFileServer("/", fileServer)
 
 	// Auth feature
-	// authRepo := auth.NewInMemoryRepo(queryManager) // in-memory implementation
 	authRepo := sqlite.NewAuthRepo(queryManager)
 	authService := auth.NewService(authRepo)
 	authWebHandler := auth.NewWebHandler(templateManager, authService)
@@ -55,8 +54,8 @@ func main() {
 	authAPIHandler := auth.NewAPIHandler(authService)
 	authAPIRouter := auth.NewAPIRouter(authAPIHandler)
 
-	app.MountFeatWeb("/auth", authWebRouter)
-	app.MountFeatAPI(version, "/auth", authAPIRouter)
+	app.MountWeb("/auth", authWebRouter)
+	app.MountAPI(version, "/auth", authAPIRouter)
 
 	// Todo resource
 	todoRepo := todo.NewRepo(queryManager)
@@ -66,8 +65,8 @@ func main() {
 	todoAPIHandler := todo.NewAPIHandler(todoService)
 	todoAPIRouter := todo.NewAPIRouter(todoAPIHandler)
 
-	app.MountWeb("/todo", todoWebRouter)
-	app.MountAPI(version, "/todo", todoAPIRouter)
+	app.MountResWeb("/todo", todoWebRouter)
+	app.MountResAPI(version, "/todo", todoAPIRouter)
 
 	// Add deps
 	app.Add(migrator)

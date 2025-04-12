@@ -32,6 +32,9 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Post("/delete-role", handler.DeleteRole)
 	core.Post("/add-role", handler.AddRole)
 	core.Post("/remove-role", handler.RemoveRole)
+	core.Get("/list-role-permissions", handler.ListRolePermissions)
+	core.Post("/add-permission-to-role", handler.AddPermissionToRole)
+	core.Post("/remove-permission-from-role", handler.RemovePermissionFromRole)
 
 	// Permission routes
 	core.Get("/list-permissions", handler.ListPermissions)
@@ -41,8 +44,6 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Post("/create-permission", handler.CreatePermission)
 	core.Post("/update-permission", handler.UpdatePermission)
 	core.Post("/delete-permission", handler.DeletePermission)
-	core.Post("/add-permission-to-role", handler.AddPermissionToRole)
-	core.Post("/remove-permission-from-role", handler.RemovePermissionFromRole)
 
 	// Resource routes
 	core.Get("/list-resources", handler.ListResources)

@@ -6,26 +6,29 @@ import (
 )
 
 const (
-	resourceType = "resource"
+	resourceEntityType = "resource"
 )
 
 type Resource struct {
 	am.Model
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Label       string `json:"label"`
-	Type        string `json:"type"`
-	URI         string `json:"uri"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+	Label         string `json:"label"`
+	ResourceType  string `json:"type"` // Type of resource (e.g., "url", "entity")
+	URI           string `json:"uri"`
 	PermissionIDs []uuid.UUID
-	Permissions []Permission
+	Permissions   []Permission
 }
 
-func NewResource(name, description string) Resource {
+func NewResource(name, description, resourceType string) Resource {
+	model := am.NewModel(am.WithType(resourceEntityType))
+	model.GenCreationValues()
 	return Resource{
-		Model:       am.NewModel(am.WithType(resourceType)),
-		Name:        name,
-		Description: description,
+		Model:         model,
+		Name:          name,
+		Description:   description,
+		ResourceType:  resourceType,
 		PermissionIDs: []uuid.UUID{},
-		Permissions: []Permission{},
+		Permissions:   []Permission{},
 	}
 }

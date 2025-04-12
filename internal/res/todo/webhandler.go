@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	todoResPath = "/todo"
+	todoResPath = "/res/todo"
 	key         = am.Key
 	method      = am.HTTPMethod
 )
@@ -32,7 +32,7 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 }
 
 func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("List of lists")
+	h.Log().Info("List todos")
 	ctx := r.Context()
 
 	lists, err := h.service.GetLists(ctx)
@@ -42,8 +42,13 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(lists)
-	page.SetFormAction(todoResPath)
 	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(todoResPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddResNewItem("todo")
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("todo", "list")
 	if err != nil {
@@ -127,6 +132,15 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(list)
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(todoResPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddResListItem(list)
+	menu.AddResEditItem(list)
+	menu.AddResDeleteItem(list)
+
+	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("todo", "show")
 	if err != nil {

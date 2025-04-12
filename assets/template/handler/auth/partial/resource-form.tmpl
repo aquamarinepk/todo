@@ -1,0 +1,81 @@
+{{ define "resource-form" }}
+<form action="{{ .Form.Action }}" method="POST">
+  <input type="hidden" name="aquamarine.csrf.token" value="{{ .Form.CSRF }}" />
+  <input type="hidden" name="id" value="{{ .Data.ID }}" />
+
+  <div class="mb-4">
+    <label for="name" class="block text-gray-700 text-sm font-bold mb-2"
+      >Name</label
+    >
+    <input
+      type="text"
+      id="name"
+      name="name"
+      value="{{ .Data.Name }}"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+    />
+  </div>
+
+  <div class="mb-4">
+    <label for="label" class="block text-gray-700 text-sm font-bold mb-2"
+      >Label</label
+    >
+    <input
+      type="text"
+      id="label"
+      name="label"
+      value="{{ .Data.Label }}"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+    />
+  </div>
+
+  <div class="mb-4">
+    <label for="type" class="block text-gray-700 text-sm font-bold mb-2"
+      >Resource Type</label
+    >
+    <select
+      id="type"
+      name="type"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+    >
+      <option value="path" {{ if eq .Data.Type "path" }}selected{{ end }}>Path</option>
+      <option value="handler" {{ if eq .Data.Type "handler" }}selected{{ end }}>Handler</option>
+      <option value="entity" {{ if eq .Data.Type "entity" }}selected{{ end }}>Entity</option>
+    </select>
+  </div>
+
+  <div class="mb-4">
+    <label for="uri" class="block text-gray-700 text-sm font-bold mb-2">Path</label>
+    <input
+      type="text"
+      id="uri"
+      name="uri"
+      value="{{ .Data.URI }}"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+    />
+  </div>
+
+  <div class="mb-4">
+    <label for="description" class="block text-gray-700 text-sm font-bold mb-2"
+      >Description</label
+    >
+    <textarea
+      id="description"
+      name="description"
+      class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+    >
+{{ .Data.Description }}</textarea
+    >
+  </div>
+
+  <div class="flex items-center justify-between">
+    <button
+      type="submit"
+      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+    >
+      {{ .Form.Button.Text }}
+    </button>
+    <a href="/res/list-resources" class="text-gray-600 hover:text-gray-800">Cancel</a>
+  </div>
+</form>
+{{ end }}

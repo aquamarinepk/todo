@@ -24,7 +24,7 @@ func NewAPIHandler(service Service, options ...am.Option) *APIHandler {
 }
 
 func (h *APIHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.service.GetUsers(r.Context())
+	users, err := h.service.GetAllUsers(r.Context())
 	var res am.Response
 	if err != nil {
 		res = am.NewErrorResponse("Failed to list users", am.ErrorCodeInternalError, err.Error())

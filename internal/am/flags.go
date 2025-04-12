@@ -7,4 +7,5 @@ var Flags = map[string]interface{}{
 	Key.ServerAPIHost:    "localhost",
 	Key.ServerAPIPort:    "8081",
 	Key.ServerAPIEnabled: true,
+	Key.ServerResPath:    "/res",
 }

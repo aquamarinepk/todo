@@ -3,12 +3,12 @@
 {{ end }}
 
 {{ define "title" }}
-Create New User
+Edit {{ .Data.Name }}
 {{ end }}
 
 {{ define "content" }}
-<h1>Create a New User</h1>
-{{ template "form" . }}
+<h1>Edit User</h1>
+{{ template "user-form" . }}
 {{ end }}
 
 {{ define "submenu" }}
