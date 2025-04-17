@@ -17,6 +17,7 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Post("/update-user", handler.UpdateUser)
 	core.Post("/delete-user", handler.DeleteUser)
 	core.Get("/list-user-roles", handler.ListUserRoles)
+	core.Get("/list-user-permissions", handler.ListUserPermissions)
 	core.Post("/add-role-to-user", handler.AddRoleToUser)
 	core.Post("/remove-role-from-user", handler.RemoveRoleFromUser)
 	core.Post("/add-permission-to-user", handler.AddPermissionToUser)

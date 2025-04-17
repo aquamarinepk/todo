@@ -17,8 +17,10 @@ const (
 )
 
 const (
-	ActionListUserRoles = "list-user-roles"
-	TextRoles           = "Roles"
+	ActionListUserRoles       = "list-user-roles"
+	ActionListUserPermissions = "list-user-permissions"
+	TextRoles                 = "Roles"
+	TextPermissions           = "Permissions"
 )
 
 type WebHandler struct {
@@ -132,6 +134,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	menu.AddEditItem(user)
 	menu.AddDeleteItem(user)
 	menu.AddGenericItem(ActionListUserRoles, user.ID().String(), TextRoles)
+	menu.AddGenericItem(ActionListUserPermissions, user.ID().String(), TextPermissions)
 
 	page.Menu = *menu
 
@@ -388,6 +391,85 @@ func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) 
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("list-user-roles?id=%s", userID), http.StatusSeeOther)
+}
+
+func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request) {
+	id, err := h.ID(w, r)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	h.Log().Info("List permissions for user", "id", id)
+	ctx := r.Context()
+
+	// Get user details
+	user, err := h.service.GetUser(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	// Get permissions assigned to the user through roles
+	permissionsFromRoles, err := h.service.GetAllUserPermissions(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	// Get permissions directly assigned to the user
+	directPermissions, err := h.service.GetUserDirectPermissions(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	// Get permissions not assigned to the user (neither through roles nor directly)
+	unassignedPermissions, err := h.service.GetUserUnassignedPermissions(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	// Prepare the page data
+	page := am.NewPage(struct {
+		User                  User
+		PermissionsFromRoles  []Permission
+		DirectPermissions     []Permission
+		UnassignedPermissions []Permission
+	}{
+		User:                  user,
+		PermissionsFromRoles:  permissionsFromRoles,
+		DirectPermissions:     directPermissions,
+		UnassignedPermissions: unassignedPermissions,
+	})
+	page.GenCSRFToken(r)
+
+	// Create the menu
+	menu := am.NewMenu(authPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddShowItem(user, "Back")
+
+	page.Menu = *menu
+
+	// Render the template
+	tmpl, err := h.tm.Get("auth", "list-user-permissions")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
@@ -886,7 +968,7 @@ func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	http.Redirect(w, r, am.ShowPath(authPath, "user", userID), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/list-user-permissions?id=%s", authPath, userID), http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
@@ -913,7 +995,7 @@ func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	http.Redirect(w, r, am.ShowPath(authPath, "user", userID), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/list-user-permissions?id=%s", authPath, userID), http.StatusSeeOther)
 }
 
 func (h *WebHandler) AddPermissionToRole(w http.ResponseWriter, r *http.Request) {

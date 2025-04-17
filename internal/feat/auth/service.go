@@ -8,30 +8,40 @@ import (
 )
 
 type Service interface {
+	// User-related methods
 	GetAllUsers(ctx context.Context) ([]User, error)
 	GetUser(ctx context.Context, id uuid.UUID) (User, error)
 	CreateUser(ctx context.Context, user User) error
 	UpdateUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
-	GetAllRoles(ctx context.Context) ([]Role, error)
-	CreateRole(ctx context.Context, role Role) error
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
 	GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
-	GetRole(ctx context.Context, roleID uuid.UUID) (Role, error)
-	UpdateRole(ctx context.Context, role Role) error
-	DeleteRole(ctx context.Context, roleID uuid.UUID) error
+	GetAllUserPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
+	GetUserDirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
+	GetUserUnassignedPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
 	AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
-	GetAllPermissions(ctx context.Context) ([]Permission, error)
-	CreatePermission(ctx context.Context, permission Permission) error
-	GetPermission(ctx context.Context, id uuid.UUID) (Permission, error)
-	UpdatePermission(ctx context.Context, permission Permission) error
-	DeletePermission(ctx context.Context, id uuid.UUID) error
 	AddPermissionToUser(ctx context.Context, userID uuid.UUID, permission Permission) error
 	RemovePermissionFromUser(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) error
+
+	// Role-related methods
+	GetAllRoles(ctx context.Context) ([]Role, error)
+	GetRole(ctx context.Context, roleID uuid.UUID) (Role, error)
+	CreateRole(ctx context.Context, role Role) error
+	UpdateRole(ctx context.Context, role Role) error
+	DeleteRole(ctx context.Context, roleID uuid.UUID) error
+	GetRolePermissions(ctx context.Context, roleID uuid.UUID) ([]Permission, error)
 	AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error
 	RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error
-	GetRolePermissions(ctx context.Context, roleID uuid.UUID) ([]Permission, error)
+
+	// Permission-related methods
+	GetAllPermissions(ctx context.Context) ([]Permission, error)
+	GetPermission(ctx context.Context, id uuid.UUID) (Permission, error)
+	CreatePermission(ctx context.Context, permission Permission) error
+	UpdatePermission(ctx context.Context, permission Permission) error
+	DeletePermission(ctx context.Context, id uuid.UUID) error
+
+	// Resource-related methods
 	GetAllResources(ctx context.Context) ([]Resource, error)
 	GetResource(ctx context.Context, id uuid.UUID) (Resource, error)
 	CreateResource(ctx context.Context, resource Resource) error
@@ -98,6 +108,14 @@ func (svc *BaseService) DeleteRole(ctx context.Context, roleID uuid.UUID) error 
 	return svc.repo.DeleteRole(ctx, roleID)
 }
 
+func (svc *BaseService) GetAllRoles(ctx context.Context) ([]Role, error) {
+	return svc.repo.GetAllRoles(ctx)
+}
+
+func (svc *BaseService) GetRolePermissions(ctx context.Context, roleID uuid.UUID) ([]Permission, error) {
+	return svc.repo.GetRolePermissions(ctx, roleID)
+}
+
 func (svc *BaseService) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
 	return svc.repo.AddRole(ctx, userID, roleID)
 }
@@ -124,6 +142,18 @@ func (svc *BaseService) UpdatePermission(ctx context.Context, permission Permiss
 
 func (svc *BaseService) DeletePermission(ctx context.Context, id uuid.UUID) error {
 	return svc.repo.DeletePermission(ctx, id)
+}
+
+func (svc *BaseService) GetAllUserPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error) {
+	return svc.repo.GetAllUserPermissions(ctx, userID)
+}
+
+func (svc *BaseService) GetUserDirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error) {
+	return svc.repo.GetUserDirectPermissions(ctx, userID)
+}
+
+func (svc *BaseService) GetUserUnassignedPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error) {
+	return svc.repo.GetUserUnassignedPermissions(ctx, userID)
 }
 
 func (svc *BaseService) AddPermissionToUser(ctx context.Context, userID uuid.UUID, permission Permission) error {
@@ -176,12 +206,4 @@ func (svc *BaseService) AddPermissionToResource(ctx context.Context, resourceID 
 
 func (svc *BaseService) RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error {
 	return svc.repo.RemovePermissionFromResource(ctx, resourceID, permissionID)
-}
-
-func (svc *BaseService) GetAllRoles(ctx context.Context) ([]Role, error) {
-	return svc.repo.GetAllRoles(ctx)
-}
-
-func (svc *BaseService) GetRolePermissions(ctx context.Context, roleID uuid.UUID) ([]Permission, error) {
-	return svc.repo.GetRolePermissions(ctx, roleID)
 }
