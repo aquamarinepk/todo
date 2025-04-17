@@ -7,102 +7,74 @@ Role Permissions {{ end }} {{ define "content" }}
 <div class="space-y-8">
   <div class="flex items-center justify-between">
     <h1 class="text-2xl font-bold">Role Permissions</h1>
-    <a
-      href="show-role?id={{ .Data.ID }}"
-      class="inline-block bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-    >
-      Back to Role
-    </a>
+    <a href="show-role?id={{ .Data.ID }}" class="text-gray-600 hover:text-gray-800">Back to Role</a>
   </div>
 
-  <div class="bg-white shadow-md rounded-lg p-6">
-    <div class="mb-6">
-      <h2 class="text-xl font-semibold text-gray-900">{{ .Data.Name }}</h2>
-      <p class="mt-1 text-sm text-gray-600">{{ .Data.Description }}</p>
-    </div>
+  <div class="mb-6">
+    <h2 class="text-xl font-semibold text-gray-900">{{ .Data.Name }}</h2>
+    <p class="mt-1 text-sm text-gray-600">{{ .Data.Description }}</p>
+  </div>
 
-    <div class="border-t border-gray-200 pt-6">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">
-        Assigned Permissions
-      </h3>
-      {{ if .Data.Permissions }}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+  <div class="mb-8">
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Assigned Permissions</h3>
+    {{ if .Data.Permissions }}
+    <table class="min-w-full divide-y divide-gray-200">
+      <tbody class="bg-white divide-y divide-gray-200">
+        {{ $csrf := .Form.CSRF }}
         {{ range .Data.Permissions }}
-        <div class="bg-gray-50 rounded p-4 border border-gray-200">
-          <div class="flex justify-between items-start">
-            <div>
-              <h4 class="font-medium text-gray-900">{{ .Name }}</h4>
-              <p class="text-sm text-gray-600">{{ .Description }}</p>
-            </div>
-            <form action="remove-permission-from-role" method="POST">
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            {{ .Name }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ .Description }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+            <form action="remove-permission-from-role" method="POST" class="inline">
               <input type="hidden" name="role_id" value="{{ $.Data.ID }}" />
               <input type="hidden" name="permission_id" value="{{ .ID }}" />
-              <input
-                type="hidden"
-                name="aquamarine.csrf.token"
-                value="{{ $.Form.CSRF }}"
-              />
-              <button type="submit" class="text-red-500 hover:text-red-700">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fill-rule="evenodd"
-                    d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
-                    clip-rule="evenodd"
-                  />
-                </svg>
-              </button>
+              <input type="hidden" name="aquamarine.csrf.token" value="{{ $csrf }}" />
+              <button type="submit" class="inline-block bg-red-500 text-white px-6 py-2 rounded w-24">Remove</button>
             </form>
-          </div>
-        </div>
+          </td>
+        </tr>
         {{ end }}
-      </div>
-      {{ else }}
-      <p class="text-gray-600 mb-8">No permissions assigned to this role.</p>
-      {{ end }}
-    </div>
+      </tbody>
+    </table>
+    {{ else }}
+    <p class="text-gray-600">No permissions assigned to this role.</p>
+    {{ end }}
+  </div>
 
-    <div class="border-t border-gray-200 pt-6">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">
-        Available Permissions
-      </h3>
-
-      {{ if .Data.AvailablePermissions }}
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <div>
+    <h3 class="text-lg font-medium text-gray-900 mb-4">Available Permissions</h3>
+    {{ if .Data.AvailablePermissions }}
+    <table class="min-w-full divide-y divide-gray-200">
+      <tbody class="bg-white divide-y divide-gray-200">
+        {{ $csrf := .Form.CSRF }}
         {{ range .Data.AvailablePermissions }}
-        <div class="bg-gray-50 rounded p-4 border border-gray-200">
-          <div class="flex justify-between items-start">
-            <div>
-              <h4 class="font-medium text-gray-900">{{ .Name }}</h4>
-              <p class="text-sm text-gray-600">{{ .Description }}</p>
-            </div>
-            <form action="add-permission-to-role" method="POST">
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            {{ .Name }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ .Description }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-right">
+            <form action="add-permission-to-role" method="POST" class="inline">
               <input type="hidden" name="role_id" value="{{ $.Data.ID }}" />
               <input type="hidden" name="permission_id" value="{{ .ID }}" />
-              <input
-                type="hidden"
-                name="aquamarine.csrf.token"
-                value="{{ $.Form.CSRF }}"
-              />
-              <button
-                type="submit"
-                class="inline-flex items-center px-3 py-1 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Add
-              </button>
+              <input type="hidden" name="aquamarine.csrf.token" value="{{ $csrf }}" />
+              <button type="submit" class="inline-block bg-blue-500 text-white px-6 py-2 rounded w-24">Add</button>
             </form>
-          </div>
-        </div>
+          </td>
+        </tr>
         {{ end }}
-      </div>
-      {{ else }}
-      <p class="text-gray-600">All available permissions have been assigned.</p>
-      {{ end }}
-    </div>
+      </tbody>
+    </table>
+    {{ else }}
+    <p class="text-gray-600">All available permissions have been assigned.</p>
+    {{ end }}
   </div>
 </div>
 {{ end }}
