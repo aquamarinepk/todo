@@ -20,6 +20,9 @@ type Repo interface {
 	AddPermissionToUser(ctx context.Context, userID uuid.UUID, permission Permission) error
 	RemovePermissionFromUser(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) error
 	GetUserRole(ctx context.Context, userID, roleID uuid.UUID) (Role, error)
+	GetAllUserPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
+	GetUserDirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
+	GetUserUnassignedPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
 
 	// Role-related methods
 	GetAllRoles(ctx context.Context) ([]Role, error)
