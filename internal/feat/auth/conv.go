@@ -2,6 +2,7 @@ package auth
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/google/uuid"
@@ -14,19 +15,28 @@ func ToUserDA(user User) UserDA {
 		Slug:          sql.NullString{String: user.Slug(), Valid: user.Slug() != ""},
 		Name:          sql.NullString{String: user.Name, Valid: user.Name != ""},
 		Username:      sql.NullString{String: user.Username, Valid: user.Username != ""},
-		Email:         sql.NullString{String: user.Email, Valid: user.Email != ""},
-		EncPassword:   sql.NullString{String: user.EncPassword, Valid: user.EncPassword != ""},
+		EmailEnc:      user.EmailEnc,
+		PasswordEnc:   user.PasswordEnc,
 		RoleIDs:       toRoleIDs(user.Roles),
 		PermissionIDs: toPermissionIDs(user.Permissions),
 		CreatedBy:     sql.NullString{String: user.CreatedBy().String(), Valid: user.CreatedBy() != uuid.Nil},
 		UpdatedBy:     sql.NullString{String: user.UpdatedBy().String(), Valid: user.UpdatedBy() != uuid.Nil},
 		CreatedAt:     sql.NullTime{Time: user.CreatedAt(), Valid: !user.CreatedAt().IsZero()},
 		UpdatedAt:     sql.NullTime{Time: user.UpdatedAt(), Valid: !user.UpdatedAt().IsZero()},
+		LastLoginAt:   sql.NullTime{Time: derefTime(user.LastLoginAt), Valid: user.LastLoginAt != nil},
+		LastLoginIP:   sql.NullString{String: user.LastLoginIP, Valid: user.LastLoginIP != ""},
+		IsActive:      sql.NullBool{Bool: user.IsActive, Valid: true},
 	}
 }
 
 // ToUser converts a UserDA data access object to a User business object
 func ToUser(da UserDA) User {
+	var lastLoginAt *time.Time
+	if da.LastLoginAt.Valid {
+		t := da.LastLoginAt.Time
+		lastLoginAt = &t
+	}
+
 	return User{
 		Model: am.NewModel(
 			am.WithID(da.ID),
@@ -39,8 +49,11 @@ func ToUser(da UserDA) User {
 		),
 		Name:        da.Name.String,
 		Username:    da.Username.String,
-		Email:       da.Email.String,
-		EncPassword: da.EncPassword.String,
+		EmailEnc:    da.EmailEnc,
+		PasswordEnc: da.PasswordEnc,
+		LastLoginAt: lastLoginAt,
+		LastLoginIP: da.LastLoginIP.String,
+		IsActive:    da.IsActive.Bool,
 	}
 }
 
@@ -55,21 +68,47 @@ func ToUsers(das []UserDA) []User {
 
 // ToUserExt converts UserExtDA to User including roles and permissions
 func ToUserExt(da UserExtDA) User {
-	return User{
-		Model: am.NewModel(
-			am.WithID(da.ID),
-			am.WithType(userType),
-			am.WithSlug(da.Slug.String),
-			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
-			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
-			am.WithCreatedAt(da.CreatedAt.Time),
-			am.WithUpdatedAt(da.UpdatedAt.Time),
-		),
-		Name:        da.Name.String,
-		Username:    da.Username.String,
-		Email:       da.Email.String,
-		EncPassword: da.EncPassword.String,
+	user := ToUser(UserDA{
+		ID:          da.ID,
+		Slug:        da.Slug,
+		Name:        da.Name,
+		Username:    da.Username,
+		EmailEnc:    da.EmailEnc,
+		PasswordEnc: da.PasswordEnc,
+		CreatedBy:   da.CreatedBy,
+		UpdatedBy:   da.UpdatedBy,
+		CreatedAt:   da.CreatedAt,
+		UpdatedAt:   da.UpdatedAt,
+		LastLoginAt: da.LastLoginAt,
+		LastLoginIP: da.LastLoginIP,
+		IsActive:    da.IsActive,
+	})
+
+	// Add role if present
+	if da.RoleID.Valid {
+		user.RoleIDs = append(user.RoleIDs, am.ParseUUID(da.RoleID))
+		user.Roles = append(user.Roles, Role{
+			Model: am.NewModel(
+				am.WithID(am.ParseUUID(da.RoleID)),
+				am.WithType(roleType),
+			),
+			Name: da.RoleName.String,
+		})
 	}
+
+	// Add permission if present
+	if da.PermissionID.Valid {
+		user.PermissionIDs = append(user.PermissionIDs, am.ParseUUID(da.PermissionID))
+		user.Permissions = append(user.Permissions, Permission{
+			Model: am.NewModel(
+				am.WithID(am.ParseUUID(da.PermissionID)),
+				am.WithType(permissionType),
+			),
+			Name: da.PermissionName.String,
+		})
+	}
+
+	return user
 }
 
 // ToRoleDA converts a Role business object to a RoleDA data access object
@@ -255,72 +294,31 @@ func ToResourceExt(da ResourceExtDA) Resource {
 		),
 		Name:          da.Name.String,
 		Description:   da.Description.String,
-		ResourceType:  "entity", // Default type since it's not in ResourceExtDA
+		ResourceType:  "entity",
 		PermissionIDs: []uuid.UUID{am.ParseUUID(da.PermissionID)},
 		Permissions:   []Permission{permission},
 	}
 }
 
-// Helper functions for role conversions
-func toRoles(roleIDs []uuid.UUID) []Role {
-	var roles []Role
-	for _, id := range roleIDs {
-		roles = append(roles, Role{
-			Model: am.NewModel(
-				am.WithID(id),
-				am.WithType(roleType),
-			),
-		})
-	}
-	return roles
-}
-
 func toRoleIDs(roles []Role) []uuid.UUID {
-	var roleIDs []uuid.UUID
-	for _, role := range roles {
-		roleIDs = append(roleIDs, role.ID())
-	}
-	return roleIDs
-}
-
-// Helper functions for permission conversions
-func toPermissions(permissionIDs []uuid.UUID) []Permission {
-	var permissions []Permission
-	for _, id := range permissionIDs {
-		permissions = append(permissions, Permission{
-			Model: am.NewModel(
-				am.WithID(id),
-				am.WithType(permissionType),
-			),
-		})
-	}
-	return permissions
-}
-
-func toPermissionIDs(permissions []Permission) []uuid.UUID {
 	var ids []uuid.UUID
-	for _, permission := range permissions {
-		ids = append(ids, permission.ID())
+	for _, r := range roles {
+		ids = append(ids, r.ID())
 	}
 	return ids
 }
 
-// ToUserRole converts RoleDA to Role
-func ToUserRole(da RoleDA) Role {
-	return Role{
-		Model: am.NewModel(
-			am.WithID(da.ID),
-			am.WithType(roleType),
-			am.WithSlug(da.Slug.String),
-			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
-			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
-			am.WithCreatedAt(da.CreatedAt.Time),
-			am.WithUpdatedAt(da.UpdatedAt.Time),
-		),
-		Name:          da.Name.String,
-		Description:   da.Description.String,
-		Status:        da.Status.String,
-		PermissionIDs: da.Permissions,
-		Permissions:   []Permission{},
+func toPermissionIDs(perms []Permission) []uuid.UUID {
+	var ids []uuid.UUID
+	for _, p := range perms {
+		ids = append(ids, p.ID())
 	}
+	return ids
+}
+
+func derefTime(t *time.Time) time.Time {
+	if t == nil {
+		return time.Time{}
+	}
+	return *t
 }

@@ -1,7 +1,7 @@
 -- Res: UserPermissions
 -- Table: user_permissions
 
--- GetAllUserPermissions
+-- GetUserAssignedPermissions
 SELECT p.id, p.name, p.description, p.slug, p.created_by, p.updated_by, p.created_at, p.updated_at
 FROM permissions p
 WHERE p.id IN (
@@ -13,6 +13,16 @@ WHERE p.id IN (
     SELECT up.permission_id
     FROM user_permissions up
     WHERE up.user_id = ?
+);
+
+-- GetUserIndirectPermissions
+SELECT p.id, p.name, p.description, p.slug, p.created_by, p.updated_by, p.created_at, p.updated_at
+FROM permissions p
+WHERE p.id IN (
+    SELECT rp.permission_id
+    FROM role_permissions rp
+             JOIN user_roles ur ON rp.role_id = ur.role_id
+    WHERE ur.user_id = ?
 );
 
 -- GetUserDirectPermissions

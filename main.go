@@ -16,6 +16,11 @@ const (
 	version   = "v1"
 	namespace = "TODO"
 	engine    = "sqlite"
+	// encKey is the encryption key for AES-256 encryption.
+	// 23 bytes hex string for AES-128
+	// Sample value here until we put this value in config.
+	// This value was also used to generate seeder data.
+	encKey = "8af0b8e0f14c4842b3e8f2dc41cf2872"
 )
 
 var (
@@ -48,8 +53,8 @@ func main() {
 
 	// Auth feature
 	authRepo := sqlite.NewAuthRepo(queryManager)
-	authService := auth.NewService(authRepo)
-	authWebHandler := auth.NewWebHandler(templateManager, authService)
+	authService := auth.NewService(authRepo, []byte(encKey))
+	authWebHandler := auth.NewWebHandler(templateManager, authService, []byte(encKey))
 	authWebRouter := auth.NewWebRouter(authWebHandler)
 	authAPIHandler := auth.NewAPIHandler(authService)
 	authAPIRouter := auth.NewAPIRouter(authAPIHandler)
