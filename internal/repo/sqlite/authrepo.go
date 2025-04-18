@@ -228,7 +228,7 @@ func (repo *AuthRepo) GetRole(ctx context.Context, id uuid.UUID, preload ...bool
 }
 
 func (repo *AuthRepo) getRole(ctx context.Context, id uuid.UUID) (auth.Role, error) {
-	query, err := repo.Query.Get("auth", "role", "Get")
+	query, err := repo.Query.Get(featAuth, resRole, "Get")
 	if err != nil {
 		return auth.Role{}, err
 	}
@@ -245,7 +245,7 @@ func (repo *AuthRepo) getRole(ctx context.Context, id uuid.UUID) (auth.Role, err
 }
 
 func (repo *AuthRepo) getRolePreload(ctx context.Context, id uuid.UUID) (auth.Role, error) {
-	query, err := repo.Query.Get("auth", "role", "GetPreload")
+	query, err := repo.Query.Get(featAuth, resRole, "GetPreload")
 	if err != nil {
 		return auth.Role{}, err
 	}
@@ -342,6 +342,7 @@ func (repo *AuthRepo) GetAllPermissions(ctx context.Context) ([]auth.Permission,
 	return auth.ToPermissions(permissionsDA), nil
 }
 
+// GetPermission returns a permission by ID
 func (repo *AuthRepo) GetPermission(ctx context.Context, id uuid.UUID) (auth.Permission, error) {
 	query, err := repo.Query.Get(featAuth, resPerm, "Get")
 	if err != nil {
@@ -349,13 +350,13 @@ func (repo *AuthRepo) GetPermission(ctx context.Context, id uuid.UUID) (auth.Per
 	}
 
 	var permissionDA auth.PermissionDA
-	err = repo.db.GetContext(ctx, &permissionDA, query, id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return auth.Permission{}, errors.New("permission not found")
+	if err := repo.db.GetContext(ctx, &permissionDA, query, id); err != nil {
+		if err == sql.ErrNoRows {
+			return auth.Permission{}, auth.ErrPermissionNotFound
 		}
 		return auth.Permission{}, err
 	}
+
 	return auth.ToPermission(permissionDA), nil
 }
 
@@ -428,24 +429,24 @@ func (repo *AuthRepo) GetResource(ctx context.Context, id uuid.UUID, preload ...
 }
 
 func (repo *AuthRepo) getResource(ctx context.Context, id uuid.UUID) (auth.Resource, error) {
-	query, err := repo.Query.Get("auth", "resource", "Get")
+	query, err := repo.Query.Get(featAuth, resRes, "Get")
 	if err != nil {
 		return auth.Resource{}, err
 	}
 
 	var resourceDA auth.ResourceDA
-	err = repo.db.GetContext(ctx, &resourceDA, query, id)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return auth.Resource{}, errors.New("resource not found")
+	if err := repo.db.GetContext(ctx, &resourceDA, query, id); err != nil {
+		if err == sql.ErrNoRows {
+			return auth.Resource{}, auth.ErrResourceNotFound
 		}
 		return auth.Resource{}, err
 	}
+
 	return auth.ToResource(resourceDA), nil
 }
 
 func (repo *AuthRepo) getResourcePreload(ctx context.Context, id uuid.UUID) (auth.Resource, error) {
-	query, err := repo.Query.Get("auth", "resource", "GetPreload")
+	query, err := repo.Query.Get(featAuth, resRes, "GetPreload")
 	if err != nil {
 		return auth.Resource{}, err
 	}
@@ -742,26 +743,12 @@ func (repo *AuthRepo) GetRolePermissions(ctx context.Context, roleID uuid.UUID) 
 		return nil, err
 	}
 
-	rows, err := repo.db.QueryContext(ctx, query, roleID)
-	if err != nil {
+	var permissionsDA []auth.PermissionDA
+	if err := repo.db.SelectContext(ctx, &permissionsDA, query, roleID); err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var permissions []auth.Permission
-	for rows.Next() {
-		var p auth.PermissionDA
-		if err := rows.Scan(&p.ID, &p.Slug, &p.Name, &p.Description, &p.CreatedBy, &p.UpdatedBy, &p.CreatedAt, &p.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("failed to scan permission: %w", err)
-		}
-		permissions = append(permissions, auth.ToPermission(p))
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating permissions: %w", err)
-	}
-
-	return permissions, nil
+	return auth.ToPermissions(permissionsDA), nil
 }
 
 // GetResourcePermissions returns all permissions assigned to a resource
@@ -771,26 +758,12 @@ func (repo *AuthRepo) GetResourcePermissions(ctx context.Context, resourceID uui
 		return nil, err
 	}
 
-	rows, err := repo.db.QueryContext(ctx, query, resourceID)
-	if err != nil {
+	var permissionsDA []auth.PermissionDA
+	if err := repo.db.SelectContext(ctx, &permissionsDA, query, resourceID); err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var permissions []auth.Permission
-	for rows.Next() {
-		var p auth.PermissionDA
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Slug, &p.CreatedBy, &p.UpdatedBy, &p.CreatedAt, &p.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("failed to scan permission: %w", err)
-		}
-		permissions = append(permissions, auth.ToPermission(p))
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating permissions: %w", err)
-	}
-
-	return permissions, nil
+	return auth.ToPermissions(permissionsDA), nil
 }
 
 // GetResourceUnassignedPermissions returns all permissions not assigned to a resource
@@ -800,26 +773,12 @@ func (repo *AuthRepo) GetResourceUnassignedPermissions(ctx context.Context, reso
 		return nil, err
 	}
 
-	rows, err := repo.db.QueryContext(ctx, query, resourceID)
-	if err != nil {
+	var permissionsDA []auth.PermissionDA
+	if err := repo.db.SelectContext(ctx, &permissionsDA, query, resourceID); err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var permissions []auth.Permission
-	for rows.Next() {
-		var p auth.PermissionDA
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Slug, &p.CreatedBy, &p.UpdatedBy, &p.CreatedAt, &p.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("failed to scan permission: %w", err)
-		}
-		permissions = append(permissions, auth.ToPermission(p))
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating permissions: %w", err)
-	}
-
-	return permissions, nil
+	return auth.ToPermissions(permissionsDA), nil
 }
 
 // GetRoleUnassignedPermissions returns all permissions not assigned to a role
@@ -829,24 +788,10 @@ func (repo *AuthRepo) GetRoleUnassignedPermissions(ctx context.Context, roleID u
 		return nil, err
 	}
 
-	rows, err := repo.db.QueryContext(ctx, query, roleID)
-	if err != nil {
+	var permissionsDA []auth.PermissionDA
+	if err := repo.db.SelectContext(ctx, &permissionsDA, query, roleID); err != nil {
 		return nil, err
 	}
-	defer rows.Close()
 
-	var permissions []auth.Permission
-	for rows.Next() {
-		var p auth.PermissionDA
-		if err := rows.Scan(&p.ID, &p.Slug, &p.Name, &p.Description, &p.CreatedBy, &p.UpdatedBy, &p.CreatedAt, &p.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("failed to scan permission: %w", err)
-		}
-		permissions = append(permissions, auth.ToPermission(p))
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("error iterating permissions: %w", err)
-	}
-
-	return permissions, nil
+	return auth.ToPermissions(permissionsDA), nil
 }
