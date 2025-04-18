@@ -55,6 +55,7 @@ type Service interface {
 	UpdateResource(ctx context.Context, resource Resource) error
 	DeleteResource(ctx context.Context, id uuid.UUID) error
 	GetResourcePermissions(ctx context.Context, resourceID uuid.UUID) ([]Permission, error)
+	GetResourceUnassignedPermissions(ctx context.Context, resourceID uuid.UUID) ([]Permission, error)
 	AddPermissionToResource(ctx context.Context, resourceID uuid.UUID, permission Permission) error
 	RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error
 }
@@ -257,6 +258,10 @@ func (svc *BaseService) DeleteResource(ctx context.Context, id uuid.UUID) error 
 
 func (svc *BaseService) GetResourcePermissions(ctx context.Context, resourceID uuid.UUID) ([]Permission, error) {
 	return svc.repo.GetResourcePermissions(ctx, resourceID)
+}
+
+func (svc *BaseService) GetResourceUnassignedPermissions(ctx context.Context, resourceID uuid.UUID) ([]Permission, error) {
+	return svc.repo.GetResourceUnassignedPermissions(ctx, resourceID)
 }
 
 func (svc *BaseService) AddPermissionToResource(ctx context.Context, resourceID uuid.UUID, permission Permission) error {

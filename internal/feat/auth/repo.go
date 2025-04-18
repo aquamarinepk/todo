@@ -54,6 +54,7 @@ type Repo interface {
 	UpdateResource(ctx context.Context, resource Resource) error
 	DeleteResource(ctx context.Context, id uuid.UUID) error
 	GetResourcePermissions(ctx context.Context, resourceID uuid.UUID) ([]Permission, error)
+	GetResourceUnassignedPermissions(ctx context.Context, resourceID uuid.UUID) ([]Permission, error)
 	AddPermissionToResource(ctx context.Context, resourceID uuid.UUID, permission Permission) error
 	RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error
 }
