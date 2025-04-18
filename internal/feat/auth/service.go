@@ -59,17 +59,19 @@ type Service interface {
 	RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error
 }
 
+var (
+	key = am.Key
+)
+
 type BaseService struct {
 	*am.Service
-	repo     Repo
-	emailKey []byte
+	repo Repo
 }
 
-func NewService(repo Repo, emailKey []byte) *BaseService {
+func NewService(repo Repo) *BaseService {
 	return &BaseService{
-		Service:  am.NewService("auth-service"),
-		repo:     repo,
-		emailKey: emailKey,
+		Service: am.NewService("auth-service"),
+		repo:    repo,
 	}
 }
 
@@ -79,10 +81,11 @@ func (svc *BaseService) GetUsers(ctx context.Context) ([]User, error) {
 		return nil, err
 	}
 
-	// Decrypt emails for each user
+	encKey := svc.Cfg().ByteSliceVal(key.SecEncryptionKey)
+
 	for i := range users {
 		if len(users[i].EmailEnc) > 0 {
-			email, err := DecryptEmail(users[i].EmailEnc, svc.emailKey)
+			email, err := DecryptEmail(users[i].EmailEnc, encKey)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decrypt email for user %s: %w", users[i].ID(), err)
 			}
@@ -99,8 +102,10 @@ func (svc *BaseService) GetUser(ctx context.Context, id uuid.UUID) (User, error)
 		return User{}, err
 	}
 
+	encKey := svc.Cfg().ByteSliceVal(key.SecEncryptionKey)
+
 	if len(user.EmailEnc) > 0 {
-		email, err := DecryptEmail(user.EmailEnc, svc.emailKey)
+		email, err := DecryptEmail(user.EmailEnc, encKey)
 		if err != nil {
 			return User{}, fmt.Errorf("failed to decrypt email for user %s: %w", user.ID(), err)
 		}

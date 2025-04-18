@@ -31,13 +31,11 @@ type User struct {
 	Permissions []Permission `json:"permissions,omitempty"`
 }
 
-// NewUser creates a user from pre-encrypted data.
-func NewUser(username string, emailEnc, passwordEnc []byte, name string) User {
+// NewUser creates a user with default values.
+func NewUser(username, name string) User {
 	return User{
 		Model:         am.NewModel(am.WithType(userType)),
 		Username:      username,
-		EmailEnc:      emailEnc,
-		PasswordEnc:   passwordEnc,
 		Name:          name,
 		IsActive:      true,
 		Roles:         []Role{},
@@ -59,7 +57,21 @@ func NewUserSec(username, email, password, name string, emailKey []byte) (User, 
 		return User{}, err
 	}
 
-	return NewUser(username, emailEnc, passwordEnc, name), nil
+	u := NewUser(username, name)
+	u.SetEmailEnc(emailEnc)
+	u.SetPasswordEnc(passwordEnc)
+
+	return u, nil
+}
+
+// SetEmailEnc sets the encrypted email for the user.
+func (u *User) SetEmailEnc(emailEnc []byte) {
+	u.EmailEnc = emailEnc
+}
+
+// SetPasswordEnc sets the encrypted password for the user.
+func (u *User) SetPasswordEnc(passwordEnc []byte) {
+	u.PasswordEnc = passwordEnc
 }
 
 // AddRole adds a role to the user.

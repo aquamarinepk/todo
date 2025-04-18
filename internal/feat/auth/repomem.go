@@ -142,7 +142,9 @@ func (repo *BaseRepo) CreateUser(ctx context.Context, u User) (User, error) {
 		return User{}, err
 	}
 
-	user := NewUser(u.Username, emailEnc, passwordEnc, u.Name)
+	user := NewUser(u.Username, u.Name)
+	user.SetEmailEnc(emailEnc)
+	user.SetPasswordEnc(passwordEnc)
 	user.RoleIDs = u.RoleIDs
 	user.PermissionIDs = u.PermissionIDs
 
@@ -593,7 +595,9 @@ func (repo *BaseRepo) addSampleData() {
 	// Add sample users
 	emailEnc, _ := EncryptEmail("john@example.com", repo.emailKey)
 	passwordEnc, _ := HashPassword("password")
-	user := NewUser("john", emailEnc, passwordEnc, "John Doe")
+	user := NewUser("john", "John Doe")
+	user.SetEmailEnc(emailEnc)
+	user.SetPasswordEnc(passwordEnc)
 	user.RoleIDs = []uuid.UUID{repo.roles[uuid.MustParse("00000000-0000-0000-0000-000000000001")].ID}
 	user.PermissionIDs = []uuid.UUID{repo.permissions[uuid.MustParse("00000000-0000-0000-0000-000000000001")].ID}
 	userDA := toUserDA(user)

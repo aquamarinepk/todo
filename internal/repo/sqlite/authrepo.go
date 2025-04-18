@@ -386,9 +386,9 @@ func (repo *AuthRepo) UpdatePermission(ctx context.Context, permission auth.Perm
 
 	permissionDA := auth.ToPermissionDA(permission)
 	_, err = repo.db.ExecContext(ctx, query,
+		permissionDA.Slug,
 		permissionDA.Name,
 		permissionDA.Description,
-		permissionDA.Slug,
 		permissionDA.UpdatedBy,
 		permissionDA.UpdatedAt,
 		permissionDA.ID)
