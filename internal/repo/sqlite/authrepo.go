@@ -821,3 +821,32 @@ func (repo *AuthRepo) GetResourceUnassignedPermissions(ctx context.Context, reso
 
 	return permissions, nil
 }
+
+// GetRoleUnassignedPermissions returns all permissions not assigned to a role
+func (repo *AuthRepo) GetRoleUnassignedPermissions(ctx context.Context, roleID uuid.UUID) ([]auth.Permission, error) {
+	query, err := repo.Query.Get(featAuth, resRolePerm, "GetRoleUnassignedPermissions")
+	if err != nil {
+		return nil, err
+	}
+
+	rows, err := repo.db.QueryContext(ctx, query, roleID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var permissions []auth.Permission
+	for rows.Next() {
+		var p auth.PermissionDA
+		if err := rows.Scan(&p.ID, &p.Slug, &p.Name, &p.Description, &p.CreatedBy, &p.UpdatedBy, &p.CreatedAt, &p.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("failed to scan permission: %w", err)
+		}
+		permissions = append(permissions, auth.ToPermission(p))
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating permissions: %w", err)
+	}
+
+	return permissions, nil
+}
