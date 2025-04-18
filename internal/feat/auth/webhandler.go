@@ -1651,25 +1651,10 @@ func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Get all permissions and filter out the assigned ones
-	allPermissions, err := h.service.GetAllPermissions(ctx)
+	unassigned, err := h.service.GetRoleUnassignedPermissions(ctx, id)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
-	}
-
-	// Create a map of assigned permission IDs for quick lookup
-	assignedMap := make(map[uuid.UUID]bool)
-	for _, p := range assigned {
-		assignedMap[p.ID()] = true
-	}
-
-	// Filter out assigned permissions
-	var unassigned []Permission
-	for _, p := range allPermissions {
-		if !assignedMap[p.ID()] {
-			unassigned = append(unassigned, p)
-		}
 	}
 
 	page := am.NewPage(struct {

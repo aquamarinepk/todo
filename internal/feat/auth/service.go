@@ -36,6 +36,7 @@ type Service interface {
 	UpdateRole(ctx context.Context, role Role) error
 	DeleteRole(ctx context.Context, roleID uuid.UUID) error
 	GetRolePermissions(ctx context.Context, roleID uuid.UUID) ([]Permission, error)
+	GetRoleUnassignedPermissions(ctx context.Context, roleID uuid.UUID) ([]Permission, error)
 	AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error
 	RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error
 
@@ -170,6 +171,10 @@ func (svc *BaseService) GetAllRoles(ctx context.Context) ([]Role, error) {
 
 func (svc *BaseService) GetRolePermissions(ctx context.Context, roleID uuid.UUID) ([]Permission, error) {
 	return svc.repo.GetRolePermissions(ctx, roleID)
+}
+
+func (svc *BaseService) GetRoleUnassignedPermissions(ctx context.Context, roleID uuid.UUID) ([]Permission, error) {
+	return svc.repo.GetRoleUnassignedPermissions(ctx, roleID)
 }
 
 func (svc *BaseService) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
