@@ -7,24 +7,28 @@ import (
 )
 
 type Repo interface {
-	// User-related methods
-	GetAllUsers(ctx context.Context) ([]User, error)
+	// SECTION: User-related methods
+
+	GetUsers(ctx context.Context) ([]User, error)
 	GetUser(ctx context.Context, id uuid.UUID, preload ...bool) (User, error)
 	CreateUser(ctx context.Context, user User) error
 	UpdateUser(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
-	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
+	UpdatePassword(ctx context.Context, user User) error
+	GetUserAssignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
 	GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
 	AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
 	AddPermissionToUser(ctx context.Context, userID uuid.UUID, permission Permission) error
 	RemovePermissionFromUser(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) error
 	GetUserRole(ctx context.Context, userID, roleID uuid.UUID) (Role, error)
-	GetAllUserPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
+	GetUserAssignedPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
+	GetUserIndirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
 	GetUserDirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
 	GetUserUnassignedPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
 
-	// Role-related methods
+	// SECTION:  Role-related methods
+
 	GetAllRoles(ctx context.Context) ([]Role, error)
 	GetRole(ctx context.Context, roleID uuid.UUID, preload ...bool) (Role, error)
 	CreateRole(ctx context.Context, role Role) error
@@ -34,14 +38,16 @@ type Repo interface {
 	AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permission Permission) error
 	RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error
 
-	// Permission-related methods
+	// SECTION: Permission-related methods
+
 	GetAllPermissions(ctx context.Context) ([]Permission, error)
 	GetPermission(ctx context.Context, id uuid.UUID) (Permission, error)
 	CreatePermission(ctx context.Context, permission Permission) error
 	UpdatePermission(ctx context.Context, permission Permission) error
 	DeletePermission(ctx context.Context, id uuid.UUID) error
 
-	// Resource-related methods
+	// SECTION: Resource-related methods
+
 	GetAllResources(ctx context.Context) ([]Resource, error)
 	GetResource(ctx context.Context, id uuid.UUID, preload ...bool) (Resource, error)
 	CreateResource(ctx context.Context, resource Resource) error

@@ -11,7 +11,7 @@ WHERE EXISTS (
 -- RemoveRole
 DELETE FROM user_roles WHERE user_id = ? AND role_id = ?;
 
--- GetUserRoles
+-- GetUserAssignedRoles
 SELECT r.id, r.name, r.description, r.slug, r.status, r.created_by, r.updated_by, r.created_at, r.updated_at
 FROM roles r
 JOIN user_roles ur ON r.id = ur.role_id

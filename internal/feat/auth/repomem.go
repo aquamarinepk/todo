@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 	"sync"
@@ -25,6 +26,7 @@ type BaseRepo struct {
 	rolePermissions     map[uuid.UUID][]uuid.UUID
 	resourcePermissions map[uuid.UUID][]uuid.UUID
 	order               []uuid.UUID
+	emailKey            []byte
 }
 
 func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
@@ -39,6 +41,7 @@ func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 		rolePermissions:     make(map[uuid.UUID][]uuid.UUID),
 		resourcePermissions: make(map[uuid.UUID][]uuid.UUID),
 		order:               []uuid.UUID{},
+		emailKey:            []byte{},
 	}
 
 	repo.addSampleData() // NOTE: Used for testing purposes only.
@@ -107,17 +110,52 @@ func (repo *BaseRepo) getUserPermissionsByID(userID uuid.UUID) []Permission {
 	return permissions
 }
 
-func (repo *BaseRepo) CreateUser(ctx context.Context, user User) error {
+func toUserDA(user User) UserDA {
+	return UserDA{
+		ID:            user.ID(),
+		Slug:          sql.NullString{String: user.Slug(), Valid: user.Slug() != ""},
+		Name:          sql.NullString{String: user.Name, Valid: user.Name != ""},
+		Username:      sql.NullString{String: user.Username, Valid: user.Username != ""},
+		EmailEnc:      user.EmailEnc,
+		PasswordEnc:   user.PasswordEnc,
+		RoleIDs:       user.RoleIDs,
+		PermissionIDs: user.PermissionIDs,
+		CreatedBy:     sql.NullString{String: user.CreatedBy().String(), Valid: user.CreatedBy() != uuid.Nil},
+		UpdatedBy:     sql.NullString{String: user.UpdatedBy().String(), Valid: user.UpdatedBy() != uuid.Nil},
+		CreatedAt:     sql.NullTime{Time: user.CreatedAt(), Valid: !user.CreatedAt().IsZero()},
+		UpdatedAt:     sql.NullTime{Time: user.UpdatedAt(), Valid: !user.UpdatedAt().IsZero()},
+		LastLoginAt:   sql.NullTime{Time: derefTime(user.LastLoginAt), Valid: user.LastLoginAt != nil},
+		LastLoginIP:   sql.NullString{String: user.LastLoginIP, Valid: user.LastLoginIP != ""},
+		IsActive:      sql.NullBool{Bool: user.IsActive, Valid: true},
+	}
+}
+
+func (repo *BaseRepo) CreateUser(ctx context.Context, u User) (User, error) {
+	// Encrypt email and password
+	emailEnc, err := EncryptEmail(string(u.EmailEnc), repo.emailKey)
+	if err != nil {
+		return User{}, err
+	}
+
+	passwordEnc, err := HashPassword(string(u.PasswordEnc))
+	if err != nil {
+		return User{}, err
+	}
+
+	user := NewUser(u.Username, emailEnc, passwordEnc, u.Name)
+	user.RoleIDs = u.RoleIDs
+	user.PermissionIDs = u.PermissionIDs
+
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
 	userDA := toUserDA(user)
 	if _, exists := repo.users[userDA.ID]; exists {
-		return errors.New("user already exists")
+		return User{}, errors.New("user already exists")
 	}
 	repo.users[userDA.ID] = userDA
 	repo.order = append(repo.order, userDA.ID)
-	return nil
+	return user, nil
 }
 
 func (repo *BaseRepo) UpdateUser(ctx context.Context, user User) error {
@@ -540,10 +578,10 @@ func (repo *BaseRepo) Debug() {
 	defer repo.mu.Unlock()
 
 	var result string
-	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s\n", "Type", "ID", "Slug", "Username")
+	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s\n", "Type", "ID", "Slug", "Username", "Extra")
 	for _, id := range repo.order {
 		userDA := repo.users[id]
-		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s\n", "User", userDA.ID, userDA.Slug.String, userDA.Name.String)
+		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s\n", "User", userDA.ID, userDA.Slug.String, userDA.Name.String, userDA.Username.String)
 	}
 	fmt.Println(result)
 }
@@ -553,87 +591,36 @@ func (repo *BaseRepo) addSampleData() {
 	defer repo.mu.Unlock()
 
 	// Add sample users
-	users := []struct {
-		username string
-		email    string
-		name     string
-	}{
-		{"johndoe", "john.doe@example.com", "John Doe"},
-		{"janesmith", "jane.smith@example.com", "Jane Smith"},
-		{"robertjohnson", "robert.johnson@example.com", "Robert Johnson"},
-		{"sarahwilliams", "sarah.williams@example.com", "Sarah Williams"},
-		{"michaelbrown", "michael.brown@example.com", "Michael Brown"},
-	}
-
-	for _, u := range users {
-		id := uuid.New()
-		user := NewUser(u.username, u.email, u.name)
-		user.GenSlug()
-		user.GenCreationValues()
-		userDA := toUserDA(user)
-		userDA.ID = id
-		repo.users[id] = userDA
-		repo.order = append(repo.order, id)
-		repo.Log().Info("Created user with ID: ", id)
-	}
+	emailEnc, _ := EncryptEmail("john@example.com", repo.emailKey)
+	passwordEnc, _ := HashPassword("password")
+	user := NewUser("john", emailEnc, passwordEnc, "John Doe")
+	user.RoleIDs = []uuid.UUID{repo.roles[uuid.MustParse("00000000-0000-0000-0000-000000000001")].ID}
+	user.PermissionIDs = []uuid.UUID{repo.permissions[uuid.MustParse("00000000-0000-0000-0000-000000000001")].ID}
+	userDA := toUserDA(user)
+	userDA.ID = uuid.New()
+	repo.users[userDA.ID] = userDA
+	repo.order = append(repo.order, userDA.ID)
 
 	// Add sample roles
-	roles := []struct {
-		name        string
-		description string
-	}{
-		{"Admin", "Administrator role with full access"},
-		{"User", "Regular user role with basic access"},
-	}
-
-	for _, r := range roles {
-		id := uuid.New()
-		role := NewRole(r.name, r.description, r.description)
-		role.GenSlug()
-		role.GenCreationValues()
-		roleDA := toRoleDA(role)
-		roleDA.ID = id
-		repo.roles[id] = roleDA
-		repo.Log().Info("Created role with ID: ", id)
-	}
-
-	// Assign roles to users
-	// Only John Doe (first user) gets both Admin and User roles
-	for i, userID := range repo.order {
-		if i == 0 { // John Doe
-			for roleID := range repo.roles {
-				repo.userRoles[userID] = append(repo.userRoles[userID], roleID)
-			}
-		}
-	}
+	role := NewRole("admin", "Administrator", "Administrator role with full access")
+	role.PermissionIDs = []uuid.UUID{repo.permissions[uuid.MustParse("00000000-0000-0000-0000-000000000001")].ID}
+	roleDA := toRoleDA(role)
+	roleDA.ID = uuid.New()
+	repo.roles[roleDA.ID] = roleDA
+	repo.order = append(repo.order, roleDA.ID)
 
 	// Add sample permissions
-	permissions := []struct {
-		name        string
-		description string
-	}{
-		{"Read", "Permission to read resources"},
-		{"Write", "Permission to write resources"},
-		{"Execute", "Permission to execute actions"},
-	}
+	perm := NewPermission("read", "Read permission")
+	permDA := ToPermissionDA(perm)
+	permDA.ID = uuid.New()
+	repo.permissions[permDA.ID] = permDA
+	repo.order = append(repo.order, permDA.ID)
 
-	for _, p := range permissions {
-		id := uuid.New()
-		permission := NewPermission(p.name, p.description)
-		permission.GenSlug()
-		permission.GenCreationValues()
-		permissionDA := ToPermissionDA(permission)
-		permissionDA.ID = id
-		repo.permissions[id] = permissionDA
-		repo.Log().Info("Created permission with ID: ", id)
-	}
+	// Assign roles to users
+	repo.userRoles[userDA.ID] = []uuid.UUID{roleDA.ID}
 
 	// Assign permissions to roles
-	for roleID := range repo.roles {
-		for permissionID := range repo.permissions {
-			repo.rolePermissions[roleID] = append(repo.rolePermissions[roleID], permissionID)
-		}
-	}
+	repo.rolePermissions[roleDA.ID] = []uuid.UUID{permDA.ID}
 
 	// Add sample resources
 	for i := 1; i <= 3; i++ {
@@ -651,9 +638,7 @@ func (repo *BaseRepo) addSampleData() {
 
 	// Assign permissions to resources
 	for resourceID := range repo.resources {
-		for permissionID := range repo.permissions {
-			repo.resourcePermissions[resourceID] = append(repo.resourcePermissions[resourceID], permissionID)
-		}
+		repo.resourcePermissions[resourceID] = []uuid.UUID{permDA.ID}
 	}
 }
 

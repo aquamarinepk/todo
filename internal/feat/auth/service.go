@@ -2,21 +2,25 @@ package auth
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/google/uuid"
 )
 
 type Service interface {
-	// User-related methods
-	GetAllUsers(ctx context.Context) ([]User, error)
+	// SECTION: User-related methods
+
+	GetUsers(ctx context.Context) ([]User, error)
 	GetUser(ctx context.Context, id uuid.UUID) (User, error)
 	CreateUser(ctx context.Context, user User) error
 	UpdateUser(ctx context.Context, user User) error
+	UpdateUserPassword(ctx context.Context, user User) error
 	DeleteUser(ctx context.Context, id uuid.UUID) error
 	GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
 	GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error)
-	GetAllUserPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
+	GetUserAssignedPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
+	GetUserIndirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
 	GetUserDirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
 	GetUserUnassignedPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error)
 	AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error
@@ -24,7 +28,8 @@ type Service interface {
 	AddPermissionToUser(ctx context.Context, userID uuid.UUID, permission Permission) error
 	RemovePermissionFromUser(ctx context.Context, userID uuid.UUID, permissionID uuid.UUID) error
 
-	// Role-related methods
+	// SECTION: Role-related methods
+
 	GetAllRoles(ctx context.Context) ([]Role, error)
 	GetRole(ctx context.Context, roleID uuid.UUID) (Role, error)
 	CreateRole(ctx context.Context, role Role) error
@@ -34,14 +39,16 @@ type Service interface {
 	AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error
 	RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error
 
-	// Permission-related methods
+	// SECTION: Permission-related methods
+
 	GetAllPermissions(ctx context.Context) ([]Permission, error)
 	GetPermission(ctx context.Context, id uuid.UUID) (Permission, error)
 	CreatePermission(ctx context.Context, permission Permission) error
 	UpdatePermission(ctx context.Context, permission Permission) error
 	DeletePermission(ctx context.Context, id uuid.UUID) error
 
-	// Resource-related methods
+	// SECTION: Resource-related methods
+
 	GetAllResources(ctx context.Context) ([]Resource, error)
 	GetResource(ctx context.Context, id uuid.UUID) (Resource, error)
 	CreateResource(ctx context.Context, resource Resource) error
@@ -54,22 +61,53 @@ type Service interface {
 
 type BaseService struct {
 	*am.Service
-	repo Repo
+	repo     Repo
+	emailKey []byte
 }
 
-func NewService(repo Repo, opts ...am.Option) *BaseService {
+func NewService(repo Repo, emailKey []byte) *BaseService {
 	return &BaseService{
-		Service: am.NewService("", opts...),
-		repo:    repo,
+		Service:  am.NewService("auth-service"),
+		repo:     repo,
+		emailKey: emailKey,
 	}
 }
 
-func (svc *BaseService) GetAllUsers(ctx context.Context) ([]User, error) {
-	return svc.repo.GetAllUsers(ctx)
+func (svc *BaseService) GetUsers(ctx context.Context) ([]User, error) {
+	users, err := svc.repo.GetUsers(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decrypt emails for each user
+	for i := range users {
+		if len(users[i].EmailEnc) > 0 {
+			email, err := DecryptEmail(users[i].EmailEnc, svc.emailKey)
+			if err != nil {
+				return nil, fmt.Errorf("failed to decrypt email for user %s: %w", users[i].ID(), err)
+			}
+			users[i].Email = email
+		}
+	}
+
+	return users, nil
 }
 
 func (svc *BaseService) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
-	return svc.repo.GetUser(ctx, id)
+	user, err := svc.repo.GetUser(ctx, id)
+	if err != nil {
+		return User{}, err
+	}
+
+	if len(user.EmailEnc) > 0 {
+		email, err := DecryptEmail(user.EmailEnc, svc.emailKey)
+		if err != nil {
+			return User{}, fmt.Errorf("failed to decrypt email for user %s: %w", user.ID(), err)
+		}
+		user.Email = email
+	}
+
+	return user, nil
 }
 
 func (svc *BaseService) CreateUser(ctx context.Context, user User) error {
@@ -80,12 +118,24 @@ func (svc *BaseService) UpdateUser(ctx context.Context, user User) error {
 	return svc.repo.UpdateUser(ctx, user)
 }
 
+func (svc *BaseService) UpdateUserPassword(ctx context.Context, user User) error {
+	// TODO: Implement validator to check things like empty password, etc.
+	hashedPassword, err := HashPassword(user.Password)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	user.PasswordEnc = hashedPassword
+
+	return svc.repo.UpdatePassword(ctx, user)
+}
+
 func (svc *BaseService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return svc.repo.DeleteUser(ctx, id)
 }
 
 func (svc *BaseService) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error) {
-	return svc.repo.GetUserRoles(ctx, userID)
+	return svc.repo.GetUserAssignedRoles(ctx, userID)
 }
 
 func (svc *BaseService) GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error) {
@@ -144,8 +194,12 @@ func (svc *BaseService) DeletePermission(ctx context.Context, id uuid.UUID) erro
 	return svc.repo.DeletePermission(ctx, id)
 }
 
-func (svc *BaseService) GetAllUserPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error) {
-	return svc.repo.GetAllUserPermissions(ctx, userID)
+func (svc *BaseService) GetUserAssignedPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error) {
+	return svc.repo.GetUserAssignedPermissions(ctx, userID)
+}
+
+func (svc *BaseService) GetUserIndirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error) {
+	return svc.repo.GetUserIndirectPermissions(ctx, userID)
 }
 
 func (svc *BaseService) GetUserDirectPermissions(ctx context.Context, userID uuid.UUID) ([]Permission, error) {

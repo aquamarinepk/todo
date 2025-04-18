@@ -61,7 +61,7 @@ func (repo *AuthRepo) Stop(ctx context.Context) error {
 	return nil
 }
 
-func (repo *AuthRepo) GetAllUsers(ctx context.Context) ([]auth.User, error) {
+func (repo *AuthRepo) GetUsers(ctx context.Context) ([]auth.User, error) {
 	query, err := repo.Query.Get(featAuth, resUser, "GetAll")
 	if err != nil {
 		return nil, err
@@ -160,9 +160,9 @@ func (repo *AuthRepo) CreateUser(ctx context.Context, user auth.User) error {
 	_, err = repo.db.ExecContext(ctx, query,
 		userDA.ID,
 		userDA.Username,
-		userDA.Email,
+		userDA.EmailEnc,
 		userDA.Name,
-		userDA.EncPassword,
+		userDA.PasswordEnc,
 		userDA.Slug,
 		userDA.CreatedBy,
 		userDA.UpdatedBy,
@@ -179,8 +179,8 @@ func (repo *AuthRepo) UpdateUser(ctx context.Context, user auth.User) error {
 	}
 
 	userDA := auth.ToUserDA(user)
-	_, err = repo.db.ExecContext(ctx, query, userDA.Username, userDA.Email, userDA.Name,
-		userDA.EncPassword, userDA.Slug, userDA.UpdatedBy, userDA.UpdatedAt, userDA.ID)
+	_, err = repo.db.ExecContext(ctx, query, userDA.Username, userDA.EmailEnc, userDA.Name,
+		userDA.Slug, userDA.UpdatedBy, userDA.UpdatedAt, userDA.ID)
 	return err
 }
 
@@ -191,6 +191,17 @@ func (repo *AuthRepo) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	}
 
 	_, err = repo.db.ExecContext(ctx, query, id)
+	return err
+}
+
+func (repo *AuthRepo) UpdatePassword(ctx context.Context, user auth.User) error {
+	query, err := repo.Query.Get(featAuth, resUser, "UpdatePassword")
+	if err != nil {
+		return err
+	}
+
+	userDA := auth.ToUserDA(user)
+	_, err = repo.db.ExecContext(ctx, query, userDA.PasswordEnc, userDA.UpdatedBy, userDA.UpdatedAt, userDA.ID)
 	return err
 }
 
@@ -517,8 +528,8 @@ func (repo *AuthRepo) DeleteResource(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-func (repo *AuthRepo) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]auth.Role, error) {
-	query, err := repo.Query.Get(featAuth, resUserRole, "GetUserRoles")
+func (repo *AuthRepo) GetUserAssignedRoles(ctx context.Context, userID uuid.UUID) ([]auth.Role, error) {
+	query, err := repo.Query.Get(featAuth, resUserRole, "GetUserAssignedRoles")
 	if err != nil {
 		return nil, err
 	}
@@ -531,15 +542,30 @@ func (repo *AuthRepo) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]aut
 	return auth.ToRoles(rolesDA), nil
 }
 
-// GetAllUserPermissions retrieves all permissions assigned to a user, both directly and through roles.
-func (repo *AuthRepo) GetAllUserPermissions(ctx context.Context, userID uuid.UUID) ([]auth.Permission, error) {
-	query, err := repo.Query.Get(featAuth, resUserPerm, "GetAllUserPermissions")
+// GetUserAssignedPermissions retrieves all permissions assigned to a user, both directly and through roles.
+func (repo *AuthRepo) GetUserAssignedPermissions(ctx context.Context, userID uuid.UUID) ([]auth.Permission, error) {
+	query, err := repo.Query.Get(featAuth, resUserPerm, "GetUserAssignedPermissions")
 	if err != nil {
 		return nil, err
 	}
 
 	var permissionsDA []auth.PermissionDA
 	err = repo.db.SelectContext(ctx, &permissionsDA, query, userID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return auth.ToPermissions(permissionsDA), nil
+}
+
+func (repo *AuthRepo) GetUserIndirectPermissions(ctx context.Context, userID uuid.UUID) ([]auth.Permission, error) {
+	query, err := repo.Query.Get(featAuth, resUserPerm, "GetUserIndirectPermissions")
+	if err != nil {
+		return nil, err
+	}
+
+	var permissionsDA []auth.PermissionDA
+	err = repo.db.SelectContext(ctx, &permissionsDA, query, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -725,7 +751,7 @@ func (repo *AuthRepo) GetRolePermissions(ctx context.Context, roleID uuid.UUID) 
 	var permissions []auth.Permission
 	for rows.Next() {
 		var p auth.PermissionDA
-		if err := rows.Scan(&p.ID, &p.Name, &p.Description, &p.Slug, &p.CreatedBy, &p.UpdatedBy, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(&p.ID, &p.Slug, &p.Name, &p.Description, &p.CreatedBy, &p.UpdatedBy, &p.CreatedAt, &p.UpdatedAt); err != nil {
 			return nil, fmt.Errorf("failed to scan permission: %w", err)
 		}
 		permissions = append(permissions, auth.ToPermission(p))
