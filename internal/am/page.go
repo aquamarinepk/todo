@@ -41,8 +41,10 @@ type Feat struct {
 // NewPage creates a new Page with the given data.
 func NewPage(data interface{}) *Page {
 	return &Page{
-		Data:  data,
-		Flash: Flash{},
+		Data: data,
+		Flash: Flash{
+			Notifications: []Notification{},
+		},
 		Form: Form{
 			Action: "",
 			Button: Button{
