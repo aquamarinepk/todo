@@ -27,6 +27,7 @@ type WebHandler struct {
 	*am.Handler
 	service Service
 	tm      *am.TemplateManager
+	crypto  *am.Crypto
 }
 
 func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option) *WebHandler {
@@ -35,6 +36,7 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 		Handler: handler,
 		service: service,
 		tm:      tm,
+		crypto:  &am.Crypto{},
 	}
 }
 
@@ -81,13 +83,33 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 
 	user := NewUser("", "")
 
-	page := struct {
-		User User
-	}{
-		User: user,
+	page := am.NewPage(user)
+	page.SetFormAction(fmt.Sprintf("%s/create-user", authPath))
+	page.SetFormButtonText("Create")
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(user)
+
+	page.Menu = *menu
+
+	tmpl, err := h.tm.Get("auth", "new-user")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
 	}
 
-	h.Render(w, r, "new-user", page)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
@@ -182,34 +204,26 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Create user")
-	ctx := r.Context()
+	user := UserForm{}
 
-	username := r.FormValue("username")
-	email := r.FormValue("email")
-	name := r.FormValue("name")
-	password := r.FormValue("password")
+	err := am.ReqToForm(r, &user)
+	if err != nil {
+		h.Err(w, err, "Invalid form data", http.StatusBadRequest)
+		return
+	}
 
 	encKey := h.Cfg().ByteSliceVal(am.Key.SecEncryptionKey)
-	emailEnc, err := EncryptEmail(email, encKey)
+
+	newUser, err := NewUserSec(user.Username, user.Email, user.Password, user.Name, encKey)
 	if err != nil {
-		h.Err(w, err, "Failed to encrypt email", http.StatusInternalServerError)
+		h.Err(w, err, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
 
-	passwordEnc, err := HashPassword(password)
+	ctx := r.Context()
+	err = h.service.CreateUser(ctx, newUser)
 	if err != nil {
-		h.Err(w, err, "Failed to hash password", http.StatusInternalServerError)
-		return
-	}
-
-	user := NewUser(username, name)
-	user.SetEmailEnc(emailEnc)
-	user.SetPasswordEnc(passwordEnc)
-
-	err = h.service.CreateUser(ctx, user)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		h.Err(w, err, "Failed to save user", http.StatusInternalServerError)
 		return
 	}
 

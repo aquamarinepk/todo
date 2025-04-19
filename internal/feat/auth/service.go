@@ -118,6 +118,7 @@ func (svc *BaseService) GetUser(ctx context.Context, id uuid.UUID) (User, error)
 }
 
 func (svc *BaseService) CreateUser(ctx context.Context, user User) error {
+	user.GenCreationValues()
 	return svc.repo.CreateUser(ctx, user)
 }
 

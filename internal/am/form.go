@@ -164,8 +164,9 @@ func (m *FormMapper) MapForm(r *http.Request, v interface{}) error {
 	return nil
 }
 
-// MapFormToStruct is a convenience function that creates a FormMapper and maps form values
-func MapFormToStruct(r *http.Request, v interface{}, config ...FormConfig) error {
+// ReqToForm is a convenience function that creates a FormMapper and maps form values
+// from an HTTP request to a struct.
+func ReqToForm(r *http.Request, v interface{}, config ...FormConfig) error {
 	mapper, err := NewFormMapper(v, config...)
 	if err != nil {
 		return err
