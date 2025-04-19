@@ -2,10 +2,11 @@ package auth
 
 // UserForm represents the form data for creating/updating a user
 type UserForm struct {
-	Username string `form:"username" required:"true"`
-	Email    string `form:"email" required:"true"`
-	Name     string `form:"name" required:"true"`
-	Password string `form:"password" required:"true"`
+	Username     string `form:"username" required:"true"`
+	Email        string `form:"email" required:"true"`
+	Name         string `form:"name" required:"true"`
+	Password     string `form:"password" required:"true"`
+	PasswordConf string `form:"password_conf" required:"true"`
 }
 
 // RoleForm represents the form data for creating/updating a role
