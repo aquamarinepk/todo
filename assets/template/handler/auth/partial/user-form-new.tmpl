@@ -1,4 +1,4 @@
-{{ define "user-form" }}
+{{ define "user-form-new" }}
 <form action="{{ .Form.Action }}" method="post" class="space-y-4">
   <input type="hidden" name="_method" value="{{ .Form.Method }}" />
   <input type="hidden" name="aquamarine.csrf.token" value="{{ .Form.CSRF }}" />
@@ -39,7 +39,6 @@
       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
     />
   </div>
-  {{ if eq .Form.Action (printf "%s/create-user" .Feat.Path) }}
   <div>
     <label for="password" class="block text-sm font-medium text-gray-700">
       Password:
@@ -51,7 +50,6 @@
       class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
     />
   </div>
-  {{ end }}
   <div>
     <button
       type="submit"
@@ -63,4 +61,4 @@
     </button>
   </div>
 </form>
-{{ end }}
+{{ end }} 
