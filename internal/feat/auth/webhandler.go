@@ -208,19 +208,18 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	err := am.ToForm(r, &user)
 	if err != nil {
-		h.Err(w, err, "Invalid form data", http.StatusBadRequest)
+		h.Err(w, err, ErrInvalidFormData, http.StatusBadRequest)
 		return
 	}
 
-	// Validate the form data
 	validation, err := ValidateUser(user)
 	if err != nil {
-		h.Err(w, err, "Validation error", http.StatusBadRequest)
+		h.Err(w, err, ErrValidationFailed, http.StatusBadRequest)
 		return
 	}
 
 	if validation.HasErrors() {
-		h.Err(w, fmt.Errorf(validation.Error()), "Validation failed", http.StatusBadRequest)
+		h.Err(w, fmt.Errorf(validation.Error()), ErrValidationFailed, http.StatusBadRequest)
 		return
 	}
 
@@ -228,14 +227,14 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	newUser, err := FormToUser(user, encKey)
 	if err != nil {
-		h.Err(w, err, "Failed to create user", http.StatusInternalServerError)
+		h.Err(w, err, ErrCannotCreateUser, http.StatusInternalServerError)
 		return
 	}
 
 	ctx := r.Context()
 	err = h.service.CreateUser(ctx, newUser)
 	if err != nil {
-		h.Err(w, err, "Failed to save user", http.StatusInternalServerError)
+		h.Err(w, err, ErrCannotCreateUser, http.StatusInternalServerError)
 		return
 	}
 
@@ -246,7 +245,7 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	idStr := r.FormValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
@@ -271,7 +270,7 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if password != "" {
 		passwordEnc, err := HashPassword(password)
 		if err != nil {
-			h.Err(w, err, "Failed to hash password", http.StatusInternalServerError)
+			h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
 			return
 		}
 		user.PasswordEnc = passwordEnc
@@ -290,7 +289,7 @@ func (h *WebHandler) UpdateUserPassword(w http.ResponseWriter, r *http.Request) 
 	idStr := r.FormValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
+		h.Err(w, err, ErrInvalidUserID, http.StatusBadRequest)
 		return
 	}
 
@@ -415,13 +414,13 @@ func (h *WebHandler) AddRoleToUser(w http.ResponseWriter, r *http.Request) {
 	userIDStr := r.FormValue("user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 	roleIDStr := r.FormValue("role_id")
 	roleID, err := uuid.Parse(roleIDStr)
 	if err != nil {
-		h.Err(w, err, "Invalid role ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
@@ -1013,14 +1012,14 @@ func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request)
 	userIDStr := r.FormValue("user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
 	permissionIDStr := r.FormValue("permission_id")
 	permissionID, err := uuid.Parse(permissionIDStr)
 	if err != nil {
-		h.Err(w, err, "Invalid permission ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
@@ -1401,14 +1400,10 @@ func (h *WebHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *WebHandler) Err(w http.ResponseWriter, err error, msg string, code int) {
-	h.Log().Error(msg, err)
-	http.Error(w, fmt.Sprintf("%s: %v", msg, err), code)
-}
-
-func (h *WebHandler) addSampleData() {
-	// Sample resources will be added in a future implementation
-}
+// func (h *WebHandler) Err(w http.ResponseWriter, err error, msg string, code int) {
+// 	h.Log().Error(msg, err)
+// 	http.Error(w, fmt.Sprintf("%s: %v", msg, err), code)
+// }
 
 func (h *WebHandler) NewPermission(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New permission form")

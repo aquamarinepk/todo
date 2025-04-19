@@ -22,8 +22,9 @@ func NewHandler(name string, opts ...Option) *Handler {
 // Err writes an error response to the client.
 // This method can be overridden by types that embed Handler.
 func (h *Handler) Err(w http.ResponseWriter, err error, msg string, code int) {
-	h.Log().Error(msg, err)
-	http.Error(w, msg, code)
+	errMsg := fmt.Sprintf("%s: '%v'", msg, err)
+	h.Log().Error(errMsg)
+	http.Error(w, errMsg, code)
 }
 
 // Render writes a template to the response writer.
