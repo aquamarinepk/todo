@@ -212,6 +212,18 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate the form data
+	validation, err := ValidateUser(user)
+	if err != nil {
+		h.Err(w, err, "Validation error", http.StatusBadRequest)
+		return
+	}
+
+	if validation.HasErrors() {
+		h.Err(w, fmt.Errorf(validation.Error()), "Validation failed", http.StatusBadRequest)
+		return
+	}
+
 	encKey := h.Cfg().ByteSliceVal(am.Key.SecEncryptionKey)
 
 	newUser, err := FormToUser(user, encKey)
