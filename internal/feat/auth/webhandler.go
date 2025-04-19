@@ -17,14 +17,17 @@ const (
 )
 
 const (
-	ActionListUserRoles = "list-user-roles"
-	TextRoles           = "Roles"
+	ActionListUserRoles       = "list-user-roles"
+	ActionListUserPermissions = "list-user-permissions"
+	TextRoles                 = "Roles"
+	TextPermissions           = "Permissions"
 )
 
 type WebHandler struct {
 	*am.Handler
 	service Service
 	tm      *am.TemplateManager
+	crypto  *am.Crypto
 }
 
 func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option) *WebHandler {
@@ -33,6 +36,7 @@ func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option
 		Handler: handler,
 		service: service,
 		tm:      tm,
+		crypto:  &am.Crypto{},
 	}
 }
 
@@ -40,7 +44,7 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("List of users")
 	ctx := r.Context()
 
-	users, err := h.service.GetAllUsers(ctx)
+	users, err := h.service.GetUsers(ctx)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
@@ -75,12 +79,12 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("New user form")
+	h.Log().Info("New user")
 
-	user := NewUser("", "", "")
+	user := NewUser("", "")
 
 	page := am.NewPage(user)
-	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "create", am.NoSlug))
+	page.SetFormAction(fmt.Sprintf("%s/create-user", authPath))
 	page.SetFormButtonText("Create")
 	page.GenCSRFToken(r)
 
@@ -132,6 +136,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	menu.AddEditItem(user)
 	menu.AddDeleteItem(user)
 	menu.AddGenericItem(ActionListUserRoles, user.ID().String(), TextRoles)
+	menu.AddGenericItem(ActionListUserPermissions, user.ID().String(), TextPermissions)
 
 	page.Menu = *menu
 
@@ -199,21 +204,37 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Create user ")
-	ctx := r.Context()
+	user := UserForm{}
 
-	username := r.FormValue("username")
-	email := r.FormValue("email")
-	name := r.FormValue("name")
-	user := NewUser(username, email, name)
-
-	user.GenID()
-	user.GenSlug()
-	user.GenCreationValues()
-
-	err := h.service.CreateUser(ctx, user)
+	err := am.ToForm(r, &user)
 	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		h.Err(w, err, ErrInvalidFormData, http.StatusBadRequest)
+		return
+	}
+
+	validation, err := ValidateUser(user)
+	if err != nil {
+		h.Err(w, err, ErrValidationFailed, http.StatusBadRequest)
+		return
+	}
+
+	if validation.HasErrors() {
+		h.Err(w, fmt.Errorf(validation.Error()), ErrValidationFailed, http.StatusBadRequest)
+		return
+	}
+
+	encKey := h.Cfg().ByteSliceVal(am.Key.SecEncryptionKey)
+
+	newUser, err := FormToUser(user, encKey)
+	if err != nil {
+		h.Err(w, err, ErrCannotCreateUser, http.StatusInternalServerError)
+		return
+	}
+
+	ctx := r.Context()
+	err = h.service.CreateUser(ctx, newUser)
+	if err != nil {
+		h.Err(w, err, ErrCannotCreateUser, http.StatusInternalServerError)
 		return
 	}
 
@@ -224,7 +245,7 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	idStr := r.FormValue("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
@@ -237,11 +258,60 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user.Username = r.FormValue("username")
-	user.Email = r.FormValue("email")
-	user.Name = r.FormValue("name")
+	username := r.FormValue("username")
+	name := r.FormValue("name")
+	password := r.FormValue("password")
+
+	// Update user fields
+	user.Username = username
+	user.Name = name
+
+	// Update password if provided
+	if password != "" {
+		passwordEnc, err := HashPassword(password)
+		if err != nil {
+			h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+			return
+		}
+		user.PasswordEnc = passwordEnc
+	}
 
 	err = h.service.UpdateUser(ctx, user)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotUpdateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, am.ListPath(authPath, "user"), http.StatusSeeOther)
+}
+
+func (h *WebHandler) UpdateUserPassword(w http.ResponseWriter, r *http.Request) {
+	idStr := r.FormValue("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		h.Err(w, err, ErrInvalidUserID, http.StatusBadRequest)
+		return
+	}
+
+	h.Log().Info("Update user password for user ", id)
+	ctx := r.Context()
+
+	user, err := h.service.GetUser(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	// NOTE: This will be done briefly with a to-be-implemented validator.
+	password := r.FormValue("password")
+	if password == "" {
+		h.Err(w, fmt.Errorf("password is required"), "Password is required", http.StatusBadRequest)
+		return
+	}
+
+	user.Password = password
+
+	err = h.service.UpdateUserPassword(ctx, user)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
@@ -309,7 +379,6 @@ func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
 		UnassignedRoles: unassignedRoles,
 	})
 
-	// Set form action for adding roles
 	page.SetFormAction("/auth/add-role-to-user")
 	page.GenCSRFToken(r)
 
@@ -345,13 +414,13 @@ func (h *WebHandler) AddRoleToUser(w http.ResponseWriter, r *http.Request) {
 	userIDStr := r.FormValue("user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 	roleIDStr := r.FormValue("role_id")
 	roleID, err := uuid.Parse(roleIDStr)
 	if err != nil {
-		h.Err(w, err, "Invalid role ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
@@ -388,6 +457,85 @@ func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) 
 	}
 
 	http.Redirect(w, r, fmt.Sprintf("list-user-roles?id=%s", userID), http.StatusSeeOther)
+}
+
+func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request) {
+	id, err := h.ID(w, r)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	h.Log().Info("List permissions for user ", "id", id)
+	ctx := r.Context()
+
+	// Get user details
+	user, err := h.service.GetUser(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	// Get permissions assigned to the user through roles
+	permissionsFromRoles, err := h.service.GetUserIndirectPermissions(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	// Get permissions directly assigned to the user
+	directPermissions, err := h.service.GetUserDirectPermissions(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	// Get permissions not assigned to the user (neither through roles nor directly)
+	unassignedPermissions, err := h.service.GetUserUnassignedPermissions(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	// Prepare the page data
+	page := am.NewPage(struct {
+		User                  User
+		PermissionsFromRoles  []Permission
+		DirectPermissions     []Permission
+		UnassignedPermissions []Permission
+	}{
+		User:                  user,
+		PermissionsFromRoles:  permissionsFromRoles,
+		DirectPermissions:     directPermissions,
+		UnassignedPermissions: unassignedPermissions,
+	})
+	page.GenCSRFToken(r)
+
+	// Create the menu
+	menu := am.NewMenu(authPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddShowItem(user, "Back")
+
+	page.Menu = *menu
+
+	// Render the template
+	tmpl, err := h.tm.Get("auth", "list-user-permissions")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
 }
 
 func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
@@ -597,7 +745,7 @@ func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log().Info("Update role", id)
+	h.Log().Info("Update role ", id)
 	ctx := r.Context()
 
 	role, err := h.service.GetRole(ctx, id)
@@ -689,7 +837,8 @@ func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("list-user-roles?id=%s", userID), http.StatusSeeOther)
 }
 
-// Permission handlers
+// SECTION: Permission handlers
+
 func (h *WebHandler) ListPermissions(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("List permissions")
 	ctx := r.Context()
@@ -806,7 +955,7 @@ func (h *WebHandler) UpdatePermission(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log().Info("Update permission", id)
+	h.Log().Info("Update permission ", id)
 	ctx := r.Context()
 
 	permission, err := h.service.GetPermission(ctx, id)
@@ -863,14 +1012,14 @@ func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request)
 	userIDStr := r.FormValue("user_id")
 	userID, err := uuid.Parse(userIDStr)
 	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
 	permissionIDStr := r.FormValue("permission_id")
 	permissionID, err := uuid.Parse(permissionIDStr)
 	if err != nil {
-		h.Err(w, err, "Invalid permission ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
@@ -886,7 +1035,7 @@ func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	http.Redirect(w, r, am.ShowPath(authPath, "user", userID), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/list-user-permissions?id=%s", authPath, userID), http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
@@ -913,7 +1062,7 @@ func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	http.Redirect(w, r, am.ShowPath(authPath, "user", userID), http.StatusSeeOther)
+	http.Redirect(w, r, fmt.Sprintf("%s/list-user-permissions?id=%s", authPath, userID), http.StatusSeeOther)
 }
 
 func (h *WebHandler) AddPermissionToRole(w http.ResponseWriter, r *http.Request) {
@@ -1093,15 +1242,13 @@ func (h *WebHandler) UpdateResource(w http.ResponseWriter, r *http.Request) {
 	idStr := r.Form.Get("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		h.Log().Error("invalid resource id", "error", err)
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
 	resource, err := h.service.GetResource(r.Context(), id)
 	if err != nil {
-		h.Log().Error("failed to get resource", "error", err)
-		http.Error(w, "Failed to get resource", http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
 	}
 
@@ -1122,8 +1269,7 @@ func (h *WebHandler) UpdateResource(w http.ResponseWriter, r *http.Request) {
 	)
 
 	if err := h.service.UpdateResource(r.Context(), resource); err != nil {
-		h.Log().Error("failed to update resource", "error", err)
-		http.Error(w, "Failed to update resource", http.StatusInternalServerError)
+		h.Err(w, err, am.ErrCannotUpdateResource, http.StatusInternalServerError)
 		return
 	}
 
@@ -1213,7 +1359,7 @@ func (h *WebHandler) GetRole(w http.ResponseWriter, r *http.Request) {
 		h.Err(w, err, "Invalid role ID", http.StatusBadRequest)
 		return
 	}
-	h.Log().Info("Get role", id)
+	h.Log().Info("Get role ", id)
 	ctx := r.Context()
 
 	if _, err := h.service.GetRole(ctx, id); err != nil {
@@ -1229,7 +1375,7 @@ func (h *WebHandler) GetPermission(w http.ResponseWriter, r *http.Request) {
 		h.Err(w, err, "Invalid permission ID", http.StatusBadRequest)
 		return
 	}
-	h.Log().Info("Get permission", id)
+	h.Log().Info("Get permission ", id)
 	ctx := r.Context()
 
 	if _, err := h.service.GetPermission(ctx, id); err != nil {
@@ -1245,7 +1391,7 @@ func (h *WebHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
 		return
 	}
-	h.Log().Info("Get user", id)
+	h.Log().Info("Get user ", id)
 	ctx := r.Context()
 
 	if _, err := h.service.GetUser(ctx, id); err != nil {
@@ -1255,12 +1401,8 @@ func (h *WebHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *WebHandler) Err(w http.ResponseWriter, err error, msg string, code int) {
-	h.Log().Error(msg, err)
-	http.Error(w, fmt.Sprintf("%s: %v", msg, err), code)
-}
-
-func (h *WebHandler) addSampleData() {
-	// Sample resources will be added in a future implementation
+	h.Log().Errorf("%s: '%s'", msg, err.Error())
+	http.Error(w, fmt.Sprintf("%s: '%v'", msg, err), code)
 }
 
 func (h *WebHandler) NewPermission(w http.ResponseWriter, r *http.Request) {
@@ -1303,7 +1445,7 @@ func (h *WebHandler) EditPermission(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log().Info("Edit permission", id)
+	h.Log().Info("Edit permission ", id)
 	ctx := r.Context()
 
 	permission, err := h.service.GetPermission(ctx, id)
@@ -1381,7 +1523,7 @@ func (h *WebHandler) EditResource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.Log().Info("Edit resource", id)
+	h.Log().Info("Edit resource ", id)
 	ctx := r.Context()
 
 	resource, err := h.service.GetResource(ctx, id)
@@ -1428,7 +1570,7 @@ func (h *WebHandler) ListResourcePermissions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	h.Log().Info("showing resource permissions", "id", id)
+	h.Log().Info("Showing resource permissions ", "id", id)
 
 	ctx := r.Context()
 	resource, err := h.service.GetResource(ctx, id)
@@ -1443,25 +1585,10 @@ func (h *WebHandler) ListResourcePermissions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Get all permissions and filter out the assigned ones
-	allPermissions, err := h.service.GetAllPermissions(ctx)
+	unassigned, err := h.service.GetResourceUnassignedPermissions(ctx, id)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
-	}
-
-	// Create a map of assigned permission IDs for quick lookup
-	assignedMap := make(map[uuid.UUID]bool)
-	for _, p := range assigned {
-		assignedMap[p.ID()] = true
-	}
-
-	// Filter out assigned permissions
-	var unassigned []Permission
-	for _, p := range allPermissions {
-		if !assignedMap[p.ID()] {
-			unassigned = append(unassigned, p)
-		}
 	}
 
 	page := am.NewPage(struct {
@@ -1508,17 +1635,15 @@ func (h *WebHandler) ListResourcePermissions(w http.ResponseWriter, r *http.Requ
 }
 
 func (h *WebHandler) DeleteResource(w http.ResponseWriter, r *http.Request) {
-	idStr := r.Form.Get("id")
-	id, err := uuid.Parse(idStr)
+	id, err := h.ID(w, r)
 	if err != nil {
-		h.Log().Error("invalid resource id", "error", err)
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
 		return
 	}
 
-	if err := h.service.DeleteResource(r.Context(), id); err != nil {
-		h.Log().Error("failed to delete resource", "error", err)
-		http.Error(w, "Failed to delete resource", http.StatusInternalServerError)
+	ctx := r.Context()
+	if err := h.service.DeleteResource(ctx, id); err != nil {
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
 		return
 	}
 
@@ -1532,7 +1657,7 @@ func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	h.Log().Info("showing role permissions", "id", id)
+	h.Log().Info("Showing role permissions ", "id ", id)
 
 	ctx := r.Context()
 	role, err := h.service.GetRole(ctx, id)
@@ -1547,25 +1672,10 @@ func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	// Get all permissions and filter out the assigned ones
-	allPermissions, err := h.service.GetAllPermissions(ctx)
+	unassigned, err := h.service.GetRoleUnassignedPermissions(ctx, id)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
-	}
-
-	// Create a map of assigned permission IDs for quick lookup
-	assignedMap := make(map[uuid.UUID]bool)
-	for _, p := range assigned {
-		assignedMap[p.ID()] = true
-	}
-
-	// Filter out assigned permissions
-	var unassigned []Permission
-	for _, p := range allPermissions {
-		if !assignedMap[p.ID()] {
-			unassigned = append(unassigned, p)
-		}
 	}
 
 	page := am.NewPage(struct {

@@ -72,6 +72,17 @@ func (cfg *Config) get(reload bool) map[string]string {
 	return merged
 }
 
+// ByteSliceVal retrieves the value of a specific namespaced environment variable or CLI flag as a byte slice.
+// If the key is not found, it returns an empty byte slice.
+// If reload is true, it re-reads the values from the environment and CLI flags.
+func (cfg *Config) ByteSliceVal(key string, reload ...bool) []byte {
+	val, ok := cfg.StrVal(key, reload...)
+	if !ok {
+		return []byte{}
+	}
+	return []byte(val)
+}
+
 // StrVal retrieves the value of a specific namespaced environment variable or CLI flag.
 // If reload is true, it re-reads the values from the environment and CLI flags.
 func (cfg *Config) StrVal(key string, reload ...bool) (value string, ok bool) {
