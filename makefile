@@ -4,6 +4,21 @@ BUILD_DIR = build
 SRC_DIR = .
 MAIN_SRC = $(SRC_DIR)/main.go
 BINARY = $(BUILD_DIR)/$(APP_NAME)
+DB_FILE = auth.db
+DB_BACKUP_DIR = bak
+
+# Helper function to backup database with timestamp
+define backup_db
+	@if [ -f "$(DB_FILE)" ]; then \
+		TIMESTAMP=$$(date +%Y%m%d%H%M%S); \
+		NEW_NAME="$(1)/$${TIMESTAMP}-$(DB_FILE)"; \
+		echo "Moving $(DB_FILE) to $${NEW_NAME}..."; \
+		mv "$(DB_FILE)" "$${NEW_NAME}"; \
+		echo "Database moved to $${NEW_NAME}"; \
+	else \
+		echo "Database file $(DB_FILE) not found"; \
+	fi
+endef
 
 # Default target
 all: build
@@ -70,5 +85,15 @@ clean:
 	@rm -rf $(BUILD_DIR)
 	@echo "Clean complete."
 
+# Backup database in current directory
+backup-db:
+	$(call backup_db,.)
+
+# Reset database by moving it to backup directory
+reset-db:
+	@mkdir -p $(DB_BACKUP_DIR)
+	$(call backup_db,$(DB_BACKUP_DIR))
+	@echo "A fresh database will be created on next application start"
+
 # Phony targets
-.PHONY: all build run runflags setenv clean
+.PHONY: all build run runflags setenv clean backup-db reset-db
