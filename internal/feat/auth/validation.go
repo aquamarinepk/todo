@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"github.com/adrianpk/todo/internal/am"
+	"github.com/aquamarinepk/todo/internal/am"
 )
 
 // ValidateUser validates a UserForm.
@@ -11,7 +11,6 @@ import (
 // - Password length (min 8)
 // - Password confirmation
 func ValidateUser(form UserForm) (am.Validation, error) {
-	// Compose multiple validations
 	validate := am.ComposeValidators(
 		am.MinLength("username", form.Username, 3),
 		am.MaxLength("username", form.Username, 50),
