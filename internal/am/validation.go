@@ -8,19 +8,13 @@ import (
 
 // Validation holds the result of one or many validation checks.
 // It can collect multiple error messages unless strict mode is enabled.
-// Use WithStrict() to stop on the first error, or WithSoft() to collect all.
 // Use IsValid() to check result, and Error() or JSON() to report.
 type Validation struct {
 	Errors []string
-	Strict bool
 }
 
 // Add adds an error message to the validation result.
-// If strict mode is enabled, it will ignore further additions after the first error.
 func (v *Validation) Add(err string) {
-	if v.Strict && len(v.Errors) > 0 {
-		return // ignore further additions
-	}
 	v.Errors = append(v.Errors, err)
 }
 
@@ -46,24 +40,12 @@ func (v Validation) JSON() string {
 	return string(data)
 }
 
-// WithStrict creates a new Validation with strict mode enabled.
-// In strict mode, validation stops after the first error.
-func WithStrict() Validation {
-	return Validation{Strict: true}
-}
-
-// WithSoft creates a new Validation with soft mode enabled.
-// In soft mode, all validation errors are collected.
-func WithSoft() Validation {
-	return Validation{Strict: false}
-}
-
 // Validator is a function type that performs validation on any input.
 type Validator func(v any) (Validation, error)
 
 // ComposeValidators allows combining multiple Validator functions into one.
-// It will run all validations and collect their errors.
-// If strict mode is enabled, it will stop after the first error.
+// By default, it will collect all validation errors.
+// If strict is true, it will stop after the first error.
 func ComposeValidators(fns ...Validator) Validator {
 	return func(v any) (Validation, error) {
 		out := Validation{}
@@ -73,7 +55,23 @@ func ComposeValidators(fns ...Validator) Validator {
 				return out, err
 			}
 			out.Errors = append(out.Errors, res.Errors...)
-			if out.Strict && len(out.Errors) > 0 {
+		}
+		return out, nil
+	}
+}
+
+// ComposeValidatorsStrict allows combining multiple Validator functions into one
+// and stops after the first error is found.
+func ComposeValidatorsStrict(fns ...Validator) Validator {
+	return func(v any) (Validation, error) {
+		out := Validation{}
+		for _, fn := range fns {
+			res, err := fn(v)
+			if err != nil {
+				return out, err
+			}
+			out.Errors = append(out.Errors, res.Errors...)
+			if len(out.Errors) > 0 {
 				break
 			}
 		}
@@ -86,9 +84,9 @@ func ComposeValidators(fns ...Validator) Validator {
 // MinLength validates that a string field has a minimum length.
 func MinLength(field, val string, min int) Validator {
 	return func(_ any) (Validation, error) {
-		v := WithSoft()
+		v := Validation{}
 		if len(val) < min {
-			v.Add(fmt.Sprintf("%s must be at least %d characters", field, min))
+			v.Add(fmt.Sprintf("%s: must be at least %d characters", field, min))
 		}
 		return v, nil
 	}
@@ -97,9 +95,9 @@ func MinLength(field, val string, min int) Validator {
 // MaxLength validates that a string field has a maximum length.
 func MaxLength(field, val string, max int) Validator {
 	return func(_ any) (Validation, error) {
-		v := WithSoft()
+		v := Validation{}
 		if len(val) > max {
-			v.Add(fmt.Sprintf("%s must be at most %d characters", field, max))
+			v.Add(fmt.Sprintf("%s: must be at most %d characters", field, max))
 		}
 		return v, nil
 	}
@@ -108,9 +106,9 @@ func MaxLength(field, val string, max int) Validator {
 // Equals validates that two string fields are equal.
 func Equals(field string, a, b string) Validator {
 	return func(_ any) (Validation, error) {
-		v := WithSoft()
+		v := Validation{}
 		if a != b {
-			v.Add(fmt.Sprintf("%s fields must match", field))
+			v.Add(fmt.Sprintf("%s: fields do not match", field))
 		}
 		return v, nil
 	}
@@ -119,7 +117,7 @@ func Equals(field string, a, b string) Validator {
 // GreaterThan validates that an integer field is greater than a value.
 func GreaterThan(field string, a, b int) Validator {
 	return func(_ any) (Validation, error) {
-		v := WithSoft()
+		v := Validation{}
 		if a <= b {
 			v.Add(fmt.Sprintf("%s must be greater than %d", field, b))
 		}
