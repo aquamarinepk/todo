@@ -28,15 +28,17 @@ type WebHandler struct {
 	service Service
 	tm      *am.TemplateManager
 	crypto  *am.Crypto
+	flash   *am.FlashManager
 }
 
-func NewWebHandler(tm *am.TemplateManager, service Service, options ...am.Option) *WebHandler {
+func NewWebHandler(tm *am.TemplateManager, flash *am.FlashManager, service Service, options ...am.Option) *WebHandler {
 	handler := am.NewHandler("web-handler", options...)
 	return &WebHandler{
 		Handler: handler,
 		service: service,
 		tm:      tm,
 		crypto:  &am.Crypto{},
+		flash:   flash,
 	}
 }
 
@@ -78,8 +80,34 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// NewUser handles the creation of a new user.
+// WIP: This is a work in progress. The flash message system is still not available
+// to deliver notifications. Some tweaking is still needed to properly display
+// flash messages in the template.
 func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New user")
+
+	// WIPT: Just testing the flash mesages.
+	// Still not working
+	err := h.AddInfoFlash(w, r, "Welcome to the user creation page!")
+	if err != nil {
+		h.Log().Error("add info flash message error", err)
+	}
+
+	err = h.AddSuccessFlash(w, r, "This is a success message!")
+	if err != nil {
+		h.Log().Error("add success flash message error", err)
+	}
+
+	err = h.AddWarningFlash(w, r, "Please fill in all required fields!")
+	if err != nil {
+		h.Log().Error("add warning flash message error", err)
+	}
+
+	err = h.AddErrorFlash(w, r, "This is an error message!")
+	if err != nil {
+		h.Log().Error("add error flash message error", err)
+	}
 
 	user := NewUser("", "")
 
@@ -87,6 +115,14 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(fmt.Sprintf("%s/create-user", authPath))
 	page.SetFormButtonText("Create")
 	page.GenCSRFToken(r)
+
+	// Convert auth.Flash to am.Flash
+	authFlash := h.GetFlash(r)
+	amFlash := am.Flash{}
+	for _, n := range authFlash.Notifications {
+		amFlash.Add(string(n.Type), n.Msg)
+	}
+	page.SetFlash(amFlash)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(user)
@@ -219,7 +255,11 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validation.HasErrors() {
-		h.Err(w, fmt.Errorf(validation.Error()), ErrValidationFailed, http.StatusBadRequest)
+		// Add validation errors as flash messages
+		for _, err := range validation.Errors {
+			h.AddFlash(w, r, am.NotificationType.Error, err)
+		}
+		http.Redirect(w, r, am.NewPath(authPath, "user"), http.StatusSeeOther)
 		return
 	}
 
@@ -236,6 +276,12 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Err(w, err, ErrCannotCreateUser, http.StatusInternalServerError)
 		return
+	}
+
+	// Set success flash message
+	err = h.AddFlash(w, r, am.NotificationType.Success, "User created successfully")
+	if err != nil {
+		h.Log().Error("Failed to add flash message", err)
 	}
 
 	http.Redirect(w, r, am.ListPath(authPath, "user"), http.StatusSeeOther)
@@ -551,6 +597,8 @@ func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(roles)
 	page.SetFormAction(authPath)
 	page.GenCSRFToken(r)
+
+	page.SetFlash(GetFlash(r))
 
 	menu := am.NewMenu(authPath)
 	menu.AddNewItem(roleType)
@@ -1400,11 +1448,6 @@ func (h *WebHandler) GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// func (h *WebHandler) Err(w http.ResponseWriter, err error, msg string, code int) {
-// 	h.Log().Error(msg, err)
-// 	http.Error(w, fmt.Sprintf("%s: %v", msg, err), code)
-// }
-
 func (h *WebHandler) NewPermission(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New permission form")
 
@@ -1719,4 +1762,37 @@ func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
+}
+
+// WIP: The following flash-related functions were part of the initial experimentation
+// phase to test ideas and concepts. They will be deprecated once the am.FlashManager
+// is fully functional and integrated. These functions served as a proof of concept
+// for the flash message system that is now being properly implemented in the am package.
+// After the am.FlashManager is fully functional, these functions will be removed.
+
+func (h *WebHandler) AddFlash(w http.ResponseWriter, r *http.Request, notificationType string, msg string) error {
+	flash := GetFlash(r)
+	flash.Add(notificationType, msg)
+	return h.flash.SetFlash(w, flash)
+}
+
+// WIP:
+func (h *WebHandler) GetFlash(r *http.Request) am.Flash {
+	return GetFlash(r)
+}
+
+func (h *WebHandler) AddInfoFlash(w http.ResponseWriter, r *http.Request, msg string) error {
+	return h.AddFlash(w, r, am.NotificationType.Info, msg)
+}
+
+func (h *WebHandler) AddSuccessFlash(w http.ResponseWriter, r *http.Request, msg string) error {
+	return h.AddFlash(w, r, am.NotificationType.Success, msg)
+}
+
+func (h *WebHandler) AddWarningFlash(w http.ResponseWriter, r *http.Request, msg string) error {
+	return h.AddFlash(w, r, am.NotificationType.Warn, msg)
+}
+
+func (h *WebHandler) AddErrorFlash(w http.ResponseWriter, r *http.Request, msg string) error {
+	return h.AddFlash(w, r, am.NotificationType.Error, msg)
 }

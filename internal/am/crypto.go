@@ -18,8 +18,17 @@ type Crypto struct {
 	key []byte
 }
 
-func NewCrypto(key []byte) *Crypto {
-	return &Crypto{key: key}
+func NewCrypto(key ...[]byte) *Crypto {
+	var k []byte
+	if len(key) > 0 {
+		k = key[0]
+	}
+
+	return &Crypto{key: k}
+}
+
+func (c *Crypto) SetKey(key []byte) {
+	c.key = key
 }
 
 func (c *Crypto) EncryptEmail(email string) ([]byte, error) {

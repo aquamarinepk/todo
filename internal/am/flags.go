@@ -8,4 +8,7 @@ var Flags = map[string]interface{}{
 	Key.ServerAPIPort:    "8081",
 	Key.ServerAPIEnabled: true,
 	Key.ServerResPath:    "/res",
+
+	Key.SecHashKey:  "0123456789abcdef0123456789abcdef",
+	Key.SecBlockKey: "0123456789abcdef0123456789abcdef",
 }
