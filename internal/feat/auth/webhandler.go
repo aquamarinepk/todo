@@ -206,7 +206,7 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	user := UserForm{}
 
-	err := am.ReqToForm(r, &user)
+	err := am.ToForm(r, &user)
 	if err != nil {
 		h.Err(w, err, "Invalid form data", http.StatusBadRequest)
 		return
@@ -214,7 +214,7 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 	encKey := h.Cfg().ByteSliceVal(am.Key.SecEncryptionKey)
 
-	newUser, err := NewUserSec(user.Username, user.Email, user.Password, user.Name, encKey)
+	newUser, err := FormToUser(user, encKey)
 	if err != nil {
 		h.Err(w, err, "Failed to create user", http.StatusInternalServerError)
 		return

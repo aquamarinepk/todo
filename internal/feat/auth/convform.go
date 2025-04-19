@@ -7,6 +7,7 @@ import (
 // FormToUser converts a UserForm to a User entity.
 // It validates that the password and password confirmation match.
 func FormToUser(form UserForm, encKey []byte) (User, error) {
+	// TODO: A configurable validator will take care of this briefly
 	if form.Password != form.PasswordConf {
 		return User{}, errors.New("passwords do not match")
 	}
