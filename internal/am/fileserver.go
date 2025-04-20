@@ -23,27 +23,24 @@ const (
 
 // FileServer serves static files from an embedded filesystem.
 type FileServer struct {
-	Core
-	router *Router
-	fs     embed.FS
+	*Router
+	fs embed.FS
 }
 
 // NewFileServer creates a new FileServer.
 func NewFileServer(fs embed.FS, opts ...Option) *FileServer {
-	core := NewCore(fileServerName, opts...)
-
 	routerName := fmt.Sprintf("%s-router", fileServerName)
 
 	r := NewRouter(routerName, opts...)
 	return &FileServer{
-		Core:   core,
-		router: r,
+		Router: r,
 		fs:     fs,
 	}
 }
 
 func (f *FileServer) SetupRoutes() error {
-	if f.Cfg().BoolVal(Key.ServerIndexEnabled, false) {
+	cfg := f.Router.Cfg()
+	if cfg.BoolVal(Key.ServerIndexEnabled, false) {
 		return f.SetupRoutesIndex()
 	}
 
@@ -59,7 +56,7 @@ func (f *FileServer) SetupRoutesIndex() error {
 
 	server := http.FileServer(http.FS(staticFS))
 
-	f.router.HandleFunc(staticPath+"/*", func(w http.ResponseWriter, r *http.Request) {
+	f.Router.HandleFunc(staticPath+"/*", func(w http.ResponseWriter, r *http.Request) {
 		http.StripPrefix(staticPath, server).ServeHTTP(w, r)
 	})
 
@@ -75,7 +72,7 @@ func (f *FileServer) SetupRoutesNoIndex() error {
 
 	fileServer := http.FileServer(http.FS(staticFS))
 
-	f.router.HandleFunc(staticPath+"/*", func(w http.ResponseWriter, r *http.Request) {
+	f.Router.HandleFunc(staticPath+"/*", func(w http.ResponseWriter, r *http.Request) {
 		requestedFile := strings.TrimPrefix(r.URL.Path, staticPath+"/")
 
 		f, err := staticFS.Open(requestedFile)
@@ -98,13 +95,13 @@ func (f *FileServer) SetupRoutesNoIndex() error {
 }
 
 // Router returns the underlying chi.Router.
-func (f *FileServer) Router() *Router {
-	return f.router
-}
+//func (f *FileServer) Router() *Router {
+//	return f.router
+//}
 
 // Setup is the default implementation for the Setup method in FileServer.
 func (f *FileServer) Setup(ctx context.Context) error {
-	err := f.Core.Setup(ctx)
+	err := f.Router.Setup(ctx)
 	if err != nil {
 		return err
 	}

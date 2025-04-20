@@ -10,4 +10,6 @@ const (
 	ErrTemplateNotFound     = "Template not found"
 	ErrCannotRenderTemplate = "Cannot render template"
 	ErrCannotWriteResponse  = "Cannot write response"
+	ErrInvalidFormData      = "Invalid form data"
+	ErrValidationFailed     = "Validation failed"
 )

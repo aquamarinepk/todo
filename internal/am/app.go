@@ -55,11 +55,11 @@ func NewApp(name, version string, fs embed.FS, opts ...Option) *App {
 	app := &App{
 		opts:          opts,
 		Core:          core,
-		Router:        NewRouter("web-router", opts...),
-		APIRouter:     NewRouter("api-router", opts...),
+		Router:        NewWebRouter("web-router", opts...),
+		APIRouter:     NewWebRouter("api-router", opts...),
 		APIRouters:    make(map[string]*Router),
-		ResRouter:     NewRouter("res-router", opts...),
-		ResAPIRouter:  NewRouter("res-api-router", opts...),
+		ResRouter:     NewWebRouter("res-router", opts...),
+		ResAPIRouter:  NewWebRouter("res-api-router", opts...),
 		ResAPIRouters: make(map[string]*Router),
 		fs:            fs,
 	}
@@ -120,12 +120,17 @@ func (a *App) Setup(ctx context.Context) error {
 
 	a.deps.Range(func(key, value interface{}) bool {
 		dep := value.(*Dep)
-		if coreDep, ok := dep.Core.(Core); ok {
-			err := coreDep.Setup(ctx)
-			if err != nil {
-				msg := fmt.Sprintf("failed to setup %s: %v", coreDep.Name(), err)
-				errs = append(errs, msg)
-			}
+		if _, ok := dep.Core.(Core); !ok {
+			msg := fmt.Sprintf("cannot setup %s: not a core dep", dep.Core.Name())
+			a.Log().Info(msg)
+			return true
+		}
+
+		a.Log().Info("Setting up ", dep.Name())
+		err := dep.Setup(ctx)
+		if err != nil {
+			msg := fmt.Sprintf("canot setup %s: %v", dep.Name(), err)
+			errs = append(errs, msg)
 		}
 		return true
 	})
@@ -223,7 +228,7 @@ func (a *App) MountAPI(version, path string, handler http.Handler) {
 	router, exists := a.APIRouters[version]
 	if !exists {
 		name := fmt.Sprintf("api-router-%s", versionPath)
-		router = NewRouter(name, a.opts...)
+		router = NewWebRouter(name, a.opts...)
 		router.Mount(path, handler)
 		a.APIRouters[versionPath] = router
 	}
@@ -240,7 +245,7 @@ func (a *App) MountResAPI(version, path string, handler http.Handler) {
 	router, exists := a.ResAPIRouters[version]
 	if !exists {
 		name := fmt.Sprintf("res-api-router-%s", versionPath)
-		router = NewRouter(name, a.opts...)
+		router = NewWebRouter(name, a.opts...)
 		router.Mount(path, handler)
 		a.ResAPIRouters[versionPath] = router
 	}
@@ -248,7 +253,7 @@ func (a *App) MountResAPI(version, path string, handler http.Handler) {
 }
 
 func (a *App) MountFileServer(path string, fs *FileServer) {
-	a.Mount(path, fs.Router())
+	a.Mount(path, fs.Router)
 }
 
 func (app *App) SetWebRouter(router *Router) {

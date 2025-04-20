@@ -24,7 +24,7 @@ func NewAPIHandler(service Service, options ...am.Option) *APIHandler {
 }
 
 func (h *APIHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
-	users, err := h.service.GetAllUsers(r.Context())
+	users, err := h.service.GetUsers(r.Context())
 	var res am.Response
 	if err != nil {
 		res = am.NewErrorResponse("Failed to list users", am.ErrorCodeInternalError, err.Error())
@@ -73,9 +73,8 @@ func (h *APIHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 
 func (h *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	var payload struct {
-		ID          uuid.UUID `json:"id"`
-		Name        string    `json:"name"`
-		Description string    `json:"description"`
+		ID   uuid.UUID `json:"id"`
+		Name string    `json:"name"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
 		res := am.NewErrorResponse("Invalid request payload", am.ErrorCodeBadRequest, err.Error())
@@ -89,7 +88,6 @@ func (h *APIHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	user.Name = payload.Name
-	user.EncPassword = payload.Description
 	if err := h.service.UpdateUser(r.Context(), user); err != nil {
 		res := am.NewErrorResponse("Failed to update user", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)

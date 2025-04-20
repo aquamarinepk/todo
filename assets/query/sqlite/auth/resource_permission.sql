@@ -11,4 +11,13 @@ DELETE FROM resource_permissions WHERE resource_id = ? AND permission_id = ?;
 SELECT p.id, p.name, p.description, p.slug, p.created_by, p.updated_by, p.created_at, p.updated_at
 FROM permissions p
 JOIN resource_permissions rp ON p.id = rp.permission_id
-WHERE rp.resource_id = ?; 
+WHERE rp.resource_id = ?;
+
+-- GetResourceUnassignedPermissions
+SELECT p.id, p.name, p.description, p.slug, p.created_by, p.updated_by, p.created_at, p.updated_at
+FROM permissions p
+WHERE p.id NOT IN (
+    SELECT rp.permission_id
+    FROM resource_permissions rp
+    WHERE rp.resource_id = ?
+); 

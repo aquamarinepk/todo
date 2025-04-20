@@ -101,18 +101,18 @@ func (c *BaseCore) Stop(ctx context.Context) error {
 }
 
 // Option defines a type for setting optional parameters in BaseCore.
-type Option func(*BaseCore)
+type Option func(Core)
 
 // WithLog sets the Logger in BaseCore.
 func WithLog(log Logger) Option {
-	return func(c *BaseCore) {
-		c.log = log
+	return func(c Core) {
+		c.SetLog(log)
 	}
 }
 
 // WithCfg sets the Config in BaseCore.
 func WithCfg(cfg *Config) Option {
-	return func(c *BaseCore) {
-		c.cfg = cfg
+	return func(c Core) {
+		c.SetCfg(cfg)
 	}
 }

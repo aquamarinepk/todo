@@ -12,8 +12,11 @@ type Keys struct {
 
 	DBSQLiteDSN string
 
-	SecCSRFKey      string
-	SecCSRFRedirect string
+	SecCSRFKey       string
+	SecCSRFRedirect  string
+	SecEncryptionKey string
+	SecHashKey       string
+	SecBlockKey      string
 
 	ButtonStyleGray   string
 	ButtonStyleBlue   string
@@ -43,8 +46,11 @@ var Key = Keys{
 
 	DBSQLiteDSN: "db.sqlite.dsn",
 
-	SecCSRFKey:      "sec.csrf.key",
-	SecCSRFRedirect: "sec.csrf.redirect",
+	SecCSRFKey:       "sec.csrf.key",
+	SecCSRFRedirect:  "sec.csrf.redirect",
+	SecEncryptionKey: "sec.encryption.key",
+	SecHashKey:       "sec.hash.key",
+	SecBlockKey:      "sec.block.key",
 
 	ButtonStyleGray:   "button.style.gray",
 	ButtonStyleBlue:   "button.style.blue",

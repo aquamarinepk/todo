@@ -12,32 +12,17 @@ type UserDA struct {
 	Slug          sql.NullString `db:"slug"`
 	Name          sql.NullString `db:"name"`
 	Username      sql.NullString `db:"username"`
-	Email         sql.NullString `db:"email"`
-	EncPassword   sql.NullString `db:"password"`
+	EmailEnc      []byte         `db:"email_enc"`
+	PasswordEnc   []byte         `db:"password_enc"`
 	RoleIDs       []uuid.UUID
 	PermissionIDs []uuid.UUID
 	CreatedBy     sql.NullString `db:"created_by"`
 	UpdatedBy     sql.NullString `db:"updated_by"`
 	CreatedAt     sql.NullTime   `db:"created_at"`
 	UpdatedAt     sql.NullTime   `db:"updated_at"`
-}
-
-// Convert User to UserDA
-func toUserDA(user User) UserDA {
-	return UserDA{
-		ID:            user.ID(),
-		Slug:          sql.NullString{String: user.Slug(), Valid: user.Slug() != ""},
-		Name:          sql.NullString{String: user.Name, Valid: user.Name != ""},
-		Username:      sql.NullString{String: user.Username, Valid: user.Username != ""},
-		Email:         sql.NullString{String: user.Email, Valid: user.Email != ""},
-		EncPassword:   sql.NullString{String: user.EncPassword, Valid: user.EncPassword != ""},
-		RoleIDs:       toRoleIDs(user.Roles),
-		PermissionIDs: toPermissionIDs(user.Permissions),
-		CreatedBy:     sql.NullString{String: user.CreatedBy().String(), Valid: user.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:     sql.NullString{String: user.UpdatedBy().String(), Valid: user.UpdatedBy() != uuid.Nil},
-		CreatedAt:     sql.NullTime{Time: user.CreatedAt(), Valid: !user.CreatedAt().IsZero()},
-		UpdatedAt:     sql.NullTime{Time: user.UpdatedAt(), Valid: !user.UpdatedAt().IsZero()},
-	}
+	LastLoginAt   sql.NullTime   `db:"last_login_at"`
+	LastLoginIP   sql.NullString `db:"last_login_ip"`
+	IsActive      sql.NullBool   `db:"is_active"`
 }
 
 // UserExtDA represents the data access layer for the UserRolePermission.
@@ -46,8 +31,8 @@ type UserExtDA struct {
 	Slug           sql.NullString `db:"slug"`
 	Name           sql.NullString `db:"name"`
 	Username       sql.NullString `db:"username"`
-	Email          sql.NullString `db:"email"`
-	EncPassword    sql.NullString `db:"password"`
+	EmailEnc       []byte         `db:"email_enc"`
+	PasswordEnc    []byte         `db:"password_enc"`
 	RoleID         sql.NullString `db:"role_id"`
 	PermissionID   sql.NullString `db:"permission_id"`
 	RoleName       sql.NullString `db:"role_name"`
@@ -56,4 +41,7 @@ type UserExtDA struct {
 	UpdatedBy      sql.NullString `db:"updated_by"`
 	CreatedAt      sql.NullTime   `db:"created_at"`
 	UpdatedAt      sql.NullTime   `db:"updated_at"`
+	LastLoginAt    sql.NullTime   `db:"last_login_at"`
+	LastLoginIP    sql.NullString `db:"last_login_ip"`
+	IsActive       sql.NullBool   `db:"is_active"`
 }

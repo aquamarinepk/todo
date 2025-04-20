@@ -29,8 +29,13 @@ func main() {
 	cfg := am.LoadCfg(namespace, am.Flags)
 	opts := am.DefOpts(log, cfg)
 
-	//_ = am.DebugFS(assetsFS, "assets")
+	// FlashManager
+	flashManager := am.NewFlashManager()
 
+	// Append WithFlashMiddleware to opts
+	opts = append(opts, am.WithFlashMiddleware(flashManager))
+
+	// Create the app with the updated opts
 	app := core.NewApp(name, version, assetsFS, opts...)
 
 	queryManager := am.NewQueryManager(assetsFS, engine)
@@ -49,7 +54,7 @@ func main() {
 	// Auth feature
 	authRepo := sqlite.NewAuthRepo(queryManager)
 	authService := auth.NewService(authRepo)
-	authWebHandler := auth.NewWebHandler(templateManager, authService)
+	authWebHandler := auth.NewWebHandler(templateManager, flashManager, authService)
 	authWebRouter := auth.NewWebRouter(authWebHandler)
 	authAPIHandler := auth.NewAPIHandler(authService)
 	authAPIRouter := auth.NewAPIRouter(authAPIHandler)
@@ -71,6 +76,7 @@ func main() {
 	// Add deps
 	app.Add(migrator)
 	app.Add(seeder)
+	app.Add(flashManager)
 	app.Add(fileServer)
 	app.Add(queryManager)
 	app.Add(templateManager)
@@ -92,9 +98,6 @@ func main() {
 		log.Error("Failed to setup the app: ", err)
 		return
 	}
-
-	queryManager.Debug()
-	//templateManager.Debug()
 
 	err = app.Start(ctx)
 	if err != nil {
