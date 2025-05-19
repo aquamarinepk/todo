@@ -1,3 +1,10 @@
+-- Seeding using `.sql` files can be convenient for inserting large volumes
+-- of raw data, even when the data is related to persistent entities in the
+-- system. However, its usefulness may be limited in such cases if certain
+-- values are the result of business logic operations that are hard or
+-- impractical to reproduce, especially when those values (e.g., digests,
+-- encrypted fields) are not readily available.
+
 -- Superadmin user
 INSERT INTO users (id, username, email_enc, name, password_enc, slug, created_by, updated_by, created_at, updated_at, last_login_at, last_login_ip, is_active)
 VALUES 

@@ -3,10 +3,14 @@ package auth
 import (
 	"context"
 
+	"github.com/aquamarinepk/todo/internal/am"
+
 	"github.com/google/uuid"
 )
 
 type Repo interface {
+	am.Repo
+
 	// SECTION: User-related methods
 
 	GetUsers(ctx context.Context) ([]User, error)
@@ -60,7 +64,8 @@ type Repo interface {
 	RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error
 
 	// SECTION: Organization-related methods
-
+	CreateOrg(ctx context.Context, org Org) error
+	AddOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error
 	GetDefaultOrg(ctx context.Context) (Org, error)
 	GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
 	GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)

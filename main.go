@@ -45,7 +45,7 @@ func main() {
 	migrator := am.NewMigrator(assetsFS, engine)
 
 	// Seeder
-	seeder := am.NewSeeder(assetsFS, engine)
+	// seeder := am.NewSeeder(assetsFS, engine)
 
 	// FileServer
 	fileServer := am.NewFileServer(assetsFS)
@@ -58,6 +58,7 @@ func main() {
 	authWebRouter := auth.NewWebRouter(authWebHandler)
 	authAPIHandler := auth.NewAPIHandler(authService)
 	authAPIRouter := auth.NewAPIRouter(authAPIHandler)
+	authSeeder := auth.NewSeeder(assetsFS, engine, authRepo)
 
 	app.MountWeb("/auth", authWebRouter)
 	app.MountAPI(version, "/auth", authAPIRouter)
@@ -75,7 +76,6 @@ func main() {
 
 	// Add deps
 	app.Add(migrator)
-	app.Add(seeder)
 	app.Add(flashManager)
 	app.Add(fileServer)
 	app.Add(queryManager)
@@ -92,6 +92,7 @@ func main() {
 	app.Add(todoAPIHandler)
 	app.Add(todoWebRouter)
 	app.Add(todoAPIRouter)
+	app.Add(authSeeder)
 
 	err := app.Setup(ctx)
 	if err != nil {

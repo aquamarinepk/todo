@@ -20,7 +20,7 @@ type Repo interface {
 }
 
 type BaseRepo struct {
-	*am.Repo
+	*am.BaseRepo
 	mu    sync.Mutex
 	lists map[uuid.UUID]ListDA
 	order []uuid.UUID
@@ -28,9 +28,9 @@ type BaseRepo struct {
 
 func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	repo := &BaseRepo{
-		Repo:  am.NewRepo("todo-repo", qm, opts...),
-		lists: make(map[uuid.UUID]ListDA),
-		order: []uuid.UUID{},
+		BaseRepo: am.NewRepo("todo-repo", qm, opts...),
+		lists:    make(map[uuid.UUID]ListDA),
+		order:    []uuid.UUID{},
 	}
 
 	return repo

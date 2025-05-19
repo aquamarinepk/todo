@@ -96,9 +96,12 @@ func (svc *BaseService) GetUsers(ctx context.Context) ([]User, error) {
 	}
 
 	encKey := svc.Cfg().ByteSliceVal(key.SecEncryptionKey)
+	msg := fmt.Sprintf("--------Encryption key: '%s'", string(encKey))
+	panic(msg)
 
 	for i := range users {
 		if len(users[i].EmailEnc) > 0 {
+			// Decrypt the email
 			email, err := DecryptEmail(users[i].EmailEnc, encKey)
 			if err != nil {
 				return nil, fmt.Errorf("failed to decrypt email for user %s: %w", users[i].ID(), err)
