@@ -59,6 +59,11 @@ type Service interface {
 	GetResourceUnassignedPermissions(ctx context.Context, resourceID uuid.UUID) ([]Permission, error)
 	AddPermissionToResource(ctx context.Context, resourceID uuid.UUID, permission Permission) error
 	RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error
+
+	// Org methods
+	GetDefaultOrg(ctx context.Context) (Org, error)
+	GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
+	GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
 }
 
 var (
@@ -276,4 +281,16 @@ func (svc *BaseService) AddPermissionToResource(ctx context.Context, resourceID 
 
 func (svc *BaseService) RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error {
 	return svc.repo.RemovePermissionFromResource(ctx, resourceID, permissionID)
+}
+
+func (svc *BaseService) GetDefaultOrg(ctx context.Context) (Org, error) {
+	return svc.repo.GetDefaultOrg(ctx)
+}
+
+func (svc *BaseService) GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]User, error) {
+	return svc.repo.GetOrgOwners(ctx, orgID)
+}
+
+func (svc *BaseService) GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error) {
+	return svc.repo.GetOrgUnassignedOwners(ctx, orgID)
 }

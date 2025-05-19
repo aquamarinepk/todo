@@ -300,6 +300,53 @@ func ToResourceExt(da ResourceExtDA) Resource {
 	}
 }
 
+// OrgDA is the data access struct for Org, used for DB operations.
+type OrgDA struct {
+	ID               sql.NullString `db:"id"`
+	Slug             string         `db:"slug"`
+	Name             string         `db:"name"`
+	ShortDescription string         `db:"short_description"`
+	Description      string         `db:"description"`
+	CreatedBy        sql.NullString `db:"created_by"`
+	UpdatedBy        sql.NullString `db:"updated_by"`
+	CreatedAt        time.Time      `db:"created_at"`
+	UpdatedAt        time.Time      `db:"updated_at"`
+}
+
+// ToOrg converts OrgDA to Org domain model.
+func ToOrg(da OrgDA) Org {
+	model := am.NewModel(
+		am.WithID(am.ParseUUID(da.ID)),
+		am.WithSlug(da.Slug),
+		am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
+		am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
+		am.WithCreatedAt(da.CreatedAt),
+		am.WithUpdatedAt(da.UpdatedAt),
+		am.WithType(orgEntityType),
+	)
+	return Org{
+		Model:            model,
+		Name:             da.Name,
+		ShortDescription: da.ShortDescription,
+		Description:      da.Description,
+	}
+}
+
+// ToOrgDA converts Org domain model to OrgDA for DB operations.
+func ToOrgDA(org Org) OrgDA {
+	return OrgDA{
+		ID:               sql.NullString{String: org.ID().String(), Valid: org.ID() != uuid.Nil},
+		Slug:             org.Slug(),
+		Name:             org.Name,
+		ShortDescription: org.ShortDescription,
+		Description:      org.Description,
+		CreatedBy:        sql.NullString{String: org.CreatedBy().String(), Valid: org.CreatedBy() != uuid.Nil},
+		UpdatedBy:        sql.NullString{String: org.UpdatedBy().String(), Valid: org.UpdatedBy() != uuid.Nil},
+		CreatedAt:        org.CreatedAt(),
+		UpdatedAt:        org.UpdatedAt(),
+	}
+}
+
 func toRoleIDs(roles []Role) []uuid.UUID {
 	var ids []uuid.UUID
 	for _, r := range roles {

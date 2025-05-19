@@ -1,0 +1,84 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+Organization Details
+{{ end }}
+
+{{ define "content" }}
+<div class="space-y-8">
+  <h1 class="text-2xl font-bold mb-4">Organization Details</h1>
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <div class="px-4 py-5 sm:px-6">
+      <h3 class="text-lg leading-6 font-medium text-gray-900">
+        {{ .Data.Org.Name }}
+      </h3>
+      <p class="mt-1 max-w-2xl text-sm text-gray-500">
+        Organization details and information
+      </p>
+    </div>
+    <div class="border-t border-gray-200">
+      <dl>
+        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+          <dt class="text-sm font-medium text-gray-500">Name</dt>
+          <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            {{ .Data.Org.Name }}
+          </dd>
+        </div>
+        <div class="bg-white px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+          <dt class="text-sm font-medium text-gray-500">Short Description</dt>
+          <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            {{ .Data.Org.ShortDescription }}
+          </dd>
+        </div>
+        <div class="bg-gray-50 px-4 py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+          <dt class="text-sm font-medium text-gray-500">Description</dt>
+          <dd class="mt-1 text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+            {{ .Data.Org.Description }}
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  <!-- Owners Table -->
+  <div>
+    <h2 class="text-xl font-semibold mb-2">Owners</h2>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
+            Name
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">
+            Username
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {{ range .Data.Owners }}
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            {{ .Name }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ .Username }}
+          </td>
+        </tr>
+        {{ else }}
+        <tr>
+          <td colspan="2" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+            No owners assigned to this organization.
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{ end }}
+
+{{ define "submenu" }}
+{{ template "menu" . }}
+{{ end }}

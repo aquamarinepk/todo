@@ -58,5 +58,11 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Post("/add-permission-to-resource", handler.AddPermissionToResource)
 	core.Post("/remove-permission-from-resource", handler.RemovePermissionFromResource)
 
+	// Org routes
+	core.Get("/show-org", handler.ShowOrg)
+	// core.Get("/edit-org", handler.EditOrg)
+	// core.Post("/add-member-to-org", handler.AddMemberToOrg)
+	// core.Post("/remove-member-to-org", handler.RemoveMemberFromOrg)
+
 	return core
 }

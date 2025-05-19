@@ -58,4 +58,10 @@ type Repo interface {
 	GetResourceUnassignedPermissions(ctx context.Context, resourceID uuid.UUID) ([]Permission, error)
 	AddPermissionToResource(ctx context.Context, resourceID uuid.UUID, permission Permission) error
 	RemovePermissionFromResource(ctx context.Context, resourceID uuid.UUID, permissionID uuid.UUID) error
+
+	// SECTION: Organization-related methods
+
+	GetDefaultOrg(ctx context.Context) (Org, error)
+	GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
+	GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
 }
