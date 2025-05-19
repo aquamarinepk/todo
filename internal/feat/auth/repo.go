@@ -64,4 +64,9 @@ type Repo interface {
 	GetDefaultOrg(ctx context.Context) (Org, error)
 	GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
 	GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
+	GetAllTeams(ctx context.Context, orgID uuid.UUID) ([]Team, error)
+	GetTeam(ctx context.Context, id uuid.UUID) (Team, error)
+	CreateTeam(ctx context.Context, team Team) error
+	UpdateTeam(ctx context.Context, team Team) error
+	DeleteTeam(ctx context.Context, id uuid.UUID) error
 }

@@ -1,0 +1,22 @@
+{{ define "team-form" }}
+<form action="{{ .Form.Action }}" method="POST" class="space-y-6">
+  <input type="hidden" name="id" value="{{ .Data.ID }}">
+  <input type="hidden" name="aquamarine.csrf.token" value="{{ .Form.CSRF }}">
+  <div>
+    <label for="name" class="block text-sm font-medium text-gray-700">Name</label>
+    <input type="text" id="name" name="name" value="{{ .Data.Name }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+  </div>
+  <div>
+    <label for="short_description" class="block text-sm font-medium text-gray-700">Short Description</label>
+    <input type="text" id="short_description" name="short_description" value="{{ .Data.ShortDescription }}" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
+  </div>
+  <div>
+    <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+    <textarea id="description" name="description" rows="4" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">{{ .Data.Description }}</textarea>
+  </div>
+  <div class="flex justify-end space-x-2">
+    <a href="show-team?id={{ .Data.ID }}" class="bg-gray-200 text-gray-700 px-4 py-2 rounded">Cancel</a>
+    <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded">Update</button>
+  </div>
+</form>
+{{ end }}

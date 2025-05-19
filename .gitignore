@@ -2,3 +2,4 @@ build/
 main
 /auth.db
 /bak/
+/tmp/
