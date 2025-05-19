@@ -38,7 +38,7 @@ func ToUser(da UserDA) User {
 	}
 
 	return User{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(userType),
 			am.WithSlug(da.Slug.String),
@@ -88,7 +88,7 @@ func ToUserExt(da UserExtDA) User {
 	if da.RoleID.Valid {
 		user.RoleIDs = append(user.RoleIDs, am.ParseUUID(da.RoleID))
 		user.Roles = append(user.Roles, Role{
-			Model: am.NewModel(
+			BaseModel: am.NewModel(
 				am.WithID(am.ParseUUID(da.RoleID)),
 				am.WithType(roleType),
 			),
@@ -100,7 +100,7 @@ func ToUserExt(da UserExtDA) User {
 	if da.PermissionID.Valid {
 		user.PermissionIDs = append(user.PermissionIDs, am.ParseUUID(da.PermissionID))
 		user.Permissions = append(user.Permissions, Permission{
-			Model: am.NewModel(
+			BaseModel: am.NewModel(
 				am.WithID(am.ParseUUID(da.PermissionID)),
 				am.WithType(permissionType),
 			),
@@ -130,7 +130,7 @@ func ToRoleDA(role Role) RoleDA {
 // ToRole converts a RoleDA data access object to a Role business object
 func ToRole(da RoleDA) Role {
 	return Role{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(roleType),
 			am.WithSlug(da.Slug.String),
@@ -159,7 +159,7 @@ func ToRoles(das []RoleDA) []Role {
 // ToRoleExt converts RoleExtDA to Role including permissions
 func ToRoleExt(da RoleExtDA) Role {
 	permission := Permission{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(am.ParseUUID(da.PermissionID)),
 			am.WithType(permissionType),
 		),
@@ -167,7 +167,7 @@ func ToRoleExt(da RoleExtDA) Role {
 	}
 
 	return Role{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(roleType),
 			am.WithSlug(da.Slug.String),
@@ -200,7 +200,7 @@ func ToPermissionDA(permission Permission) PermissionDA {
 // ToPermission converts a PermissionDA data access object to a Permission business object
 func ToPermission(da PermissionDA) Permission {
 	return Permission{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(permissionType),
 			am.WithSlug(da.Slug.String),
@@ -244,7 +244,7 @@ func ToResourceDA(resource Resource) ResourceDA {
 // ToResource converts a ResourceDA data access object to a Resource business object
 func ToResource(da ResourceDA) Resource {
 	return Resource{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(resourceEntityType),
 			am.WithSlug(da.Slug.String),
@@ -275,7 +275,7 @@ func ToResources(das []ResourceDA) []Resource {
 // ToResourceExt converts ResourceExtDA to Resource including permissions
 func ToResourceExt(da ResourceExtDA) Resource {
 	permission := Permission{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(am.ParseUUID(da.PermissionID)),
 			am.WithType(permissionType),
 		),
@@ -283,7 +283,7 @@ func ToResourceExt(da ResourceExtDA) Resource {
 	}
 
 	return Resource{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(resourceEntityType),
 			am.WithSlug(da.Slug.String),
@@ -325,7 +325,7 @@ func ToOrg(da OrgDA) Org {
 		am.WithType(orgEntityType),
 	)
 	return Org{
-		Model:            model,
+		BaseModel:        model,
 		Name:             da.Name,
 		ShortDescription: da.ShortDescription,
 		Description:      da.Description,
@@ -358,7 +358,7 @@ func ToTeam(da TeamDA) Team {
 		am.WithType(teamEntityType),
 	)
 	return Team{
-		Model:            model,
+		BaseModel:        model,
 		OrgID:            am.ParseUUID(da.OrgID),
 		Name:             da.Name,
 		ShortDescription: da.ShortDescription,

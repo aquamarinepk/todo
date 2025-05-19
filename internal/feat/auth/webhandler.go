@@ -1253,7 +1253,7 @@ func (h *WebHandler) UpdatePermission(w http.ResponseWriter, r *http.Request) {
 	description := r.Form.Get("description")
 	permission.Name = name
 	permission.Description = description
-	permission.Model = am.NewModel(
+	permission.BaseModel = am.NewModel(
 		am.WithID(permission.ID()),
 		am.WithType(permissionType),
 		am.WithSlug(name),
@@ -1373,7 +1373,7 @@ func (h *WebHandler) CreateResource(w http.ResponseWriter, r *http.Request) {
 
 	resource := NewResource(name, description, resourceType)
 	resource.GenSlug()
-	resource.Model = am.NewModel(
+	resource.BaseModel = am.NewModel(
 		am.WithID(resource.ID()),
 		am.WithSlug(resource.Slug()),
 		am.WithCreatedBy(uuid.New()),
@@ -1503,7 +1503,7 @@ func (h *WebHandler) UpdateResource(w http.ResponseWriter, r *http.Request) {
 	resource.Name = name
 	resource.Description = description
 	resource.GenSlug()
-	resource.Model = am.NewModel(
+	resource.BaseModel = am.NewModel(
 		am.WithID(resource.ID()),
 		am.WithType(resourceEntityType),
 		am.WithSlug(resource.Slug()),
@@ -1822,7 +1822,7 @@ func (h *WebHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 
 	team := NewTeam(org.ID(), name, shortDescription, description)
 	team.GenSlug()
-	team.Model = am.NewModel(
+	team.BaseModel = am.NewModel(
 		am.WithID(team.ID()),
 		am.WithSlug(team.Slug()),
 		am.WithCreatedBy(team.CreatedBy()),
@@ -1951,7 +1951,7 @@ func (h *WebHandler) UpdateTeam(w http.ResponseWriter, r *http.Request) {
 	team.ShortDescription = r.Form.Get("short_description")
 	team.Description = r.Form.Get("description")
 	team.SetSlug(r.Form.Get("slug"))
-	team.Model = am.NewModel(
+	team.BaseModel = am.NewModel(
 		am.WithID(team.ID()),
 		am.WithSlug(team.Slug()),
 		am.WithCreatedBy(team.CreatedBy()),

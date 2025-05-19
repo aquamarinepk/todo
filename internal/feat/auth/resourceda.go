@@ -27,7 +27,7 @@ type ResourceDA struct {
 // toModel methods do not preload relationships
 func toResource(da ResourceDA) Resource {
 	return Resource{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(resourceEntityType),
 			am.WithSlug(da.Slug.String),

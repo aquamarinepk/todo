@@ -1,0 +1,248 @@
+{
+  "users": [
+    {
+      "ref": "user-superadmin",
+      "username": "superadmin",
+      "email": "superadmin@example.com",
+      "name": "Super Admin",
+      "password": "password123",
+      "is_active": true
+    },
+    {
+      "ref": "user-admin",
+      "username": "admin",
+      "email": "admin@example.com",
+      "name": "Admin",
+      "password": "password123",
+      "is_active": true
+    },
+    {
+      "ref": "user-johndoe",
+      "username": "johndoe",
+      "email": "john.doe@example.com",
+      "name": "John Doe",
+      "password": "password123",
+      "is_active": true
+    },
+    {
+      "ref": "user-janesmith",
+      "username": "janesmith",
+      "email": "jane.smith@example.com",
+      "name": "Jane Smith",
+      "password": "password123",
+      "is_active": true
+    },
+    {
+      "ref": "user-bobjohnson",
+      "username": "bobjohnson",
+      "email": "bob.johnson@example.com",
+      "name": "Bob Johnson",
+      "password": "password123",
+      "is_active": true
+    },
+    {
+      "ref": "user-alicebrown",
+      "username": "alicebrown",
+      "email": "alice.brown@example.com",
+      "name": "Alice Brown",
+      "password": "password123",
+      "is_active": true
+    },
+    {
+      "ref": "user-charliewilson",
+      "username": "charliewilson",
+      "email": "charlie.wilson@example.com",
+      "name": "Charlie Wilson",
+      "password": "password123",
+      "is_active": true
+    }
+  ],
+  "orgs": [
+    {
+      "ref": "org-aquamarine",
+      "name": "Aquamarine",
+      "short_description": "Aquamarine Org",
+      "description": "Main organization for Aquamarine"
+    }
+  ],
+  "org_owners": [
+    { "org_ref": "org-aquamarine", "user_ref": "user-superadmin" }
+  ],
+  "teams": [
+    {
+      "ref": "team-team-a",
+      "org_ref": "org-aquamarine",
+      "name": "Team A",
+      "short_description": "Short desc A",
+      "description": "Description for Team A"
+    },
+    {
+      "ref": "team-team-b",
+      "org_ref": "org-aquamarine",
+      "name": "Team B",
+      "short_description": "Short desc B",
+      "description": "Description for Team B"
+    },
+    {
+      "ref": "team-team-c",
+      "org_ref": "org-aquamarine",
+      "name": "Team C",
+      "short_description": "Short desc C",
+      "description": "Description for Team C"
+    }
+  ],
+  "roles": [
+    {
+      "ref": "role-admin",
+      "name": "admin",
+      "description": "Administrator role"
+    },
+    {
+      "ref": "role-user",
+      "name": "user",
+      "description": "Regular user role"
+    },
+    {
+      "ref": "role-manager",
+      "name": "manager",
+      "description": "Manager role"
+    },
+    {
+      "ref": "role-editor",
+      "name": "editor",
+      "description": "Content editor role"
+    },
+    {
+      "ref": "role-viewer",
+      "name": "viewer",
+      "description": "Read-only viewer role"
+    },
+    {
+      "ref": "role-auditor",
+      "name": "auditor",
+      "description": "Audit and compliance role"
+    }
+  ],
+  "permissions": [
+    { "ref": "permission-read", "name": "Read" },
+    {
+      "ref": "permission-write",
+      "name": "Write"
+    },
+    {
+      "ref": "permission-execute",
+      "name": "Execute"
+    }
+  ],
+  "resources": [
+    {
+      "ref": "resource-api-endpoints",
+      "name": "API Endpoints",
+      "description": "API endpoint management resource",
+      "label": "API",
+      "type": "path",
+      "uri": "/api"
+    },
+    {
+      "ref": "resource-dashboard",
+      "name": "Dashboard",
+      "description": "Dashboard management resource",
+      "label": "Dashboard",
+      "type": "path",
+      "uri": "/dashboard"
+    },
+    {
+      "ref": "resource-reports",
+      "name": "Reports",
+      "description": "Report generation and management resource",
+      "label": "Reports",
+      "type": "path",
+      "uri": "/reports"
+    },
+    {
+      "ref": "resource-settings",
+      "name": "Settings",
+      "description": "Application settings management resource",
+      "label": "Settings",
+      "type": "path",
+      "uri": "/settings"
+    }
+  ],
+  "user_roles": [
+    {
+      "user_ref": "user-johndoe",
+      "role_ref": "role-admin"
+    },
+    {
+      "user_ref": "user-johndoe",
+      "role_ref": "role-user"
+    }
+  ],
+  "role_permissions": [
+    { "role_ref": "role-admin", "permission_ref": "permission-read" },
+    {
+      "role_ref": "role-admin",
+      "permission_ref": "permission-write"
+    },
+    {
+      "role_ref": "role-user",
+      "permission_ref": "permission-execute"
+    }
+  ],
+  "user_permissions": [
+    {
+      "user_ref": "user-johndoe",
+      "permission_ref": "permission-execute"
+    }
+  ],
+  "resource_permissions": [
+    {
+      "resource_ref": "resource-api-endpoints",
+      "permission_ref": "permission-read"
+    },
+    {
+      "resource_ref": "resource-api-endpoints",
+      "permission_ref": "permission-write"
+    },
+    {
+      "resource_ref": "resource-api-endpoints",
+      "permission_ref": "permission-execute"
+    },
+    {
+      "resource_ref": "resource-dashboard",
+      "permission_ref": "permission-read"
+    },
+    {
+      "resource_ref": "resource-dashboard",
+      "permission_ref": "permission-write"
+    },
+    {
+      "resource_ref": "resource-dashboard",
+      "permission_ref": "permission-execute"
+    },
+    {
+      "resource_ref": "resource-reports",
+      "permission_ref": "permission-read"
+    },
+    {
+      "resource_ref": "resource-reports",
+      "permission_ref": "permission-write"
+    },
+    {
+      "resource_ref": "resource-reports",
+      "permission_ref": "permission-execute"
+    },
+    {
+      "resource_ref": "resource-settings",
+      "permission_ref": "permission-read"
+    },
+    {
+      "resource_ref": "resource-settings",
+      "permission_ref": "permission-write"
+    },
+    {
+      "resource_ref": "resource-settings",
+      "permission_ref": "permission-execute"
+    }
+  ]
+}

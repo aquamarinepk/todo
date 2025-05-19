@@ -25,7 +25,7 @@ type RoleDA struct {
 // toModel methods do not preload relationships
 func toRole(da RoleDA) Role {
 	return Role{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(roleType),
 			am.WithSlug(da.Slug.String),
@@ -50,10 +50,10 @@ func toRoleDA(role Role) RoleDA {
 		Name:        sql.NullString{String: role.Name, Valid: role.Name != ""},
 		Description: sql.NullString{String: role.Description, Valid: role.Description != ""},
 		Permissions: toPermissionIDs(role.Permissions),
-		CreatedBy:   sql.NullString{String: role.Model.CreatedBy().String(), Valid: role.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:   sql.NullString{String: role.Model.UpdatedBy().String(), Valid: role.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:   sql.NullTime{Time: role.Model.CreatedAt(), Valid: !role.Model.CreatedAt().IsZero()},
-		UpdatedAt:   sql.NullTime{Time: role.Model.UpdatedAt(), Valid: !role.Model.UpdatedAt().IsZero()},
+		CreatedBy:   sql.NullString{String: role.CreatedBy().String(), Valid: role.CreatedBy() != uuid.Nil},
+		UpdatedBy:   sql.NullString{String: role.UpdatedBy().String(), Valid: role.UpdatedBy() != uuid.Nil},
+		CreatedAt:   sql.NullTime{Time: role.CreatedAt(), Valid: !role.CreatedAt().IsZero()},
+		UpdatedAt:   sql.NullTime{Time: role.UpdatedAt(), Valid: !role.UpdatedAt().IsZero()},
 	}
 }
 

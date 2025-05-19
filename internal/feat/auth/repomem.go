@@ -15,7 +15,7 @@ import (
 // This implementation is intended to simplify initial prototyping.
 // In the future, a relational database implementation and possibly a NoSQL implementation will be provided.
 type BaseRepo struct {
-	*am.Repo
+	*am.BaseRepo
 	mu                  sync.Mutex
 	users               map[uuid.UUID]UserDA
 	roles               map[uuid.UUID]RoleDA
@@ -31,7 +31,7 @@ type BaseRepo struct {
 
 func NewRepo(qm *am.QueryManager, opts ...am.Option) *BaseRepo {
 	repo := &BaseRepo{
-		Repo:                am.NewRepo("todo-repo", qm, opts...),
+		BaseRepo:            am.NewRepo("todo-repo", qm, opts...),
 		users:               make(map[uuid.UUID]UserDA),
 		roles:               make(map[uuid.UUID]RoleDA),
 		permissions:         make(map[uuid.UUID]PermissionDA),

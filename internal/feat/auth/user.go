@@ -1,6 +1,9 @@
 package auth
 
 import (
+	"context"
+	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/aquamarinepk/todo/internal/am"
@@ -12,7 +15,7 @@ const (
 )
 
 type User struct {
-	am.Model
+	*am.BaseModel
 
 	Username    string     `json:"username"`
 	Email       string     `json:"email"`
@@ -34,7 +37,7 @@ type User struct {
 // NewUser creates a user with default values.
 func NewUser(username, name string) User {
 	return User{
-		Model:         am.NewModel(am.WithType(userType)),
+		BaseModel:         am.NewModel(am.WithType(userType)),
 		Username:      username,
 		Name:          name,
 		IsActive:      true,
@@ -87,4 +90,43 @@ func (l *User) RemoveRole(roleID uuid.UUID) {
 			break
 		}
 	}
+}
+
+// PreInsert implements am.Seedable. It hashes the password and encrypts the email before inserting the user during seeding.
+// The context is used to retrieve the encryption key (as []byte) with the key "encryptionKey".
+// If the key is not found, an error is returned.
+func (u *User) PreInsert(ctx context.Context) error {
+	// Only hash/encrypt if not already set (to avoid double-processing)
+	if u.Password != "" && len(u.PasswordEnc) == 0 {
+		enc, err := HashPassword(u.Password)
+		if err != nil {
+			return err
+		}
+		u.PasswordEnc = enc
+	}
+	if u.Email != "" && len(u.EmailEnc) == 0 {
+		key, ok := ctx.Value("encryptionKey").([]byte)
+		if !ok || len(key) == 0 {
+			return fmt.Errorf("encryption key not found in context")
+		}
+		emailEnc, err := EncryptEmail(u.Email, key)
+		if err != nil {
+			return err
+		}
+		u.EmailEnc = emailEnc
+	}
+	return nil
+}
+
+// UnmarshalJSON ensures Model is always initialized after unmarshal.
+func (u *User) UnmarshalJSON(data []byte) error {
+	type Alias User
+	temp := &Alias{
+		BaseModel: am.NewModel(am.WithType(userType)),
+	}
+	if err := json.Unmarshal(data, temp); err != nil {
+		return err
+	}
+	*u = User(*temp)
+	return nil
 }
