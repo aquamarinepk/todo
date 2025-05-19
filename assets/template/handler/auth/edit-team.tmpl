@@ -1,0 +1,18 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+Edit {{ .Data.Name }}
+{{ end }}
+
+{{ define "content" }}
+<div class="space-y-8">
+<h1 class="text-2xl font-bold mb-4">Edit Team</h1>
+{{ template "team-form" . }}
+</div>
+{{ end }}
+
+{{ define "submenu" }}
+{{ template "menu" . }}
+{{ end }}

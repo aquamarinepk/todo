@@ -841,3 +841,61 @@ func (r *AuthRepo) GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) 
 	}
 	return auth.ToUsers(usersDA), nil
 }
+
+func (r *AuthRepo) GetAllTeams(ctx context.Context, orgID uuid.UUID) ([]auth.Team, error) {
+	const query = `SELECT id, org_id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at FROM teams WHERE org_id = ?`
+	var teamsDA []auth.TeamDA
+	err := r.db.SelectContext(ctx, &teamsDA, query, orgID.String())
+	if err != nil {
+		return nil, err
+	}
+	teams := make([]auth.Team, len(teamsDA))
+	for i, da := range teamsDA {
+		teams[i] = auth.ToTeam(da)
+	}
+	return teams, nil
+}
+
+func (r *AuthRepo) GetTeam(ctx context.Context, id uuid.UUID) (auth.Team, error) {
+	const query = `SELECT id, org_id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at FROM teams WHERE id = ?`
+	var da auth.TeamDA
+	err := r.db.GetContext(ctx, &da, query, id.String())
+	if err != nil {
+		return auth.Team{}, err
+	}
+	return auth.ToTeam(da), nil
+}
+
+func (r *AuthRepo) CreateTeam(ctx context.Context, team auth.Team) error {
+	da := auth.TeamDA{
+		ID:               sql.NullString{String: team.ID().String(), Valid: team.ID() != uuid.Nil},
+		OrgID:            sql.NullString{String: team.OrgID.String(), Valid: team.OrgID != uuid.Nil},
+		Slug:             team.Slug(),
+		Name:             team.Name,
+		ShortDescription: team.ShortDescription,
+		Description:      team.Description,
+		CreatedBy:        sql.NullString{String: team.CreatedBy().String(), Valid: team.CreatedBy() != uuid.Nil},
+		UpdatedBy:        sql.NullString{String: team.UpdatedBy().String(), Valid: team.UpdatedBy() != uuid.Nil},
+		CreatedAt:        team.CreatedAt(),
+		UpdatedAt:        team.UpdatedAt(),
+	}
+	const query = `INSERT INTO teams (id, org_id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	_, err := r.db.ExecContext(ctx, query,
+		da.ID, da.OrgID, da.Slug, da.Name, da.ShortDescription, da.Description, da.CreatedBy, da.UpdatedBy, da.CreatedAt, da.UpdatedAt,
+	)
+	return err
+}
+
+func (r *AuthRepo) UpdateTeam(ctx context.Context, team auth.Team) error {
+	const query = `UPDATE teams SET slug = ?, name = ?, short_description = ?, description = ?, updated_by = ?, updated_at = ? WHERE id = ?`
+	_, err := r.db.ExecContext(ctx, query,
+		team.Slug(), team.Name, team.ShortDescription, team.Description, team.UpdatedBy().String(), team.UpdatedAt(), team.ID().String(),
+	)
+	return err
+}
+
+func (r *AuthRepo) DeleteTeam(ctx context.Context, id uuid.UUID) error {
+	const query = `DELETE FROM teams WHERE id = ?`
+	_, err := r.db.ExecContext(ctx, query, id.String())
+	return err
+}

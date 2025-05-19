@@ -64,6 +64,13 @@ type Service interface {
 	GetDefaultOrg(ctx context.Context) (Org, error)
 	GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
 	GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
+
+	// Team methods
+	GetAllTeams(ctx context.Context, orgID uuid.UUID) ([]Team, error)
+	GetTeam(ctx context.Context, id uuid.UUID) (Team, error)
+	CreateTeam(ctx context.Context, team Team) error
+	UpdateTeam(ctx context.Context, team Team) error
+	DeleteTeam(ctx context.Context, id uuid.UUID) error
 }
 
 var (
@@ -293,4 +300,24 @@ func (svc *BaseService) GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]Us
 
 func (svc *BaseService) GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error) {
 	return svc.repo.GetOrgUnassignedOwners(ctx, orgID)
+}
+
+func (svc *BaseService) GetAllTeams(ctx context.Context, orgID uuid.UUID) ([]Team, error) {
+	return svc.repo.GetAllTeams(ctx, orgID)
+}
+
+func (svc *BaseService) GetTeam(ctx context.Context, id uuid.UUID) (Team, error) {
+	return svc.repo.GetTeam(ctx, id)
+}
+
+func (svc *BaseService) CreateTeam(ctx context.Context, team Team) error {
+	return svc.repo.CreateTeam(ctx, team)
+}
+
+func (svc *BaseService) UpdateTeam(ctx context.Context, team Team) error {
+	return svc.repo.UpdateTeam(ctx, team)
+}
+
+func (svc *BaseService) DeleteTeam(ctx context.Context, id uuid.UUID) error {
+	return svc.repo.DeleteTeam(ctx, id)
 }

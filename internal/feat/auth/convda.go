@@ -347,6 +347,25 @@ func ToOrgDA(org Org) OrgDA {
 	}
 }
 
+func ToTeam(da TeamDA) Team {
+	model := am.NewModel(
+		am.WithID(am.ParseUUID(da.ID)),
+		am.WithSlug(da.Slug),
+		am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
+		am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
+		am.WithCreatedAt(da.CreatedAt),
+		am.WithUpdatedAt(da.UpdatedAt),
+		am.WithType(teamEntityType),
+	)
+	return Team{
+		Model:            model,
+		OrgID:            am.ParseUUID(da.OrgID),
+		Name:             da.Name,
+		ShortDescription: da.ShortDescription,
+		Description:      da.Description,
+	}
+}
+
 func toRoleIDs(roles []Role) []uuid.UUID {
 	var ids []uuid.UUID
 	for _, r := range roles {
