@@ -1,3 +1,23 @@
+-- Superadmin user
+INSERT INTO users (id, username, email_enc, name, password_enc, slug, created_by, updated_by, created_at, updated_at, last_login_at, last_login_ip, is_active)
+VALUES 
+    ('11111111-1111-1111-1111-111111111111', 'superadmin', X'73616d706c655f656d61696c', 'Super Admin', X'70617373776f7264313233', 'superadmin', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '127.0.0.1', 1);
+
+-- Admin user
+INSERT INTO users (id, username, email_enc, name, password_enc, slug, created_by, updated_by, created_at, updated_at, last_login_at, last_login_ip, is_active)
+VALUES 
+    ('22222222-2222-2222-2222-222222222222', 'admin', X'61646d696e5f656d61696c', 'Admin', X'70617373776f7264313233', 'admin', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '127.0.0.1', 1);
+
+-- Aquamarine org
+INSERT INTO orgs (id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at)
+VALUES 
+    ('33333333-3333-3333-3333-333333333333', 'aquamarine', 'Aquamarine', 'Aquamarine Org', 'Main organization for Aquamarine', '11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
+-- Ownership: superadmin is owner of Aquamarine
+INSERT INTO org_owners (id, org_id, user_id, created_at, updated_at)
+VALUES 
+    ('44444444-4444-4444-4444-444444444444', '33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+
 INSERT INTO users (id, username, email_enc, name, password_enc, slug, created_by, updated_by, created_at, updated_at, last_login_at, last_login_ip, is_active)
 VALUES 
     ('00000000-0000-0000-0000-000000000001', 'johndoe', X'2d0ef762b0faee984f904565f544defc1899b3a4dc2b42f81d3a56523c8b67ed9bb9caa4d7935f2ecdcb66675f7a5dcc', 'John Doe', X'70617373776f7264313233', 'john-doe', '00000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, '127.0.0.1', 1),

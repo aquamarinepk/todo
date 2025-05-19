@@ -795,3 +795,49 @@ func (repo *AuthRepo) GetRoleUnassignedPermissions(ctx context.Context, roleID u
 
 	return auth.ToPermissions(permissionsDA), nil
 }
+
+func (r *AuthRepo) GetDefaultOrg(ctx context.Context) (auth.Org, error) {
+	const query = `SELECT id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at FROM orgs ORDER BY created_at ASC LIMIT 1`
+	row := r.db.QueryRowContext(ctx, query)
+	var orgDA auth.OrgDA
+	err := row.Scan(
+		&orgDA.ID,
+		&orgDA.Slug,
+		&orgDA.Name,
+		&orgDA.ShortDescription,
+		&orgDA.Description,
+		&orgDA.CreatedBy,
+		&orgDA.UpdatedBy,
+		&orgDA.CreatedAt,
+		&orgDA.UpdatedAt,
+	)
+	if err != nil {
+		return auth.Org{}, err
+	}
+	return auth.ToOrg(orgDA), nil
+}
+
+func (r *AuthRepo) GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]auth.User, error) {
+	const query = `SELECT u.id, u.slug, u.username, u.email_enc, u.name, u.password_enc, u.created_by, u.updated_by, u.created_at, u.updated_at, u.last_login_at, u.last_login_ip, u.is_active
+	FROM users u
+	JOIN org_owners oo ON u.id = oo.user_id
+	WHERE oo.org_id = ?`
+	var usersDA []auth.UserDA
+	err := r.db.SelectContext(ctx, &usersDA, query, orgID.String())
+	if err != nil {
+		return nil, err
+	}
+	return auth.ToUsers(usersDA), nil
+}
+
+func (r *AuthRepo) GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]auth.User, error) {
+	const query = `SELECT u.id, u.slug, u.username, u.email_enc, u.name, u.password_enc, u.created_by, u.updated_by, u.created_at, u.updated_at, u.last_login_at, u.last_login_ip, u.is_active
+	FROM users u
+	WHERE u.id NOT IN (SELECT user_id FROM org_owners WHERE org_id = ?)`
+	var usersDA []auth.UserDA
+	err := r.db.SelectContext(ctx, &usersDA, query, orgID.String())
+	if err != nil {
+		return nil, err
+	}
+	return auth.ToUsers(usersDA), nil
+}
