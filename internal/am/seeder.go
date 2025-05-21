@@ -77,6 +77,8 @@ func (s *Seeder) createSeedsTable() error {
 		id TEXT PRIMARY KEY,
 		datetime TEXT NOT NULL,
 		name TEXT NOT NULL,
+		type TEXT NOT NULL,
+		context TEXT,
 		created_at TIMESTAMP NOT NULL
 	)`
 	_, err := s.db.Exec(query)
@@ -219,9 +221,9 @@ func (s *Seeder) recordSeed(seed Seed) error {
 	appliedAt := time.Now().Format(time.RFC3339)
 
 	query := `
-	INSERT INTO seeds (id, datetime, name, created_at)
-	VALUES (?, ?, ?, ?)`
-	_, err := s.db.Exec(query, id, seed.Datetime, seed.Name, appliedAt)
+	INSERT INTO seeds (id, datetime, name, type, context, created_at)
+	VALUES (?, ?, ?, ?, ?, ?)`
+	_, err := s.db.Exec(query, id, seed.Datetime, seed.Name, "sql", "", appliedAt)
 	if err != nil {
 		return fmt.Errorf("cannot record seed: %w", err)
 	}
