@@ -101,7 +101,8 @@ func main() {
 		return
 	}
 
-	queryManager.Debug()
+	// templateManager.Debug()
+	// queryManager.Debug()
 
 	err = app.Start(ctx)
 	if err != nil {

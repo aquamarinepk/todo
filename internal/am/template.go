@@ -72,10 +72,10 @@ func (tm *TemplateManager) loadTemplatesFromDir(handler, path string) {
 }
 
 func (tm *TemplateManager) loadTemplate(key, path, handler string) {
-	tm.Log().Info(header("=", 120))
-	defer tm.Log().Info(header("=", 120))
+	tm.Log().Debug(header("=", 120))
+	defer tm.Log().Debug(header("=", 120))
 
-	tm.Log().Infof("Loading template: key=%s, path=%s, handler=%s", key, path, handler)
+	tm.Log().Debugf("Loading template: key=%s, path=%s, handler=%s", key, path, handler)
 
 	partials, err := tm.assetsFS.ReadDir(filepath.Join(handlerPath, handler, partialDir))
 	if err != nil {
@@ -87,14 +87,14 @@ func (tm *TemplateManager) loadTemplate(key, path, handler string) {
 	for _, partial := range partials {
 		partialPath := filepath.Join(handlerPath, handler, partialDir, partial.Name())
 		partialPaths = append(partialPaths, partialPath)
-		tm.Log().Infof("Found partial: %s", partialPath)
+		tm.Log().Debugf("Found partial: %s", partialPath)
 	}
 
 	layoutPath := tm.findLayoutPath(handler, filepath.Base(path))
-	tm.Log().Infof("Using layout: %s", layoutPath)
+	tm.Log().Debugf("Using layout: %s", layoutPath)
 
 	allPaths := append([]string{layoutPath, path}, partialPaths...)
-	tm.Log().Infof("All template paths: %v", allPaths)
+	tm.Log().Debugf("All template paths: %v", allPaths)
 
 	tmpl := template.New(mainTemplate)
 	//RegisterTemplateFuncs(tmpl)
@@ -105,35 +105,35 @@ func (tm *TemplateManager) loadTemplate(key, path, handler string) {
 		return
 	}
 
-	tm.Log().Infof("Successfully loaded template: %s", key)
+	tm.Log().Debugf("Successfully loaded template: %s", key)
 	if _, loaded := tm.templates.LoadOrStore(key, tmpl); loaded {
-		tm.Log().Infof("Template key %s already exists, skipping", key)
+		tm.Log().Debugf("Template key %s already exists, skipping", key)
 	}
 }
 
 func (tm *TemplateManager) findLayoutPath(handler, action string) string {
 	actionLayout := filepath.Join(layoutPath, handler, action)
-	tm.Log().Infof("Evaluating specific action layout path: %s", actionLayout)
+	tm.Log().Debugf("Evaluating specific action layout path: %s", actionLayout)
 	if _, err := tm.assetsFS.Open(actionLayout); err == nil {
-		tm.Log().Infof("Found specific action layout: %s", actionLayout)
+		tm.Log().Debugf("Found specific action layout: %s", actionLayout)
 		return actionLayout
 	}
 
 	handlerLayout := filepath.Join(layoutPath, handler, defaultLayout)
-	tm.Log().Infof("Evaluating handler layout path: %s", handlerLayout)
+	tm.Log().Debugf("Evaluating handler layout path: %s", handlerLayout)
 	if _, err := tm.assetsFS.Open(handlerLayout); err == nil {
-		tm.Log().Infof("Found handler layout: %s", handlerLayout)
+		tm.Log().Debugf("Found handler layout: %s", handlerLayout)
 		return handlerLayout
 	}
 
 	globalLayout := filepath.Join(layoutPath, defaultLayout)
-	tm.Log().Infof("Evaluating global layout path: %s", globalLayout)
+	tm.Log().Debugf("Evaluating global layout path: %s", globalLayout)
 	if _, err := tm.assetsFS.Open(globalLayout); err == nil {
-		tm.Log().Infof("Found global layout: %s", globalLayout)
+		tm.Log().Debugf("Found global layout: %s", globalLayout)
 		return globalLayout
 	}
 
-	tm.Log().Info("No specific, handler, or global layout found")
+	tm.Log().Debug("No specific, handler, or global layout found")
 	return ""
 }
 
@@ -163,9 +163,18 @@ func header(char string, count int) string {
 func (tm *TemplateManager) Debug() {
 	tm.templates.Range(func(key, value interface{}) bool {
 		tmpl := value.(*template.Template)
-		tm.Log().Info(debugTemplate(key.(string), tmpl))
+		tm.Log().Debugf("%s\n%s\n---", key.(string), debugTemplateSimple(tmpl))
 		return true
 	})
+}
+
+func debugTemplateSimple(tmpl *template.Template) string {
+	var sb strings.Builder
+	sb.WriteString(tmpl.Name() + "\n")
+	for _, t := range tmpl.Templates() {
+		sb.WriteString("  " + t.Name() + "\n")
+	}
+	return sb.String()
 }
 
 func (tm *TemplateManager) Setup(ctx context.Context) error {

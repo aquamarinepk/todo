@@ -128,11 +128,11 @@ func (s *Seeder) withEncryptionKey(ctx context.Context) context.Context {
 func (s *Seeder) seedUsers(ctx context.Context, data *SeedData, userRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedUsers: %w", err)
+		return fmt.Errorf("error at beginning tx for seedUsers: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedUsers ===")
-	defer fmt.Println("=== [SEED] END seedUsers ===")
+	s.Log().Debug("Seeding users: start")
+	defer s.Log().Debug("Seeding users: end")
 	for i := range data.Users {
 		u := &data.Users[i]
 		u.GenCreationValues()
@@ -143,7 +143,7 @@ func (s *Seeder) seedUsers(ctx context.Context, data *SeedData, userRefMap map[s
 		}
 		err = s.repo.CreateUser(ctx, *u)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error inserting user: %w", err)
+			return fmt.Errorf("error inserting user: %w", err)
 		}
 		userRefMap[u.Ref()] = u.ID()
 	}
@@ -153,17 +153,17 @@ func (s *Seeder) seedUsers(ctx context.Context, data *SeedData, userRefMap map[s
 func (s *Seeder) seedRoles(ctx context.Context, data *SeedData, roleRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedRoles: %w", err)
+		return fmt.Errorf("error at beginning tx for seedRoles: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedRoles ===")
-	defer fmt.Println("=== [SEED] END seedRoles ===")
+	s.Log().Debug("Seeding roles: start")
+	defer s.Log().Debug("Seeding roles: end")
 	for i := range data.Roles {
 		r := &data.Roles[i]
 		r.GenCreationValues()
 		err := s.repo.CreateRole(ctx, *r)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error inserting role: %w", err)
+			return fmt.Errorf("error inserting role: %w", err)
 		}
 		roleRefMap[r.Ref()] = r.ID()
 	}
@@ -173,17 +173,17 @@ func (s *Seeder) seedRoles(ctx context.Context, data *SeedData, roleRefMap map[s
 func (s *Seeder) seedPermissions(ctx context.Context, data *SeedData, permRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedPermissions: %w", err)
+		return fmt.Errorf("error at beginning tx for seedPermissions: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedPermissions ===")
-	defer fmt.Println("=== [SEED] END seedPermissions ===")
+	s.Log().Debug("Seeding permissions: start")
+	defer s.Log().Debug("Seeding permissions: end")
 	for i := range data.Permissions {
 		p := &data.Permissions[i]
 		p.GenCreationValues()
 		err := s.repo.CreatePermission(ctx, *p)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error inserting permission: %w", err)
+			return fmt.Errorf("error inserting permission: %w", err)
 		}
 		permRefMap[p.Ref()] = p.ID()
 	}
@@ -193,51 +193,51 @@ func (s *Seeder) seedPermissions(ctx context.Context, data *SeedData, permRefMap
 func (s *Seeder) seedOrgs(ctx context.Context, data *SeedData, orgRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedOrgs: %w", err)
+		return fmt.Errorf("error at beginning tx for seedOrgs: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedOrgs ===")
-	defer fmt.Println("=== [SEED] END seedOrgs ===")
+	s.Log().Debug("Seeding orgs: start")
+	defer s.Log().Debug("Seeding orgs: end")
 	for i := range data.Orgs {
 		o := &data.Orgs[i]
 		o.GenCreationValues()
 		err := s.repo.CreateOrg(ctx, *o)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error inserting org: %w", err)
+			return fmt.Errorf("error inserting org: %w", err)
 		}
 		orgRefMap[o.Ref()] = o.ID()
 	}
 	b, _ := json.MarshalIndent(orgRefMap, "", "  ")
-	fmt.Println("=== [SEED] SeedData state before commit ===")
-	fmt.Println(string(b))
+	s.Log().Debug("=== [SEED] SeedData state before commit ===")
+	s.Log().Debug(string(b))
 	return tx.Commit()
 }
 
 func (s *Seeder) seedTeams(ctx context.Context, data *SeedData, teamRefMap map[string]uuid.UUID, orgRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedTeams: %w", err)
+		return fmt.Errorf("error at beginning tx for seedTeams: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedTeams ===")
-	defer fmt.Println("=== [SEED] END seedTeams ===")
+	s.Log().Debug("Seeding teams: start")
+	defer s.Log().Debug("Seeding teams: end")
 	for i := range data.Teams {
 		t := &data.Teams[i]
 		orgRef := t.OrgRef
 		orgID, ok := orgRefMap[orgRef]
 		if !ok {
-			return fmt.Errorf("###DEBUG###: error finding org ref for team: %s", orgRef)
+			return fmt.Errorf("error finding org ref for team: %s", orgRef)
 		}
 		t.OrgID = orgID
 		t.GenCreationValues()
 		err := s.repo.CreateTeam(ctx, *t)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error inserting team: %w", err)
+			return fmt.Errorf("error inserting team: %w", err)
 		}
 		teamRefMap[t.Ref()] = t.ID()
 		b, _ := json.MarshalIndent(teamRefMap, "", "  ")
-		fmt.Println("=== [SEED] SeedData state before commit ===")
-		fmt.Println(string(b))
+		s.Log().Debug("=== [SEED] SeedData state before commit ===")
+		s.Log().Debug(string(b))
 	}
 	return tx.Commit()
 }
@@ -245,17 +245,17 @@ func (s *Seeder) seedTeams(ctx context.Context, data *SeedData, teamRefMap map[s
 func (s *Seeder) seedResources(ctx context.Context, data *SeedData, resourceRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedResources: %w", err)
+		return fmt.Errorf("error at beginning tx for seedResources: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedResources ===")
-	defer fmt.Println("=== [SEED] END seedResources ===")
+	s.Log().Debug("Seeding resources: start")
+	defer s.Log().Debug("Seeding resources: end")
 	for i := range data.Resources {
 		r := &data.Resources[i]
 		r.GenCreationValues()
 		err := s.repo.CreateResource(ctx, *r)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error inserting resource: %w", err)
+			return fmt.Errorf("error inserting resource: %w", err)
 		}
 		resourceRefMap[r.Ref()] = r.ID()
 	}
@@ -265,20 +265,20 @@ func (s *Seeder) seedResources(ctx context.Context, data *SeedData, resourceRefM
 func (s *Seeder) seedUserRoles(ctx context.Context, data *SeedData, userRefMap, roleRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedUserRoles: %w", err)
+		return fmt.Errorf("error at beginning tx for seedUserRoles: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedUserRoles ===")
-	defer fmt.Println("=== [SEED] END seedUserRoles ===")
+	s.Log().Debug("Seeding user roles: start")
+	defer s.Log().Debug("Seeding user roles: end")
 	for _, ur := range data.UserRoles {
 		userID, ok1 := userRefMap[ur["user_ref"]]
 		roleID, ok2 := roleRefMap[ur["role_ref"]]
 		if !ok1 || !ok2 {
-			return fmt.Errorf("###DEBUG###: error finding user or role ref for user_role: %+v", ur)
+			return fmt.Errorf("error finding user or role ref for user_role: %+v", ur)
 		}
 		err := s.repo.AddRole(ctx, userID, roleID)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error adding role to user: %w", err)
+			return fmt.Errorf("error adding role to user: %w", err)
 		}
 	}
 	return tx.Commit()
@@ -287,24 +287,24 @@ func (s *Seeder) seedUserRoles(ctx context.Context, data *SeedData, userRefMap, 
 func (s *Seeder) seedRolePermissions(ctx context.Context, data *SeedData, roleRefMap, permRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedRolePermissions: %w", err)
+		return fmt.Errorf("error at beginning tx for seedRolePermissions: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedRolePermissions ===")
-	defer fmt.Println("=== [SEED] END seedRolePermissions ===")
+	s.Log().Debug("Seeding role permissions: start")
+	defer s.Log().Debug("Seeding role permissions: end")
 	for _, rp := range data.RolePermissions {
 		roleID, ok1 := roleRefMap[rp["role_ref"]]
 		permID, ok2 := permRefMap[rp["permission_ref"]]
 		if !ok1 || !ok2 {
-			return fmt.Errorf("###DEBUG###: error finding role or permission ref for role_permission: %+v", rp)
+			return fmt.Errorf("error finding role or permission ref for role_permission: %+v", rp)
 		}
 		perm, err := s.repo.GetPermission(ctx, permID)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error getting permission: %w", err)
+			return fmt.Errorf("error getting permission: %w", err)
 		}
 		err = s.repo.AddPermissionToRole(ctx, roleID, perm)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error adding permission to role: %w", err)
+			return fmt.Errorf("error adding permission to role: %w", err)
 		}
 	}
 	return tx.Commit()
@@ -313,24 +313,24 @@ func (s *Seeder) seedRolePermissions(ctx context.Context, data *SeedData, roleRe
 func (s *Seeder) seedUserPermissions(ctx context.Context, data *SeedData, userRefMap, permRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedUserPermissions: %w", err)
+		return fmt.Errorf("error at beginning tx for seedUserPermissions: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedUserPermissions ===")
-	defer fmt.Println("=== [SEED] END seedUserPermissions ===")
+	s.Log().Debug("Seeding user permissions: start")
+	defer s.Log().Debug("Seeding user permissions: end")
 	for _, up := range data.UserPermissions {
 		userID, ok1 := userRefMap[up["user_ref"]]
 		permID, ok2 := permRefMap[up["permission_ref"]]
 		if !ok1 || !ok2 {
-			return fmt.Errorf("###DEBUG###: error finding user or permission ref for user_permission: %+v", up)
+			return fmt.Errorf("error finding user or permission ref for user_permission: %+v", up)
 		}
 		perm, err := s.repo.GetPermission(ctx, permID)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error getting permission: %w", err)
+			return fmt.Errorf("error getting permission: %w", err)
 		}
 		err = s.repo.AddPermissionToUser(ctx, userID, perm)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error adding permission to user: %w", err)
+			return fmt.Errorf("error adding permission to user: %w", err)
 		}
 	}
 	return tx.Commit()
@@ -339,24 +339,24 @@ func (s *Seeder) seedUserPermissions(ctx context.Context, data *SeedData, userRe
 func (s *Seeder) seedResourcePermissions(ctx context.Context, data *SeedData, resourceRefMap, permRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedResourcePermissions: %w", err)
+		return fmt.Errorf("error at beginning tx for seedResourcePermissions: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedResourcePermissions ===")
-	defer fmt.Println("=== [SEED] END seedResourcePermissions ===")
+	s.Log().Debug("Seeding resource permissions: start")
+	defer s.Log().Debug("Seeding resource permissions: end")
 	for _, rp := range data.ResourcePermissions {
 		resourceID, ok1 := resourceRefMap[rp["resource_ref"]]
 		permID, ok2 := permRefMap[rp["permission_ref"]]
 		if !ok1 || !ok2 {
-			return fmt.Errorf("###DEBUG###: error finding resource or permission ref for resource_permission: %+v", rp)
+			return fmt.Errorf("error finding resource or permission ref for resource_permission: %+v", rp)
 		}
 		perm, err := s.repo.GetPermission(ctx, permID)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error getting permission: %w", err)
+			return fmt.Errorf("error getting permission: %w", err)
 		}
 		err = s.repo.AddPermissionToResource(ctx, resourceID, perm)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error adding permission to resource: %w", err)
+			return fmt.Errorf("error adding permission to resource: %w", err)
 		}
 	}
 	return tx.Commit()
@@ -365,20 +365,20 @@ func (s *Seeder) seedResourcePermissions(ctx context.Context, data *SeedData, re
 func (s *Seeder) seedOrgOwners(ctx context.Context, data *SeedData, orgRefMap, userRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin tx for seedOrgOwners: %w", err)
+		return fmt.Errorf("error at beginning tx for seedOrgOwners: %w", err)
 	}
 	defer tx.Rollback()
-	fmt.Println("=== [SEED] BEGIN seedOrgOwners ===")
-	defer fmt.Println("=== [SEED] END seedOrgOwners ===")
+	s.Log().Debug("Seeding org owners: start")
+	defer s.Log().Debug("Seeding org owners: end")
 	for _, oo := range data.OrgOwners {
 		orgID, ok1 := orgRefMap[oo["org_ref"]]
 		userID, ok2 := userRefMap[oo["user_ref"]]
 		if !ok1 || !ok2 {
-			return fmt.Errorf("###DEBUG###: error finding org or user ref for org_owner")
+			return fmt.Errorf("error finding org or user ref for org_owner")
 		}
 		err := s.repo.AddOrgOwner(ctx, orgID, userID)
 		if err != nil {
-			return fmt.Errorf("###DEBUG###: error adding org owner: %w", err)
+			return fmt.Errorf("error adding org owner: %w", err)
 		}
 	}
 	return tx.Commit()
