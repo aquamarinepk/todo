@@ -37,7 +37,7 @@ type User struct {
 // NewUser creates a user with default values.
 func NewUser(username, name string) User {
 	return User{
-		BaseModel:         am.NewModel(am.WithType(userType)),
+		BaseModel:     am.NewModel(am.WithType(userType)),
 		Username:      username,
 		Name:          name,
 		IsActive:      true,
@@ -92,11 +92,15 @@ func (l *User) RemoveRole(roleID uuid.UUID) {
 	}
 }
 
-// PreInsert implements am.Seedable. It hashes the password and encrypts the email before inserting the user during seeding.
-// The context is used to retrieve the encryption key (as []byte) with the key "encryptionKey".
-// If the key is not found, an error is returned.
-func (u *User) PreInsert(ctx context.Context) error {
-	// Only hash/encrypt if not already set (to avoid double-processing)
+func (u *User) PrePersist(ctx context.Context) error {
+	err := u.EncFields(ctx)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (u *User) EncFields(ctx context.Context) error {
 	if u.Password != "" && len(u.PasswordEnc) == 0 {
 		enc, err := HashPassword(u.Password)
 		if err != nil {

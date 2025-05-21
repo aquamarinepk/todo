@@ -165,7 +165,6 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if validation.HasErrors() {
-		// Add validation errors as flash messages
 		for _, err := range validation.Errors {
 			h.AddFlash(w, r, am.NotificationType.Error, err)
 		}

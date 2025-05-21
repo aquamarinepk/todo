@@ -45,7 +45,7 @@ func main() {
 	migrator := am.NewMigrator(assetsFS, engine)
 
 	// Seeder
-	// seeder := am.NewSeeder(assetsFS, engine)
+	seeder := am.NewSeeder(assetsFS, engine)
 
 	// FileServer
 	fileServer := am.NewFileServer(assetsFS)
@@ -76,6 +76,7 @@ func main() {
 
 	// Add deps
 	app.Add(migrator)
+	app.Add(seeder)
 	app.Add(flashManager)
 	app.Add(fileServer)
 	app.Add(queryManager)

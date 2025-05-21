@@ -37,8 +37,8 @@ func NewAuthRepo(qm *am.QueryManager, opts ...am.Option) *AuthRepo {
 	}
 }
 
-// Start opens the database connection.
-func (repo *AuthRepo) Start(ctx context.Context) error {
+// Setup the database connection.
+func (repo *AuthRepo) Setup(ctx context.Context) error {
 	dsn, ok := repo.Cfg().StrVal(key.DBSQLiteDSN)
 	if !ok {
 		return errors.New("database DSN not found in configuration")

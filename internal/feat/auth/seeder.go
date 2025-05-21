@@ -36,6 +36,10 @@ func NewSeeder(assetsFS embed.FS, engine string, repo Repo) *Seeder {
 	}
 }
 
+func (s *Seeder) Setup(ctx context.Context) error {
+	return s.SeedAll(ctx)
+}
+
 // SeedAll loads and applies all auth seeds in a single transaction.
 func (s *Seeder) SeedAll(ctx context.Context) error {
 	byFeature, err := s.JSONSeeder.LoadJSONSeeds()
@@ -116,6 +120,11 @@ func (s *Seeder) seedData(ctx context.Context, data *SeedData) error {
 }
 
 // --- Helper functions for each entity type ---
+func (s *Seeder) withEncryptionKey(ctx context.Context) context.Context {
+	key := s.Cfg().ByteSliceVal("sec.encryption.key")
+	return context.WithValue(ctx, "encryptionKey", key)
+}
+
 func (s *Seeder) seedUsers(ctx context.Context, data *SeedData, userRefMap map[string]uuid.UUID) error {
 	ctx, tx, err := s.repo.BeginTx(ctx)
 	if err != nil {
@@ -127,7 +136,12 @@ func (s *Seeder) seedUsers(ctx context.Context, data *SeedData, userRefMap map[s
 	for i := range data.Users {
 		u := &data.Users[i]
 		u.GenCreationValues()
-		err := s.repo.CreateUser(ctx, *u)
+		userCtx := s.withEncryptionKey(ctx)
+		err := u.PrePersist(userCtx)
+		if err != nil {
+			return fmt.Errorf("error preparing user for insert: %w", err)
+		}
+		err = s.repo.CreateUser(ctx, *u)
 		if err != nil {
 			return fmt.Errorf("###DEBUG###: error inserting user: %w", err)
 		}
@@ -368,8 +382,4 @@ func (s *Seeder) seedOrgOwners(ctx context.Context, data *SeedData, orgRefMap, u
 		}
 	}
 	return tx.Commit()
-}
-
-func (s *Seeder) Start(ctx context.Context) error {
-	return s.SeedAll(ctx)
 }
