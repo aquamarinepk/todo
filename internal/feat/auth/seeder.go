@@ -37,6 +37,9 @@ func NewSeeder(assetsFS embed.FS, engine string, repo Repo) *Seeder {
 }
 
 func (s *Seeder) Setup(ctx context.Context) error {
+	if err := s.JSONSeeder.Setup(ctx); err != nil {
+		return err
+	}
 	return s.SeedAll(ctx)
 }
 
@@ -46,17 +49,19 @@ func (s *Seeder) SeedAll(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to load JSON seeds: %w", err)
 	}
-	seeds, ok := byFeature["auth"]
-	if !ok || len(seeds) == 0 {
-		return fmt.Errorf("no auth seeds found")
-	}
-	for _, seed := range seeds {
-		var data SeedData
-		if err := json.Unmarshal([]byte(seed.Content), &data); err != nil {
-			return fmt.Errorf("failed to unmarshal auth seed: %w", err)
-		}
-		if err := s.seedData(ctx, &data); err != nil {
-			return err
+	for feature, seeds := range byFeature {
+		for _, seed := range seeds {
+			var data SeedData
+			if err := json.Unmarshal([]byte(seed.Content), &data); err != nil {
+				return fmt.Errorf("failed to unmarshal %s seed: %w", feature, err)
+			}
+			if err := s.seedData(ctx, &data); err != nil {
+				return err
+			}
+			// Register the seed in the seeds table after successful application
+			if err := s.JSONSeeder.ApplyJSONSeed(seed.Datetime, seed.Name, feature, seed.Content); err != nil {
+				s.Log().Errorf("error recording JSON seed: %v", err)
+			}
 		}
 	}
 	return nil
