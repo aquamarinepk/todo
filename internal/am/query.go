@@ -88,7 +88,7 @@ func (qm *QueryManager) Get(feat, resource, queryName string) (string, error) {
 func (qm *QueryManager) Debug() {
 	qm.queries.Range(func(key, value interface{}) bool {
 		query := value.(string)
-		qm.Log().Infof("Query key: %s, Query: %s", key, query)
+		qm.Log().Debugf("%s\n%s\n---", key, query)
 		return true
 	})
 }
