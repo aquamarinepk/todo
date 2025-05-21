@@ -52,14 +52,18 @@ func (s *Seeder) SeedAll(ctx context.Context) error {
 	for feature, seeds := range byFeature {
 		for _, seed := range seeds {
 			var data SeedData
-			if err := json.Unmarshal([]byte(seed.Content), &data); err != nil {
+			err := json.Unmarshal([]byte(seed.Content), &data)
+			if err != nil {
 				return fmt.Errorf("failed to unmarshal %s seed: %w", feature, err)
 			}
-			if err := s.seedData(ctx, &data); err != nil {
+
+			err = s.seedData(ctx, &data)
+			if err != nil {
 				return err
 			}
-			// Register the seed in the seeds table after successful application
-			if err := s.JSONSeeder.ApplyJSONSeed(seed.Datetime, seed.Name, feature, seed.Content); err != nil {
+
+			err = s.JSONSeeder.ApplyJSONSeed(seed.Datetime, seed.Name, feature, seed.Content)
+			if err != nil {
 				s.Log().Errorf("error recording JSON seed: %v", err)
 			}
 		}
