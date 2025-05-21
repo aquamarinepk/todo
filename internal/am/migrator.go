@@ -48,15 +48,44 @@ func NewMigrator(assetsFS embed.FS, engine string, opts ...Option) *Migrator {
 }
 
 func (m *Migrator) Setup(ctx context.Context) error {
+	var err error
 	switch m.engine {
 	case EngSQLite:
-		return m.setupSQLite()
+		err = m.setupSQLite()
 	case EngPostgres:
 		// NOTE:: Will be implemented later
-		return fmt.Errorf("unsupported engine: %s", m.engine)
+		err = fmt.Errorf("unsupported engine: %s", m.engine)
 	default:
-		return fmt.Errorf("unsupported engine: %s", m.engine)
+		err = fmt.Errorf("unsupported engine: %s", m.engine)
 	}
+
+	if err != nil {
+		return err
+	}
+
+	return m.SetupMigrations()
+}
+
+func (m *Migrator) Start(ctx context.Context) error {
+	// return m.SetupMigrations()
+	return nil
+}
+
+func (m *Migrator) SetupMigrations() error {
+	fileMigrations, err := m.loadFileMigrations()
+	if err != nil {
+		return err
+	}
+
+	dbMigrations, err := m.loadDBMigrations()
+	if err != nil {
+		return err
+	}
+
+	pendingMigrations := m.findPendingMigrations(fileMigrations, dbMigrations)
+	m.logMigrations(fileMigrations, dbMigrations, pendingMigrations)
+
+	return m.Migrate(pendingMigrations)
 }
 
 func (m *Migrator) setupSQLite() error {
@@ -183,23 +212,6 @@ func (m *Migrator) logMigrations(fileMigrations []Migration, dbMigrations []Migr
 	for _, migration := range pendingMigrations {
 		m.Log().Info(fmt.Sprintf("  %s-%s", migration.Datetime, migration.Name))
 	}
-}
-
-func (m *Migrator) Start(ctx context.Context) error {
-	fileMigrations, err := m.loadFileMigrations()
-	if err != nil {
-		return err
-	}
-
-	dbMigrations, err := m.loadDBMigrations()
-	if err != nil {
-		return err
-	}
-
-	pendingMigrations := m.findPendingMigrations(fileMigrations, dbMigrations)
-	m.logMigrations(fileMigrations, dbMigrations, pendingMigrations)
-
-	return m.Migrate(pendingMigrations)
 }
 
 func (m *Migrator) Migrate(pendingMigrations []Migration) error {

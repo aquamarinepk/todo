@@ -4,3 +4,4 @@ main
 /auth.db*
 /bak/
 /tmp/
+__debug_bin*

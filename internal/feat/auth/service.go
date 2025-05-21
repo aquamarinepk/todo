@@ -96,15 +96,11 @@ func (svc *BaseService) GetUsers(ctx context.Context) ([]User, error) {
 	}
 
 	encKey := svc.Cfg().ByteSliceVal(key.SecEncryptionKey)
-	msg := fmt.Sprintf("--------Encryption key: '%s'", string(encKey))
-	panic(msg)
-
 	for i := range users {
 		if len(users[i].EmailEnc) > 0 {
-			// Decrypt the email
 			email, err := DecryptEmail(users[i].EmailEnc, encKey)
 			if err != nil {
-				return nil, fmt.Errorf("failed to decrypt email for user %s: %w", users[i].ID(), err)
+				return nil, fmt.Errorf("error decrypting email for user %s: %w", users[i].ID(), err)
 			}
 			users[i].Email = email
 		}
@@ -132,12 +128,27 @@ func (svc *BaseService) GetUser(ctx context.Context, id uuid.UUID) (User, error)
 	return user, nil
 }
 
+func (svc *BaseService) withEncryptionKey(ctx context.Context) context.Context {
+	encKey := svc.Cfg().ByteSliceVal("sec.encryption.key")
+	return context.WithValue(ctx, "encryptionKey", encKey)
+}
+
 func (svc *BaseService) CreateUser(ctx context.Context, user User) error {
 	user.GenCreationValues()
+	ctx = svc.withEncryptionKey(ctx)
+	err := user.PrePersist(ctx)
+	if err != nil {
+		return fmt.Errorf("error preparing user for insert: %w", err)
+	}
 	return svc.repo.CreateUser(ctx, user)
 }
 
 func (svc *BaseService) UpdateUser(ctx context.Context, user User) error {
+	ctx = svc.withEncryptionKey(ctx)
+	err := user.PrePersist(ctx)
+	if err != nil {
+		return fmt.Errorf("error preparing user for update: %w", err)
+	}
 	return svc.repo.UpdateUser(ctx, user)
 }
 
@@ -145,7 +156,7 @@ func (svc *BaseService) UpdateUserPassword(ctx context.Context, user User) error
 	// TODO: Implement validator to check things like empty password, etc.
 	hashedPassword, err := HashPassword(user.Password)
 	if err != nil {
-		return fmt.Errorf("failed to hash password: %w", err)
+		return fmt.Errorf("error hashing password: %w", err)
 	}
 
 	user.PasswordEnc = hashedPassword

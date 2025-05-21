@@ -30,7 +30,8 @@ type App struct {
 	ResRouter     *Router
 	ResAPIRouter  *Router
 	ResAPIRouters map[string]*Router
-	deps          sync.Map
+	deps          map[string]*Dep
+	depOrder      []string
 	depsMutex     sync.Mutex
 	fs            embed.FS
 }
@@ -62,6 +63,7 @@ func NewApp(name, version string, fs embed.FS, opts ...Option) *App {
 		ResAPIRouter:  NewWebRouter("res-api-router", opts...),
 		ResAPIRouters: make(map[string]*Router),
 		fs:            fs,
+		deps:          make(map[string]*Dep),
 	}
 
 	resPath := app.Cfg().StrValOrDef(Key.ServerResPath, resPath)
@@ -94,46 +96,50 @@ func (a *App) Add(dep Core) {
 	a.depsMutex.Lock()
 	defer a.depsMutex.Unlock()
 
-	a.deps.Store(dep.Name(), &Dep{
+	a.deps[dep.Name()] = &Dep{
 		Core:   dep,
 		Status: Stopped,
-	})
+	}
+	a.depOrder = append(a.depOrder, dep.Name())
 }
 
 func (a *App) Dep(name string) (*Dep, bool) {
-	value, ok := a.deps.Load(name)
-	if !ok {
-		return nil, false
-	}
-	return value.(*Dep), true
+	a.depsMutex.Lock()
+	defer a.depsMutex.Unlock()
+	dep, ok := a.deps[name]
+	return dep, ok
 }
 
 func (a *App) Setup(ctx context.Context) error {
 	var errs []string
 
 	// Debug the content of deps
-	a.deps.Range(func(key, value interface{}) bool {
-		dep := value.(*Dep)
-		a.Log().Infof("Dependency key: %s, Dependency name: %s, Status: %s", key, dep.Core.Name(), dep.Status)
-		return true
-	})
+	a.depsMutex.Lock()
+	order := make([]string, len(a.depOrder))
+	copy(order, a.depOrder)
+	depsCopy := make(map[string]*Dep, len(a.deps))
+	for k, v := range a.deps {
+		depsCopy[k] = v
+	}
+	a.depsMutex.Unlock()
 
-	a.deps.Range(func(key, value interface{}) bool {
-		dep := value.(*Dep)
+	for _, name := range order {
+		dep, ok := depsCopy[name]
+		if !ok {
+			continue
+		}
 		if _, ok := dep.Core.(Core); !ok {
 			msg := fmt.Sprintf("cannot setup %s: not a core dep", dep.Core.Name())
 			a.Log().Info(msg)
-			return true
+			continue
 		}
-
-		a.Log().Info("Setting up ", dep.Name())
+		a.Log().Info("setting up ", dep.Name())
 		err := dep.Setup(ctx)
 		if err != nil {
 			msg := fmt.Sprintf("canot setup %s: %v", dep.Name(), err)
 			errs = append(errs, msg)
 		}
-		return true
-	})
+	}
 
 	if a.Log() == nil {
 		errs = append(errs, "logging services not available")
@@ -153,8 +159,21 @@ func (a *App) Setup(ctx context.Context) error {
 func (a *App) Start(ctx context.Context) error {
 	// Start all dependencies
 	var errs []string
-	a.deps.Range(func(key, value interface{}) bool {
-		dep := value.(*Dep)
+
+	a.depsMutex.Lock()
+	order := make([]string, len(a.depOrder))
+	copy(order, a.depOrder)
+	depsCopy := make(map[string]*Dep, len(a.deps))
+	for k, v := range a.deps {
+		depsCopy[k] = v
+	}
+	a.depsMutex.Unlock()
+
+	for _, name := range order {
+		dep, ok := depsCopy[name]
+		if !ok {
+			continue
+		}
 		if coreDep, ok := dep.Core.(Core); ok {
 			err := coreDep.Start(ctx)
 			if err != nil {
@@ -162,8 +181,7 @@ func (a *App) Start(ctx context.Context) error {
 				errs = append(errs, msg)
 			}
 		}
-		return true
-	})
+	}
 
 	if len(errs) > 0 {
 		return errors.New(strings.Join(errs, "; "))
