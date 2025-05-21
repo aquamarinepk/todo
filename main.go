@@ -101,6 +101,8 @@ func main() {
 		return
 	}
 
+	queryManager.Debug()
+
 	err = app.Start(ctx)
 	if err != nil {
 		log.Error("Failed to start the app: ", err)

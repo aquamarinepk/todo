@@ -24,6 +24,9 @@ var (
 	resUserPerm = "user_permission"
 	resRolePerm = "role_permission"
 	resResPerm  = "resource_permission"
+	resOrg      = "org"
+	resOrgOwner = "org_owner"
+	resTeam     = "team"
 )
 
 type AuthRepo struct {
@@ -848,19 +851,25 @@ func (repo *AuthRepo) GetRoleUnassignedPermissions(ctx context.Context, roleID u
 
 func (r *AuthRepo) CreateOrg(ctx context.Context, org auth.Org) error {
 	da := auth.ToOrgDA(org)
-	const query = `INSERT INTO orgs (id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query, err := r.Query().Get(featAuth, resOrg, "Create")
+	if err != nil {
+		return err
+	}
 	exec := r.getExec(ctx)
-	_, err := exec.ExecContext(ctx, query,
+	_, err = exec.ExecContext(ctx, query,
 		da.ID, da.Slug, da.Name, da.ShortDescription, da.Description, da.CreatedBy, da.UpdatedBy, da.CreatedAt, da.UpdatedAt,
 	)
 	return err
 }
 
 func (r *AuthRepo) GetDefaultOrg(ctx context.Context) (auth.Org, error) {
-	const query = `SELECT id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at FROM orgs ORDER BY created_at ASC LIMIT 1`
+	query, err := r.Query().Get(featAuth, resOrg, "GetDefault")
+	if err != nil {
+		return auth.Org{}, err
+	}
 	row := r.db.QueryRowContext(ctx, query)
 	var orgDA auth.OrgDA
-	err := row.Scan(
+	err = row.Scan(
 		&orgDA.ID,
 		&orgDA.Slug,
 		&orgDA.Name,
@@ -878,12 +887,12 @@ func (r *AuthRepo) GetDefaultOrg(ctx context.Context) (auth.Org, error) {
 }
 
 func (r *AuthRepo) GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]auth.User, error) {
-	const query = `SELECT u.id, u.slug, u.username, u.email_enc, u.name, u.password_enc, u.created_by, u.updated_by, u.created_at, u.updated_at, u.last_login_at, u.last_login_ip, u.is_active
-	FROM users u
-	JOIN org_owners oo ON u.id = oo.user_id
-	WHERE oo.org_id = ?`
+	query, err := r.Query().Get(featAuth, resOrgOwner, "GetOrgOwners")
+	if err != nil {
+		return nil, err
+	}
 	var usersDA []auth.UserDA
-	err := r.db.SelectContext(ctx, &usersDA, query, orgID.String())
+	err = r.db.SelectContext(ctx, &usersDA, query, orgID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -891,11 +900,12 @@ func (r *AuthRepo) GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]auth.Us
 }
 
 func (r *AuthRepo) GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]auth.User, error) {
-	const query = `SELECT u.id, u.slug, u.username, u.email_enc, u.name, u.password_enc, u.created_by, u.updated_by, u.created_at, u.updated_at, u.last_login_at, u.last_login_ip, u.is_active
-	FROM users u
-	WHERE u.id NOT IN (SELECT user_id FROM org_owners WHERE org_id = ?)`
+	query, err := r.Query().Get(featAuth, resOrgOwner, "GetOrgUnassignedOwners")
+	if err != nil {
+		return nil, err
+	}
 	var usersDA []auth.UserDA
-	err := r.db.SelectContext(ctx, &usersDA, query, orgID.String())
+	err = r.db.SelectContext(ctx, &usersDA, query, orgID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -903,9 +913,12 @@ func (r *AuthRepo) GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) 
 }
 
 func (r *AuthRepo) GetAllTeams(ctx context.Context, orgID uuid.UUID) ([]auth.Team, error) {
-	const query = `SELECT id, org_id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at FROM teams WHERE org_id = ?`
+	query, err := r.Query().Get(featAuth, resTeam, "GetAll")
+	if err != nil {
+		return nil, err
+	}
 	var teamsDA []auth.TeamDA
-	err := r.db.SelectContext(ctx, &teamsDA, query, orgID.String())
+	err = r.db.SelectContext(ctx, &teamsDA, query, orgID.String())
 	if err != nil {
 		return nil, err
 	}
@@ -917,9 +930,12 @@ func (r *AuthRepo) GetAllTeams(ctx context.Context, orgID uuid.UUID) ([]auth.Tea
 }
 
 func (r *AuthRepo) GetTeam(ctx context.Context, id uuid.UUID) (auth.Team, error) {
-	const query = `SELECT id, org_id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at FROM teams WHERE id = ?`
+	query, err := r.Query().Get(featAuth, resTeam, "Get")
+	if err != nil {
+		return auth.Team{}, err
+	}
 	var da auth.TeamDA
-	err := r.db.GetContext(ctx, &da, query, id.String())
+	err = r.db.GetContext(ctx, &da, query, id.String())
 	if err != nil {
 		return auth.Team{}, err
 	}
@@ -939,37 +955,46 @@ func (r *AuthRepo) CreateTeam(ctx context.Context, team auth.Team) error {
 		CreatedAt:        team.CreatedAt(),
 		UpdatedAt:        team.UpdatedAt(),
 	}
-	const query = `INSERT INTO teams (id, org_id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	query, err := r.Query().Get(featAuth, resTeam, "Create")
+	if err != nil {
+		return err
+	}
 	exec := r.getExec(ctx)
-	_, err := exec.ExecContext(ctx, query,
+	_, err = exec.ExecContext(ctx, query,
 		da.ID, da.OrgID, da.Slug, da.Name, da.ShortDescription, da.Description, da.CreatedBy, da.UpdatedBy, da.CreatedAt, da.UpdatedAt,
 	)
 	return err
 }
 
 func (r *AuthRepo) UpdateTeam(ctx context.Context, team auth.Team) error {
-	const query = `UPDATE teams SET slug = ?, name = ?, short_description = ?, description = ?, updated_by = ?, updated_at = ? WHERE id = ?`
+	query, err := r.Query().Get(featAuth, resTeam, "Update")
+	if err != nil {
+		return err
+	}
 	exec := r.getExec(ctx)
-	_, err := exec.ExecContext(ctx, query,
+	_, err = exec.ExecContext(ctx, query,
 		team.Slug(), team.Name, team.ShortDescription, team.Description, team.UpdatedBy().String(), team.UpdatedAt(), team.ID().String(),
 	)
 	return err
 }
 
 func (r *AuthRepo) DeleteTeam(ctx context.Context, id uuid.UUID) error {
-	const query = `DELETE FROM teams WHERE id = ?`
+	query, err := r.Query().Get(featAuth, resTeam, "Delete")
+	if err != nil {
+		return err
+	}
 	exec := r.getExec(ctx)
-	_, err := exec.ExecContext(ctx, query, id.String())
+	_, err = exec.ExecContext(ctx, query, id.String())
 	return err
 }
 
 func (r *AuthRepo) AddOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error {
-	const query = `INSERT INTO org_owners (id, org_id, user_id, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`
-	id := uuid.New()
-	exec := r.getExec(ctx)
-	_, err := exec.ExecContext(ctx, query, id.String(), orgID.String(), userID.String())
+	query, err := r.Query().Get(featAuth, resOrgOwner, "Add")
 	if err != nil {
 		return err
 	}
-	return nil
+	id := uuid.New()
+	exec := r.getExec(ctx)
+	_, err = exec.ExecContext(ctx, query, id.String(), orgID.String(), userID.String())
+	return err
 }

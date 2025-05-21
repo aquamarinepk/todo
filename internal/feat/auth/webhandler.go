@@ -1696,7 +1696,7 @@ func (h *WebHandler) ShowOrg(w http.ResponseWriter, r *http.Request) {
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(org)
-	menu.AddGenericItem("list-org-members", org.ID().String(), "Members")
+	// menu.AddGenericItem("list-org-members", org.ID().String(), "Members")
 	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-org")
