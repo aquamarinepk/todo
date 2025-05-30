@@ -1,7 +1,7 @@
 -- +migrate Up
-CREATE TABLE permissions (
+CREATE TABLE permission (
                              id TEXT PRIMARY KEY,
-                             slug TEXT,
+                             short_id TEXT,
                              name TEXT,
                              description TEXT,
                              created_by TEXT,
@@ -11,4 +11,4 @@ CREATE TABLE permissions (
 );
 
 -- +migrate Down
-DROP TABLE permissions;
+DROP TABLE permission;

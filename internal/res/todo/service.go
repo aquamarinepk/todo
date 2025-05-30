@@ -36,8 +36,7 @@ func (svc *BaseService) Get(ctx context.Context, id uuid.UUID) (List, error) {
 }
 
 func (svc *BaseService) Create(ctx context.Context, list List) error {
-	list.GenSlug()
-	list.GenCreationValues()
+	list.GenCreateValues()
 	return svc.repo.Create(ctx, list)
 }
 

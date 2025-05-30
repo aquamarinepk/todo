@@ -24,7 +24,7 @@ type Resource struct {
 
 func NewResource(name, description, resourceType string) Resource {
 	model := am.NewModel(am.WithType(resourceEntityType))
-	model.GenCreationValues()
+	model.GenCreateValues()
 	return Resource{
 		BaseModel:     model,
 		Name:          name,
@@ -47,4 +47,12 @@ func (r *Resource) UnmarshalJSON(data []byte) error {
 		r.BaseModel = am.NewModel(am.WithType(resourceEntityType))
 	}
 	return nil
+}
+
+func (r *Resource) SlugPrefix() string {
+	return r.Name
+}
+
+func (r *Resource) Slug() string {
+	return am.Normalize(r.Name) + "-" + r.ShortID()
 }

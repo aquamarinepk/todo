@@ -134,7 +134,7 @@ func (svc *BaseService) withEncryptionKey(ctx context.Context) context.Context {
 }
 
 func (svc *BaseService) CreateUser(ctx context.Context, user User) error {
-	user.GenCreationValues()
+	user.GenCreateValues()
 	ctx = svc.withEncryptionKey(ctx)
 	err := user.PrePersist(ctx)
 	if err != nil {

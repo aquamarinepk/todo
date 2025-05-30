@@ -178,7 +178,7 @@
       "role_ref": "role-user"
     }
   ],
-  "role_permissions": [
+  "role_permission": [
     { "role_ref": "role-admin", "permission_ref": "permission-read" },
     {
       "role_ref": "role-admin",

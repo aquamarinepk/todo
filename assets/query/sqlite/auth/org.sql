@@ -1,9 +1,9 @@
 -- Res: Org
--- Table: orgs
+-- Table: org
 
 -- Create
-INSERT INTO orgs (id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at)
+INSERT INTO org (id, short_id, name, short_description, description, created_by, updated_by, created_at, updated_at)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- GetDefault
-SELECT id, slug, name, short_description, description, created_by, updated_by, created_at, updated_at FROM orgs ORDER BY created_at ASC LIMIT 1;
+SELECT id, short_id, name, short_description, description, created_by, updated_by, created_at, updated_at FROM org ORDER BY created_at ASC LIMIT 1;

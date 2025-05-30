@@ -831,7 +831,6 @@ func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 
 	role.Name = r.Form.Get("name")
 	role.Description = r.Form.Get("description")
-	role.SetSlug(r.Form.Get("slug"))
 
 	err = h.service.UpdateRole(ctx, role)
 	if err != nil {
@@ -1124,9 +1123,7 @@ func (h *WebHandler) CreatePermission(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 	permission := NewPermission(name, description)
-	permission.GenID()
-	permission.GenSlug()
-	permission.GenCreationValues()
+	permission.GenCreateValues()
 
 	err := h.service.CreatePermission(ctx, permission)
 	if err != nil {
@@ -1255,7 +1252,6 @@ func (h *WebHandler) UpdatePermission(w http.ResponseWriter, r *http.Request) {
 	permission.BaseModel = am.NewModel(
 		am.WithID(permission.ID()),
 		am.WithType(permissionType),
-		am.WithSlug(name),
 		am.WithCreatedBy(permission.CreatedBy()),
 		am.WithUpdatedBy(uuid.New()),
 		am.WithCreatedAt(permission.CreatedAt()),
@@ -1371,10 +1367,8 @@ func (h *WebHandler) CreateResource(w http.ResponseWriter, r *http.Request) {
 	resourceType := r.FormValue("type")
 
 	resource := NewResource(name, description, resourceType)
-	resource.GenSlug()
 	resource.BaseModel = am.NewModel(
 		am.WithID(resource.ID()),
-		am.WithSlug(resource.Slug()),
 		am.WithCreatedBy(uuid.New()),
 		am.WithUpdatedBy(uuid.New()),
 		am.WithCreatedAt(time.Now()),
@@ -1501,11 +1495,9 @@ func (h *WebHandler) UpdateResource(w http.ResponseWriter, r *http.Request) {
 
 	resource.Name = name
 	resource.Description = description
-	resource.GenSlug()
 	resource.BaseModel = am.NewModel(
 		am.WithID(resource.ID()),
 		am.WithType(resourceEntityType),
-		am.WithSlug(resource.Slug()),
 		am.WithCreatedBy(resource.CreatedBy()),
 		am.WithUpdatedBy(uuid.New()),
 		am.WithCreatedAt(resource.CreatedAt()),
@@ -1820,10 +1812,8 @@ func (h *WebHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 	description := r.Form.Get("description")
 
 	team := NewTeam(org.ID(), name, shortDescription, description)
-	team.GenSlug()
 	team.BaseModel = am.NewModel(
 		am.WithID(team.ID()),
-		am.WithSlug(team.Slug()),
 		am.WithCreatedBy(team.CreatedBy()),
 		am.WithUpdatedBy(team.UpdatedBy()),
 		am.WithCreatedAt(team.CreatedAt()),
@@ -1949,10 +1939,8 @@ func (h *WebHandler) UpdateTeam(w http.ResponseWriter, r *http.Request) {
 	team.Name = r.Form.Get("name")
 	team.ShortDescription = r.Form.Get("short_description")
 	team.Description = r.Form.Get("description")
-	team.SetSlug(r.Form.Get("slug"))
 	team.BaseModel = am.NewModel(
 		am.WithID(team.ID()),
-		am.WithSlug(team.Slug()),
 		am.WithCreatedBy(team.CreatedBy()),
 		am.WithUpdatedBy(uuid.New()),
 		am.WithCreatedAt(team.CreatedAt()),

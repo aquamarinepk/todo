@@ -1,7 +1,7 @@
 -- +migrate Up
-CREATE TABLE resources (
+CREATE TABLE resource (
                            id TEXT PRIMARY KEY,
-                           slug TEXT,
+                           short_id TEXT,
                            name TEXT,
                            description TEXT,
                            label TEXT,
@@ -14,4 +14,4 @@ CREATE TABLE resources (
 );
 
 -- +migrate Down
-DROP TABLE resources;
+DROP TABLE resource;

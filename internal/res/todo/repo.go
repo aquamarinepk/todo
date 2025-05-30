@@ -106,11 +106,11 @@ func (repo *BaseRepo) Debug() {
 	defer repo.mu.Unlock()
 
 	var result string
-	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n", "Type", "ID", "NameID", "Slug", "Action", "Description")
+	result += fmt.Sprintf("%-10s %-20s %-50s\n", "Type", "Action", "Description")
 	for _, id := range repo.order {
 		listDA := repo.lists[id]
-		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s %-50s\n",
-			listDA.Type, listDA.ID.String(), listDA.NameID.String, listDA.Slug.String, listDA.Name.String, listDA.Description.String)
+		result += fmt.Sprintf("%-10s %-20s %-50s\n",
+			listDA.Type, listDA.Name.String, listDA.Description.String)
 	}
 	result = fmt.Sprintf("%s state:\n%s", repo.Name(), result)
 	repo.Log().Info(result)

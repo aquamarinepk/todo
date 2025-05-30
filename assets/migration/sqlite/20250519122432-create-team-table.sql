@@ -1,8 +1,8 @@
 -- +migrate Up
-CREATE TABLE teams (
+CREATE TABLE team (
     id TEXT PRIMARY KEY,
+    short_id TEXT,
     org_id TEXT NOT NULL,
-    slug TEXT NOT NULL,
     name TEXT NOT NULL,
     short_description TEXT,
     description TEXT,
@@ -10,9 +10,8 @@ CREATE TABLE teams (
     updated_by TEXT,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
-    FOREIGN KEY (org_id) REFERENCES orgs(id) ON DELETE CASCADE
+    FOREIGN KEY (org_id) REFERENCES org(id) ON DELETE CASCADE
 );
-CREATE UNIQUE INDEX idx_teams_slug ON teams(slug);
 
 -- +migrate Down
-DROP TABLE teams;
+DROP TABLE team;

@@ -37,3 +37,7 @@ func (p *Permission) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+
+func (p *Permission) Slug() string {
+	return am.Normalize(p.Name) + "-" + p.ShortID()
+}

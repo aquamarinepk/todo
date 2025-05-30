@@ -10,7 +10,7 @@ import (
 // RoleDA represents the data access layer for the Role model.
 type RoleDA struct {
 	ID          uuid.UUID      `db:"id"`
-	Slug        sql.NullString `db:"slug"`
+	ShortID     sql.NullString `db:"short_id"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	Status      sql.NullString `db:"status"`
@@ -28,7 +28,6 @@ func toRole(da RoleDA) Role {
 		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(roleType),
-			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -62,7 +61,7 @@ type RoleExtDA struct {
 	ID             uuid.UUID      `db:"id"`
 	Name           sql.NullString `db:"name"`
 	Description    sql.NullString `db:"description"`
-	Slug           sql.NullString `db:"slug"`
+	ShortID        sql.NullString `db:"short_id"`
 	PermissionID   sql.NullString `db:"permission_id"`
 	PermissionName sql.NullString `db:"permission_name"`
 	CreatedBy      sql.NullString `db:"created_by"`

@@ -2,24 +2,24 @@
 -- Table: user_role
 
 -- AddRole
-INSERT INTO user_roles (user_id, role_id)
+INSERT INTO user_role (user_id, role_id)
 SELECT ?, ?
 WHERE EXISTS (
-    SELECT 1 FROM roles WHERE id = ?
+    SELECT 1 FROM role WHERE id = ?
 );
 
 -- RemoveRole
-DELETE FROM user_roles WHERE user_id = ? AND role_id = ?;
+DELETE FROM user_role WHERE user_id = ? AND role_id = ?;
 
 -- GetUserAssignedRoles
-SELECT r.id, r.name, r.description, r.slug, r.status, r.created_by, r.updated_by, r.created_at, r.updated_at
-FROM roles r
-JOIN user_roles ur ON r.id = ur.role_id
+SELECT r.id, r.name, r.description, r.short_id, r.status, r.created_by, r.updated_by, r.created_at, r.updated_at
+FROM role r
+JOIN user_role ur ON r.id = ur.role_id
 WHERE ur.user_id = ?;
 
 -- GetUserUnassignedRoles
-SELECT r.id, r.name, r.description, r.slug, r.status, r.created_by, r.updated_by, r.created_at, r.updated_at
-FROM roles r
+SELECT r.id, r.name, r.description, r.short_id, r.status, r.created_by, r.updated_by, r.created_at, r.updated_at
+FROM role r
 WHERE r.id NOT IN (
-    SELECT role_id FROM user_roles WHERE user_id = ?
+    SELECT role_id FROM user_role WHERE user_id = ?
 );

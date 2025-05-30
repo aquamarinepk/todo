@@ -11,8 +11,7 @@ import (
 type ListDA struct {
 	Type        string
 	ID          uuid.UUID      `db:"id"`
-	Slug        sql.NullString `db:"slug"`
-	NameID      sql.NullString `db:"name_id"`
+	ShortID     sql.NullString `db:"short_id"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	CreatedBy   sql.NullString `db:"created_by"`
@@ -24,9 +23,9 @@ type ListDA struct {
 // Convert ListDA to List
 func toList(da ListDA) List {
 	return List{
-		Model: am.NewModel(
+		BaseModel: am.NewModel(
 			am.WithID(da.ID),
-			am.WithSlug(da.Slug.String),
+			am.WithShortID(da.ShortID.String),
 			am.WithCreatedBy(uuid.MustParse(da.CreatedBy.String)),
 			am.WithUpdatedBy(uuid.MustParse(da.UpdatedBy.String)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -41,13 +40,12 @@ func toList(da ListDA) List {
 func toListDA(list List) ListDA {
 	return ListDA{
 		ID:          list.ID(),
-		Slug:        sql.NullString{String: list.Slug(), Valid: list.Slug() != ""},
-		NameID:      sql.NullString{String: list.Model.NameID(), Valid: list.Model.NameID() != ""},
+		ShortID:     sql.NullString{String: list.ShortID(), Valid: list.Slug() != ""},
 		Name:        sql.NullString{String: list.Name, Valid: list.Name != ""},
 		Description: sql.NullString{String: list.Description, Valid: list.Description != ""},
-		CreatedBy:   sql.NullString{String: list.Model.CreatedBy().String(), Valid: list.Model.CreatedBy() != uuid.Nil},
-		UpdatedBy:   sql.NullString{String: list.Model.UpdatedBy().String(), Valid: list.Model.UpdatedBy() != uuid.Nil},
-		CreatedAt:   sql.NullTime{Time: list.Model.CreatedAt(), Valid: !list.Model.CreatedAt().IsZero()},
-		UpdatedAt:   sql.NullTime{Time: list.Model.UpdatedAt(), Valid: !list.Model.UpdatedAt().IsZero()},
+		CreatedBy:   sql.NullString{String: list.CreatedBy().String(), Valid: list.CreatedBy() != uuid.Nil},
+		UpdatedBy:   sql.NullString{String: list.UpdatedBy().String(), Valid: list.UpdatedBy() != uuid.Nil},
+		CreatedAt:   sql.NullTime{Time: list.CreatedAt(), Valid: !list.CreatedAt().IsZero()},
+		UpdatedAt:   sql.NullTime{Time: list.UpdatedAt(), Valid: !list.UpdatedAt().IsZero()},
 	}
 }

@@ -1,11 +1,11 @@
 -- +migrate Up
-CREATE TABLE users (
+CREATE TABLE user (
     id TEXT PRIMARY KEY,
+    short_id TEXT,
     name TEXT,
     username TEXT,
     email_enc BLOB,
     password_enc BLOB,
-    slug TEXT,
     created_by TEXT,
     updated_by TEXT,
     created_at TIMESTAMP,
@@ -15,7 +15,7 @@ CREATE TABLE users (
     is_active BOOLEAN DEFAULT 1
 );
 
-CREATE INDEX idx_users_email_enc ON users(email_enc);
+CREATE INDEX idx_user_email_enc ON user(email_enc);
 
 -- +migrate Down
-DROP TABLE users;
+DROP TABLE user;

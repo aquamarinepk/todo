@@ -8,7 +8,7 @@ import (
 type TeamDA struct {
 	ID               sql.NullString `db:"id"`
 	OrgID            sql.NullString `db:"org_id"`
-	Slug             string         `db:"slug"`
+	ShortID          string         `db:"short_id"`
 	Name             string         `db:"name"`
 	ShortDescription string         `db:"short_description"`
 	Description      string         `db:"description"`

@@ -10,7 +10,7 @@ import (
 // ResourceDA represents the data access layer for the Resource model.
 type ResourceDA struct {
 	ID          uuid.UUID      `db:"id"`
-	Slug        sql.NullString `db:"slug"`
+	ShortID     sql.NullString `db:"short_id"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	Label       sql.NullString `db:"label"`
@@ -30,7 +30,6 @@ func toResource(da ResourceDA) Resource {
 		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(resourceEntityType),
-			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -53,7 +52,7 @@ func toResourceDA(resource Resource) ResourceDA {
 		Label:       sql.NullString{String: resource.Label, Valid: resource.Label != ""},
 		Type:        sql.NullString{String: resource.ResourceType, Valid: resource.ResourceType != ""},
 		URI:         sql.NullString{String: resource.URI, Valid: resource.URI != ""},
-		Slug:        sql.NullString{String: resource.Slug(), Valid: resource.Slug() != ""},
+		ShortID:     sql.NullString{String: resource.ShortID(), Valid: resource.ShortID() != ""},
 		Permissions: toPermissionIDs(resource.Permissions),
 		CreatedBy:   sql.NullString{String: resource.CreatedBy().String(), Valid: resource.CreatedBy() != uuid.Nil},
 		UpdatedBy:   sql.NullString{String: resource.UpdatedBy().String(), Valid: resource.UpdatedBy() != uuid.Nil},
@@ -67,7 +66,7 @@ type ResourceExtDA struct {
 	ID             uuid.UUID      `db:"id"`
 	Name           sql.NullString `db:"name"`
 	Description    sql.NullString `db:"description"`
-	Slug           sql.NullString `db:"slug"`
+	ShortID        sql.NullString `db:"short_id"`
 	PermissionID   sql.NullString `db:"permission_id"`
 	PermissionName sql.NullString `db:"permission_name"`
 	CreatedBy      sql.NullString `db:"created_by"`

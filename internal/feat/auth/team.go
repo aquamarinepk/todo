@@ -22,7 +22,7 @@ type Team struct {
 
 func NewTeam(orgID uuid.UUID, name, shortDescription, description string) Team {
 	model := am.NewModel(am.WithType(teamEntityType))
-	model.GenCreationValues()
+	model.GenCreateValues()
 	return Team{
 		BaseModel:        model,
 		OrgID:            orgID,
@@ -44,4 +44,8 @@ func (t *Team) UnmarshalJSON(data []byte) error {
 		t.BaseModel = am.NewModel(am.WithType(teamEntityType))
 	}
 	return nil
+}
+
+func (t *Team) Slug() string {
+	return am.Normalize(t.Name) + "-" + t.ShortID()
 }

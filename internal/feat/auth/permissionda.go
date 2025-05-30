@@ -9,7 +9,7 @@ import (
 // PermissionDA represents the data access layer for the Permission model.
 type PermissionDA struct {
 	ID          uuid.UUID      `db:"id"`
-	Slug        sql.NullString `db:"slug"`
+	ShortID     sql.NullString `db:"short_id"`
 	Name        sql.NullString `db:"name"`
 	Description sql.NullString `db:"description"`
 	CreatedBy   sql.NullString `db:"created_by"`

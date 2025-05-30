@@ -1,17 +1,17 @@
 -- Res: List
--- Table: lists
+-- Table: list
 
 -- GetAll
-SELECT id, name, slug FROM lists;
+SELECT id, name, short_id FROM list;
 
 -- Get
-SELECT id, name, slug FROM lists WHERE id = ?;
+SELECT id, name, short_id FROM list WHERE id = ?;
 
 -- Create
-INSERT INTO lists (id, name, slug) VALUES (?, ?, ?);
+INSERT INTO list (id, name, short_id) VALUES (?, ?, ?);
 
 -- Update
-UPDATE lists SET name = ?, slug = ? WHERE id = ?;
+UPDATE list SET name = ?, short_id = ? WHERE id = ?;
 
 -- Delete
-DELETE FROM lists WHERE id = ?;
+DELETE FROM list WHERE id = ?;

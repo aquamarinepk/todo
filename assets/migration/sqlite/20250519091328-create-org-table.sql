@@ -1,7 +1,7 @@
 -- +migrate Up
-CREATE TABLE orgs (
+CREATE TABLE org (
     id TEXT PRIMARY KEY,
-    slug TEXT,
+    short_id TEXT,
     name TEXT,
     short_description TEXT,
     description TEXT,
@@ -12,4 +12,4 @@ CREATE TABLE orgs (
 );
 
 -- +migrate Down
-DROP TABLE orgs;
+DROP TABLE org;

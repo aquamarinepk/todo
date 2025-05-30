@@ -9,7 +9,7 @@ import (
 // UserDA represents the data access layer for the User model.
 type UserDA struct {
 	ID            uuid.UUID      `db:"id"`
-	Slug          sql.NullString `db:"slug"`
+	ShortID       sql.NullString `db:"short_id"`
 	Name          sql.NullString `db:"name"`
 	Username      sql.NullString `db:"username"`
 	EmailEnc      []byte         `db:"email_enc"`
@@ -28,7 +28,7 @@ type UserDA struct {
 // UserExtDA represents the data access layer for the UserRolePermission.
 type UserExtDA struct {
 	ID             uuid.UUID      `db:"id"`
-	Slug           sql.NullString `db:"slug"`
+	ShortID        sql.NullString `db:"short_id"`
 	Name           sql.NullString `db:"name"`
 	Username       sql.NullString `db:"username"`
 	EmailEnc       []byte         `db:"email_enc"`

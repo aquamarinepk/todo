@@ -134,3 +134,7 @@ func (u *User) UnmarshalJSON(data []byte) error {
 	*u = User(*temp)
 	return nil
 }
+
+func (u *User) Slug() string {
+	return am.Normalize(u.Username) + "-" + u.ShortID()
+}

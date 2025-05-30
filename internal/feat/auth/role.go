@@ -47,3 +47,7 @@ func (r *Role) UnmarshalJSON(data []byte) error {
 	}
 	return nil
 }
+
+func (r *Role) Slug() string {
+	return am.Normalize(r.Name) + "-" + r.ShortID()
+}

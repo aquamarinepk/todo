@@ -113,13 +113,13 @@ func (repo *BaseRepo) getUserPermissionsByID(userID uuid.UUID) []Permission {
 func toUserDA(user User) UserDA {
 	return UserDA{
 		ID:            user.ID(),
-		Slug:          sql.NullString{String: user.Slug(), Valid: user.Slug() != ""},
+		ShortID:       sql.NullString{String: user.ShortID(), Valid: user.ShortID() != ""},
 		Name:          sql.NullString{String: user.Name, Valid: user.Name != ""},
 		Username:      sql.NullString{String: user.Username, Valid: user.Username != ""},
 		EmailEnc:      user.EmailEnc,
 		PasswordEnc:   user.PasswordEnc,
-		RoleIDs:       user.RoleIDs,
-		PermissionIDs: user.PermissionIDs,
+		RoleIDs:       toRoleIDs(user.Roles),
+		PermissionIDs: toPermissionIDs(user.Permissions),
 		CreatedBy:     sql.NullString{String: user.CreatedBy().String(), Valid: user.CreatedBy() != uuid.Nil},
 		UpdatedBy:     sql.NullString{String: user.UpdatedBy().String(), Valid: user.UpdatedBy() != uuid.Nil},
 		CreatedAt:     sql.NullTime{Time: user.CreatedAt(), Valid: !user.CreatedAt().IsZero()},
@@ -580,12 +580,18 @@ func (repo *BaseRepo) Debug() {
 	defer repo.mu.Unlock()
 
 	var result string
-	result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s\n", "Type", "ID", "Slug", "Username", "Extra")
+	result += fmt.Sprintf("%-10s %-36s %-36s %-20s\n", "Type", "ID", "Username", "Extra") // Adjusted headers, removed Slug
 	for _, id := range repo.order {
-		userDA := repo.users[id]
-		result += fmt.Sprintf("%-10s %-36s %-36s %-36s %-20s\n", "User", userDA.ID, userDA.Slug.String, userDA.Name.String, userDA.Username.String)
+		userDA, ok := repo.users[id]
+		if !ok {
+			continue
+		}
+		// Adjusted to use fields from userDA, removed Slug
+		result += fmt.Sprintf("%-10s %-36s %-36s %-20s\n",
+			"User", userDA.ID.String(), userDA.Name.String, userDA.Username.String)
 	}
-	fmt.Println(result)
+	result = fmt.Sprintf("%s state:\n%s", repo.Name(), result)
+	repo.Log().Info(result)
 }
 
 func (repo *BaseRepo) addSampleData() {
@@ -632,8 +638,8 @@ func (repo *BaseRepo) addSampleData() {
 		name := fmt.Sprintf("resource%d", i)
 		description := fmt.Sprintf("%s description", name)
 		resource := NewResource(name, description, "entity")
-		resource.GenSlug()
-		resource.GenCreationValues()
+		resource.Slug()
+		resource.GenCreateValues()
 		resourceDA := toResourceDA(resource)
 		resourceDA.ID = id
 		repo.resources[id] = resourceDA

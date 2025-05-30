@@ -57,8 +57,5 @@ Role List
 {{ end }}
 
 {{ define "submenu" }}
-<div class="flex items-center justify-center space-x-2">
-  <a href="/list-users" class="bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded">Back</a>
-  <a href="/new-role" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">New</a>
-</div>
+{{ template "menu" . }}
 {{ end }}

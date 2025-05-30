@@ -1,20 +1,20 @@
 -- Res: Permission
--- Table: permissions
+-- Table: permission
 
 -- GetAll
-SELECT id, slug, name, description, created_by, updated_by, created_at, updated_at FROM permissions;
+SELECT id, short_id, name, description, created_by, updated_by, created_at, updated_at FROM permission;
 
 -- Get
-SELECT id, slug, name, description, created_by, updated_by, created_at, updated_at
-FROM permissions
+SELECT id, short_id, name, description, created_by, updated_by, created_at, updated_at
+FROM permission
 WHERE id = ?;
 
 -- Create
-INSERT INTO permissions (id, slug, name, description, created_by, updated_by, created_at, updated_at)
+INSERT INTO permission (id, short_id, name, description, created_by, updated_by, created_at, updated_at)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?);
 
 -- Update
-UPDATE permissions SET slug = ?, name = ?, description = ?, updated_by = ?, updated_at = ? WHERE id = ?;
+UPDATE permission SET short_id = ?, name = ?, description = ?, updated_by = ?, updated_at = ? WHERE id = ?;
 
 -- Delete
-DELETE FROM permissions WHERE id = ?;
+DELETE FROM permission WHERE id = ?;

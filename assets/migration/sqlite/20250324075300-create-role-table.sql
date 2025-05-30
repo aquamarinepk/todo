@@ -1,7 +1,7 @@
 -- +migrate Up
-CREATE TABLE roles (
+CREATE TABLE role (
                        id TEXT PRIMARY KEY,
-                       slug TEXT,
+                       short_id TEXT,
                        name TEXT,
                        description TEXT,
                        status TEXT,
@@ -12,4 +12,4 @@ CREATE TABLE roles (
 );
 
 -- +migrate Down
-DROP TABLE roles;
+DROP TABLE role;

@@ -23,7 +23,7 @@ type SeedData struct {
 	Permissions         []Permission        `json:"permissions"`
 	Resources           []Resource          `json:"resources"`
 	UserRoles           []map[string]string `json:"user_roles"`
-	RolePermissions     []map[string]string `json:"role_permissions"`
+	RolePermissions     []map[string]string `json:"role_permission"`
 	UserPermissions     []map[string]string `json:"user_permissions"`
 	ResourcePermissions []map[string]string `json:"resource_permissions"`
 	OrgOwners           []map[string]string `json:"org_owners"`
@@ -144,7 +144,7 @@ func (s *Seeder) seedUsers(ctx context.Context, data *SeedData, userRefMap map[s
 	defer s.Log().Debug("Seeding users: end")
 	for i := range data.Users {
 		u := &data.Users[i]
-		u.GenCreationValues()
+		u.GenCreateValues()
 		userCtx := s.withEncryptionKey(ctx)
 		err := u.PrePersist(userCtx)
 		if err != nil {
@@ -169,7 +169,7 @@ func (s *Seeder) seedRoles(ctx context.Context, data *SeedData, roleRefMap map[s
 	defer s.Log().Debug("Seeding roles: end")
 	for i := range data.Roles {
 		r := &data.Roles[i]
-		r.GenCreationValues()
+		r.GenCreateValues()
 		err := s.repo.CreateRole(ctx, *r)
 		if err != nil {
 			return fmt.Errorf("error inserting role: %w", err)
@@ -189,7 +189,7 @@ func (s *Seeder) seedPermissions(ctx context.Context, data *SeedData, permRefMap
 	defer s.Log().Debug("Seeding permissions: end")
 	for i := range data.Permissions {
 		p := &data.Permissions[i]
-		p.GenCreationValues()
+		p.GenCreateValues()
 		err := s.repo.CreatePermission(ctx, *p)
 		if err != nil {
 			return fmt.Errorf("error inserting permission: %w", err)
@@ -209,7 +209,7 @@ func (s *Seeder) seedOrgs(ctx context.Context, data *SeedData, orgRefMap map[str
 	defer s.Log().Debug("Seeding orgs: end")
 	for i := range data.Orgs {
 		o := &data.Orgs[i]
-		o.GenCreationValues()
+		o.GenCreateValues()
 		err := s.repo.CreateOrg(ctx, *o)
 		if err != nil {
 			return fmt.Errorf("error inserting org: %w", err)
@@ -238,7 +238,7 @@ func (s *Seeder) seedTeams(ctx context.Context, data *SeedData, teamRefMap map[s
 			return fmt.Errorf("error finding org ref for team: %s", orgRef)
 		}
 		t.OrgID = orgID
-		t.GenCreationValues()
+		t.GenCreateValues()
 		err := s.repo.CreateTeam(ctx, *t)
 		if err != nil {
 			return fmt.Errorf("error inserting team: %w", err)
@@ -261,7 +261,7 @@ func (s *Seeder) seedResources(ctx context.Context, data *SeedData, resourceRefM
 	defer s.Log().Debug("Seeding resources: end")
 	for i := range data.Resources {
 		r := &data.Resources[i]
-		r.GenCreationValues()
+		r.GenCreateValues()
 		err := s.repo.CreateResource(ctx, *r)
 		if err != nil {
 			return fmt.Errorf("error inserting resource: %w", err)

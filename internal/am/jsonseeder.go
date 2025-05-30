@@ -138,7 +138,6 @@ func (s *JSONSeeder) ApplyJSONSeed(datetime, name, context, content string) erro
 		s.Log().Debugf("Seed already applied: %s-%s [%s]", datetime, name, context)
 		return nil
 	}
-	// Here you would apply the JSON seed logic (e.g., insert data into DB)
 	// For now, just log for demonstration
 	s.Log().Debugf("Applying JSON seed: %s-%s [%s]", datetime, name, context)
 	// ...apply the seed content...

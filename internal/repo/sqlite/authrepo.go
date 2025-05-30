@@ -196,7 +196,7 @@ func (repo *AuthRepo) CreateUser(ctx context.Context, user auth.User) error {
 		userDA.EmailEnc,
 		userDA.Name,
 		userDA.PasswordEnc,
-		userDA.Slug,
+		userDA.ShortID,
 		userDA.CreatedBy,
 		userDA.UpdatedBy,
 		userDA.CreatedAt,
@@ -214,7 +214,7 @@ func (repo *AuthRepo) UpdateUser(ctx context.Context, user auth.User) error {
 	userDA := auth.ToUserDA(user)
 	exec := repo.getExec(ctx)
 	_, err = exec.ExecContext(ctx, query, userDA.Username, userDA.EmailEnc, userDA.Name,
-		userDA.Slug, userDA.UpdatedBy, userDA.UpdatedAt, userDA.ID)
+		userDA.ShortID, userDA.UpdatedBy, userDA.UpdatedAt, userDA.ID)
 	return err
 }
 
@@ -330,7 +330,7 @@ func (repo *AuthRepo) CreateRole(ctx context.Context, role auth.Role) error {
 		roleDA.ID,
 		roleDA.Name,
 		roleDA.Description,
-		roleDA.Slug,
+		roleDA.ShortID,
 		roleDA.CreatedBy,
 		roleDA.UpdatedBy,
 		roleDA.CreatedAt,
@@ -349,7 +349,7 @@ func (repo *AuthRepo) UpdateRole(ctx context.Context, role auth.Role) error {
 	_, err = exec.ExecContext(ctx, query,
 		roleDA.Name,
 		roleDA.Description,
-		roleDA.Slug,
+		roleDA.ShortID,
 		roleDA.UpdatedBy,
 		roleDA.UpdatedAt,
 		roleDA.ID)
@@ -409,13 +409,14 @@ func (repo *AuthRepo) CreatePermission(ctx context.Context, permission auth.Perm
 	exec := repo.getExec(ctx)
 	_, err = exec.ExecContext(ctx, query,
 		permissionDA.ID,
-		permissionDA.Slug,
+		permissionDA.ShortID,
 		permissionDA.Name,
 		permissionDA.Description,
 		permissionDA.CreatedBy,
 		permissionDA.UpdatedBy,
 		permissionDA.CreatedAt,
-		permissionDA.UpdatedAt)
+		permissionDA.UpdatedAt,
+	)
 	return err
 }
 
@@ -428,7 +429,7 @@ func (repo *AuthRepo) UpdatePermission(ctx context.Context, permission auth.Perm
 	permissionDA := auth.ToPermissionDA(permission)
 	exec := repo.getExec(ctx)
 	_, err = exec.ExecContext(ctx, query,
-		permissionDA.Slug,
+		permissionDA.ShortID,
 		permissionDA.Name,
 		permissionDA.Description,
 		permissionDA.UpdatedBy,
@@ -537,11 +538,12 @@ func (repo *AuthRepo) CreateResource(ctx context.Context, resource auth.Resource
 		resourceDA.ID,
 		resourceDA.Name,
 		resourceDA.Description,
-		resourceDA.Slug,
+		resourceDA.ShortID,
 		resourceDA.CreatedBy,
 		resourceDA.UpdatedBy,
 		resourceDA.CreatedAt,
-		resourceDA.UpdatedAt)
+		resourceDA.UpdatedAt,
+	)
 	return err
 }
 
@@ -556,7 +558,7 @@ func (repo *AuthRepo) UpdateResource(ctx context.Context, resource auth.Resource
 	_, err = exec.ExecContext(ctx, query,
 		resourceDA.Name,
 		resourceDA.Description,
-		resourceDA.Slug,
+		resourceDA.ShortID,
 		resourceDA.UpdatedBy,
 		resourceDA.UpdatedAt,
 		resourceDA.ID)
@@ -731,7 +733,7 @@ func (repo *AuthRepo) GetUserRole(ctx context.Context, userID, roleID uuid.UUID)
 // AddPermissionToRole adds a permission to a role.
 func (repo *AuthRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID, permission auth.Permission) error {
 	query := `
-		INSERT INTO role_permissions (role_id, permission_id)
+		INSERT INTO role_permission (role_id, permission_id)
 		VALUES (?, ?)
 	`
 	exec := repo.getExec(ctx)
@@ -745,7 +747,7 @@ func (repo *AuthRepo) AddPermissionToRole(ctx context.Context, roleID uuid.UUID,
 // RemovePermissionFromRole removes a permission from a role.
 func (repo *AuthRepo) RemovePermissionFromRole(ctx context.Context, roleID uuid.UUID, permissionID uuid.UUID) error {
 	query := `
-		DELETE FROM role_permissions
+		DELETE FROM role_permission
 		WHERE role_id = ? AND permission_id = ?
 	`
 	exec := repo.getExec(ctx)
@@ -857,7 +859,7 @@ func (r *AuthRepo) CreateOrg(ctx context.Context, org auth.Org) error {
 	}
 	exec := r.getExec(ctx)
 	_, err = exec.ExecContext(ctx, query,
-		da.ID, da.Slug, da.Name, da.ShortDescription, da.Description, da.CreatedBy, da.UpdatedBy, da.CreatedAt, da.UpdatedAt,
+		da.ID, da.ShortID, da.Name, da.ShortDescription, da.Description, da.CreatedBy, da.UpdatedBy, da.CreatedAt, da.UpdatedAt,
 	)
 	return err
 }
@@ -871,7 +873,7 @@ func (r *AuthRepo) GetDefaultOrg(ctx context.Context) (auth.Org, error) {
 	var orgDA auth.OrgDA
 	err = row.Scan(
 		&orgDA.ID,
-		&orgDA.Slug,
+		&orgDA.ShortID,
 		&orgDA.Name,
 		&orgDA.ShortDescription,
 		&orgDA.Description,
@@ -946,7 +948,7 @@ func (r *AuthRepo) CreateTeam(ctx context.Context, team auth.Team) error {
 	da := auth.TeamDA{
 		ID:               sql.NullString{String: team.ID().String(), Valid: team.ID() != uuid.Nil},
 		OrgID:            sql.NullString{String: team.OrgID.String(), Valid: team.OrgID != uuid.Nil},
-		Slug:             team.Slug(),
+		ShortID:          team.ShortID(),
 		Name:             team.Name,
 		ShortDescription: team.ShortDescription,
 		Description:      team.Description,
@@ -961,7 +963,7 @@ func (r *AuthRepo) CreateTeam(ctx context.Context, team auth.Team) error {
 	}
 	exec := r.getExec(ctx)
 	_, err = exec.ExecContext(ctx, query,
-		da.ID, da.OrgID, da.Slug, da.Name, da.ShortDescription, da.Description, da.CreatedBy, da.UpdatedBy, da.CreatedAt, da.UpdatedAt,
+		da.ID, da.OrgID, da.ShortID, da.Name, da.ShortDescription, da.Description, da.CreatedBy, da.UpdatedBy, da.CreatedAt, da.UpdatedAt,
 	)
 	return err
 }
@@ -973,7 +975,7 @@ func (r *AuthRepo) UpdateTeam(ctx context.Context, team auth.Team) error {
 	}
 	exec := r.getExec(ctx)
 	_, err = exec.ExecContext(ctx, query,
-		team.Slug(), team.Name, team.ShortDescription, team.Description, team.UpdatedBy().String(), team.UpdatedAt(), team.ID().String(),
+		team.ShortID(), team.Name, team.ShortDescription, team.Description, team.UpdatedBy().String(), team.UpdatedAt(), team.ID().String(),
 	)
 	return err
 }

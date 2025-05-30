@@ -61,7 +61,7 @@ func (h *APIHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	user.GenCreationValues()
+	user.GenCreateValues()
 	if err := h.service.CreateUser(r.Context(), user); err != nil {
 		res := am.NewErrorResponse("Failed to create user", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)
@@ -122,7 +122,7 @@ func (h *APIHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
 		am.Respond(w, http.StatusBadRequest, res)
 		return
 	}
-	role.GenCreationValues()
+	role.GenCreateValues()
 	if err := h.service.CreateRole(r.Context(), role); err != nil {
 		res := am.NewErrorResponse("Failed to create role", am.ErrorCodeInternalError, err.Error())
 		am.Respond(w, http.StatusInternalServerError, res)

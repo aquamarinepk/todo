@@ -12,7 +12,7 @@ import (
 func ToUserDA(user User) UserDA {
 	return UserDA{
 		ID:            user.ID(),
-		Slug:          sql.NullString{String: user.Slug(), Valid: user.Slug() != ""},
+		ShortID:       sql.NullString{String: user.ShortID(), Valid: user.ShortID() != ""},
 		Name:          sql.NullString{String: user.Name, Valid: user.Name != ""},
 		Username:      sql.NullString{String: user.Username, Valid: user.Username != ""},
 		EmailEnc:      user.EmailEnc,
@@ -40,8 +40,8 @@ func ToUser(da UserDA) User {
 	return User{
 		BaseModel: am.NewModel(
 			am.WithID(da.ID),
+			am.WithShortID(da.ShortID.String), // Added this line
 			am.WithType(userType),
-			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -70,7 +70,7 @@ func ToUsers(das []UserDA) []User {
 func ToUserExt(da UserExtDA) User {
 	user := ToUser(UserDA{
 		ID:          da.ID,
-		Slug:        da.Slug,
+		ShortID:     da.ShortID,
 		Name:        da.Name,
 		Username:    da.Username,
 		EmailEnc:    da.EmailEnc,
@@ -117,7 +117,7 @@ func ToRoleDA(role Role) RoleDA {
 		ID:          role.ID(),
 		Name:        sql.NullString{String: role.Name, Valid: role.Name != ""},
 		Description: sql.NullString{String: role.Description, Valid: role.Description != ""},
-		Slug:        sql.NullString{String: role.Slug(), Valid: role.Slug() != ""},
+		ShortID:     sql.NullString{String: role.ShortID(), Valid: role.ShortID() != ""},
 		Status:      sql.NullString{String: role.Status, Valid: role.Status != ""},
 		Permissions: toPermissionIDs(role.Permissions),
 		CreatedBy:   sql.NullString{String: role.CreatedBy().String(), Valid: role.CreatedBy() != uuid.Nil},
@@ -132,8 +132,8 @@ func ToRole(da RoleDA) Role {
 	return Role{
 		BaseModel: am.NewModel(
 			am.WithID(da.ID),
+			am.WithShortID(da.ShortID.String), // Added
 			am.WithType(roleType),
-			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -170,7 +170,6 @@ func ToRoleExt(da RoleExtDA) Role {
 		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(roleType),
-			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -189,7 +188,7 @@ func ToPermissionDA(permission Permission) PermissionDA {
 		ID:          permission.ID(),
 		Name:        sql.NullString{String: permission.Name, Valid: permission.Name != ""},
 		Description: sql.NullString{String: permission.Description, Valid: permission.Description != ""},
-		Slug:        sql.NullString{String: permission.Slug(), Valid: permission.Slug() != ""},
+		ShortID:     sql.NullString{String: permission.ShortID(), Valid: permission.ShortID() != ""},
 		CreatedBy:   sql.NullString{String: permission.CreatedBy().String(), Valid: permission.CreatedBy() != uuid.Nil},
 		UpdatedBy:   sql.NullString{String: permission.UpdatedBy().String(), Valid: permission.UpdatedBy() != uuid.Nil},
 		CreatedAt:   sql.NullTime{Time: permission.CreatedAt(), Valid: !permission.CreatedAt().IsZero()},
@@ -202,8 +201,8 @@ func ToPermission(da PermissionDA) Permission {
 	return Permission{
 		BaseModel: am.NewModel(
 			am.WithID(da.ID),
+			am.WithShortID(da.ShortID.String), // Added
 			am.WithType(permissionType),
-			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -232,7 +231,7 @@ func ToResourceDA(resource Resource) ResourceDA {
 		Label:       sql.NullString{String: resource.Label, Valid: resource.Label != ""},
 		Type:        sql.NullString{String: resource.ResourceType, Valid: resource.ResourceType != ""},
 		URI:         sql.NullString{String: resource.URI, Valid: resource.URI != ""},
-		Slug:        sql.NullString{String: resource.Slug(), Valid: resource.Slug() != ""},
+		ShortID:     sql.NullString{String: resource.ShortID(), Valid: resource.ShortID() != ""},
 		Permissions: toPermissionIDs(resource.Permissions),
 		CreatedBy:   sql.NullString{String: resource.CreatedBy().String(), Valid: resource.CreatedBy() != uuid.Nil},
 		UpdatedBy:   sql.NullString{String: resource.UpdatedBy().String(), Valid: resource.UpdatedBy() != uuid.Nil},
@@ -246,8 +245,8 @@ func ToResource(da ResourceDA) Resource {
 	return Resource{
 		BaseModel: am.NewModel(
 			am.WithID(da.ID),
+			am.WithShortID(da.ShortID.String), // Added
 			am.WithType(resourceEntityType),
-			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -286,7 +285,6 @@ func ToResourceExt(da ResourceExtDA) Resource {
 		BaseModel: am.NewModel(
 			am.WithID(da.ID),
 			am.WithType(resourceEntityType),
-			am.WithSlug(da.Slug.String),
 			am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 			am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 			am.WithCreatedAt(da.CreatedAt.Time),
@@ -303,7 +301,7 @@ func ToResourceExt(da ResourceExtDA) Resource {
 // OrgDA is the data access struct for Org, used for DB operations.
 type OrgDA struct {
 	ID               sql.NullString `db:"id"`
-	Slug             string         `db:"slug"`
+	ShortID          string         `db:"short_id"`
 	Name             string         `db:"name"`
 	ShortDescription string         `db:"short_description"`
 	Description      string         `db:"description"`
@@ -317,7 +315,7 @@ type OrgDA struct {
 func ToOrg(da OrgDA) Org {
 	model := am.NewModel(
 		am.WithID(am.ParseUUID(da.ID)),
-		am.WithSlug(da.Slug),
+		am.WithShortID(da.ShortID), // Added (da.ShortID is string)
 		am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 		am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 		am.WithCreatedAt(da.CreatedAt),
@@ -336,7 +334,7 @@ func ToOrg(da OrgDA) Org {
 func ToOrgDA(org Org) OrgDA {
 	return OrgDA{
 		ID:               sql.NullString{String: org.ID().String(), Valid: org.ID() != uuid.Nil},
-		Slug:             org.Slug(),
+		ShortID:          org.ShortID(),
 		Name:             org.Name,
 		ShortDescription: org.ShortDescription,
 		Description:      org.Description,
@@ -350,7 +348,7 @@ func ToOrgDA(org Org) OrgDA {
 func ToTeam(da TeamDA) Team {
 	model := am.NewModel(
 		am.WithID(am.ParseUUID(da.ID)),
-		am.WithSlug(da.Slug),
+		am.WithShortID(da.ShortID), // Corrected: da.ShortID is string, not sql.NullString
 		am.WithCreatedBy(am.ParseUUID(da.CreatedBy)),
 		am.WithUpdatedBy(am.ParseUUID(da.UpdatedBy)),
 		am.WithCreatedAt(da.CreatedAt),

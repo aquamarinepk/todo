@@ -9,7 +9,7 @@ const (
 )
 
 type List struct {
-	am.Model
+	*am.BaseModel
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
@@ -17,7 +17,7 @@ type List struct {
 // NewList creates a new list.
 func NewList(name, description string) List {
 	return List{
-		Model:       am.NewModel(am.WithType(listType)),
+		BaseModel:   am.NewModel(am.WithType(listType)),
 		Name:        name,
 		Description: description,
 	}

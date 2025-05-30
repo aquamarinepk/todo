@@ -21,7 +21,7 @@ type Org struct {
 
 func NewOrg(name, shortDescription, description string, ownerID uuid.UUID) Org {
 	model := am.NewModel(am.WithType(orgEntityType))
-	model.GenCreationValues()
+	model.GenCreateValues()
 	return Org{
 		BaseModel:        model,
 		Name:             name,
@@ -43,4 +43,8 @@ func (o *Org) UnmarshalJSON(data []byte) error {
 		o.BaseModel = am.NewModel(am.WithType(orgEntityType))
 	}
 	return nil
+}
+
+func (o *Org) Slug() string {
+	return am.Normalize(o.Name) + "-" + o.ShortID()
 }
