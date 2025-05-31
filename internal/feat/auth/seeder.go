@@ -285,7 +285,7 @@ func (s *Seeder) seedUserRoles(ctx context.Context, data *SeedData, userRefMap, 
 		if !ok1 || !ok2 {
 			return fmt.Errorf("error finding user or role ref for user_role: %+v", ur)
 		}
-		err := s.repo.AddRole(ctx, userID, roleID)
+		err := s.repo.AddRole(ctx, userID, roleID, "", "")
 		if err != nil {
 			return fmt.Errorf("error adding role to user: %w", err)
 		}

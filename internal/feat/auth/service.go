@@ -169,11 +169,11 @@ func (svc *BaseService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 }
 
 func (svc *BaseService) GetUserRoles(ctx context.Context, userID uuid.UUID) ([]Role, error) {
-	return svc.repo.GetUserAssignedRoles(ctx, userID)
+	return svc.repo.GetUserAssignedRoles(ctx, userID, "", "")
 }
 
 func (svc *BaseService) GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]Role, error) {
-	return svc.repo.GetUserUnassignedRoles(ctx, userID)
+	return svc.repo.GetUserUnassignedRoles(ctx, userID, "", "")
 }
 
 func (svc *BaseService) CreateRole(ctx context.Context, role Role) error {
@@ -205,11 +205,11 @@ func (svc *BaseService) GetRoleUnassignedPermissions(ctx context.Context, roleID
 }
 
 func (svc *BaseService) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	return svc.repo.AddRole(ctx, userID, roleID)
+	return svc.repo.AddRole(ctx, userID, roleID, "", "")
 }
 
 func (svc *BaseService) RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
-	return svc.repo.RemoveRole(ctx, userID, roleID)
+	return svc.repo.RemoveRole(ctx, userID, roleID, "", "")
 }
 
 func (svc *BaseService) GetAllPermissions(ctx context.Context) ([]Permission, error) {
