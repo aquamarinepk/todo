@@ -576,14 +576,16 @@ func (repo *AuthRepo) DeleteResource(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
-func (repo *AuthRepo) GetUserAssignedRoles(ctx context.Context, userID uuid.UUID) ([]auth.Role, error) {
+func (repo *AuthRepo) GetUserAssignedRoles(ctx context.Context, userID uuid.UUID, contextType, contextID string) ([]auth.Role, error) {
 	query, err := repo.Query().Get(featAuth, resUserRole, "GetUserAssignedRoles")
 	if err != nil {
 		return nil, err
 	}
 
 	var rolesDA []auth.RoleDA
-	err = repo.db.SelectContext(ctx, &rolesDA, query, userID)
+	err = repo.db.SelectContext(ctx, &rolesDA, query,
+		userID.String(), contextType, contextID,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -676,14 +678,16 @@ func (repo *AuthRepo) RemovePermissionFromUser(ctx context.Context, userID uuid.
 	return err
 }
 
-func (repo *AuthRepo) GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID) ([]auth.Role, error) {
+func (repo *AuthRepo) GetUserUnassignedRoles(ctx context.Context, userID uuid.UUID, contextType, contextID string) ([]auth.Role, error) {
 	query, err := repo.Query().Get(featAuth, resUserRole, "GetUserUnassignedRoles")
 	if err != nil {
 		return nil, err
 	}
 
 	var rolesDA []auth.RoleDA
-	err = repo.db.SelectContext(ctx, &rolesDA, query, userID)
+	err = repo.db.SelectContext(ctx, &rolesDA, query,
+		userID.String(), contextType, contextID,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -691,25 +695,30 @@ func (repo *AuthRepo) GetUserUnassignedRoles(ctx context.Context, userID uuid.UU
 	return auth.ToRoles(rolesDA), nil
 }
 
-func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
+func (repo *AuthRepo) AddRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID, contextType, contextID string) error {
 	query, err := repo.Query().Get(featAuth, resUserRole, "AddRole")
 	if err != nil {
 		return err
 	}
 
 	exec := repo.getExec(ctx)
-	_, err = exec.ExecContext(ctx, query, userID, roleID, roleID)
+	_, err = exec.ExecContext(ctx, query,
+		userID.String(), roleID.String(), contextType, contextID,
+		roleID.String(),
+	)
 	return err
 }
 
-func (repo *AuthRepo) RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID) error {
+func (repo *AuthRepo) RemoveRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID, contextType, contextID string) error {
 	query, err := repo.Query().Get(featAuth, resUserRole, "RemoveRole")
 	if err != nil {
 		return err
 	}
 
 	exec := repo.getExec(ctx)
-	_, err = exec.ExecContext(ctx, query, userID, roleID)
+	_, err = exec.ExecContext(ctx, query,
+		userID.String(), roleID.String(), contextType, contextID,
+	)
 	return err
 }
 
