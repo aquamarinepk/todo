@@ -4,6 +4,7 @@ CREATE TABLE role (
                        short_id TEXT,
                        name TEXT,
                        description TEXT,
+                       contextual BOOLEAN DEFAULT 0 NOT NULL,
                        status TEXT,
                        created_by TEXT,
                        updated_by TEXT,
