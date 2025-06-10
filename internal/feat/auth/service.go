@@ -71,6 +71,12 @@ type Service interface {
 	CreateTeam(ctx context.Context, team Team) error
 	UpdateTeam(ctx context.Context, team Team) error
 	DeleteTeam(ctx context.Context, id uuid.UUID) error
+
+	// Team membership
+	GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]User, error)
+	GetTeamUnassignedUsers(ctx context.Context, teamID uuid.UUID) ([]User, error)
+	AddUserToTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID, relationType string) error
+	RemoveUserFromTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) error
 }
 
 var (
@@ -334,4 +340,20 @@ func (svc *BaseService) UpdateTeam(ctx context.Context, team Team) error {
 
 func (svc *BaseService) DeleteTeam(ctx context.Context, id uuid.UUID) error {
 	return svc.repo.DeleteTeam(ctx, id)
+}
+
+func (svc *BaseService) GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]User, error) {
+	return svc.repo.GetTeamMembers(ctx, teamID)
+}
+
+func (svc *BaseService) GetTeamUnassignedUsers(ctx context.Context, teamID uuid.UUID) ([]User, error) {
+	return svc.repo.GetTeamUnassignedUsers(ctx, teamID)
+}
+
+func (svc *BaseService) AddUserToTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID, relationType string) error {
+	return svc.repo.AddUserToTeam(ctx, teamID, userID, relationType)
+}
+
+func (svc *BaseService) RemoveUserFromTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) error {
+	return svc.repo.RemoveUserFromTeam(ctx, teamID, userID)
 }

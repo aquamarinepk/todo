@@ -74,4 +74,8 @@ type Repo interface {
 	CreateTeam(ctx context.Context, team Team) error
 	UpdateTeam(ctx context.Context, team Team) error
 	DeleteTeam(ctx context.Context, id uuid.UUID) error
+	GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]User, error)
+	GetTeamUnassignedUsers(ctx context.Context, teamID uuid.UUID) ([]User, error)
+	AddUserToTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID, relationType string) error
+	RemoveUserFromTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) error
 }
