@@ -14,19 +14,20 @@ import (
 )
 
 var (
-	key         = am.Key
-	featAuth    = "auth"
-	resUser     = "user"
-	resRole     = "role"
-	resPerm     = "permission"
-	resRes      = "resource"
-	resUserRole = "user_role"
-	resUserPerm = "user_permission"
-	resRolePerm = "role_permission"
-	resResPerm  = "resource_permission"
-	resOrg      = "org"
-	resOrgOwner = "org_owner"
-	resTeam     = "team"
+	key           = am.Key
+	featAuth      = "auth"
+	resUser       = "user"
+	resRole       = "role"
+	resPerm       = "permission"
+	resRes        = "resource"
+	resUserRole   = "user_role"
+	resUserPerm   = "user_permission"
+	resRolePerm   = "role_permission"
+	resResPerm    = "resource_permission"
+	resOrg        = "org"
+	resOrgOwner   = "org_owner"
+	resTeamMember = "team_member"
+	resTeam       = "team"
 )
 
 type AuthRepo struct {
@@ -1007,5 +1008,57 @@ func (r *AuthRepo) AddOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid
 	id := uuid.New()
 	exec := r.getExec(ctx)
 	_, err = exec.ExecContext(ctx, query, id.String(), orgID.String(), userID.String())
+	return err
+}
+
+func (repo *AuthRepo) GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]auth.User, error) {
+	query, err := repo.Query().Get(featAuth, resTeamMember, "ListTeamMembers")
+	repo.Log().Debugf("GetTeamMembers query: %s", query)
+	if err != nil {
+		return nil, err
+	}
+	var usersDA []auth.UserDA
+	err = repo.db.SelectContext(ctx, &usersDA, query, teamID.String())
+	repo.Log().Debugf("GetTeamMembers teamID: %s", teamID.String())
+	for _, user := range usersDA {
+		repo.Log().Debugf("User: %+v", user)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return auth.ToUsers(usersDA), nil
+}
+
+func (repo *AuthRepo) GetTeamUnassignedUsers(ctx context.Context, teamID uuid.UUID) ([]auth.User, error) {
+	query, err := repo.Query().Get(featAuth, resTeamMember, "ListUsersNotInTeam")
+	if err != nil {
+		return nil, err
+	}
+	var usersDA []auth.UserDA
+	err = repo.db.SelectContext(ctx, &usersDA, query, teamID.String())
+	if err != nil {
+		return nil, err
+	}
+	return auth.ToUsers(usersDA), nil
+}
+
+func (repo *AuthRepo) AddUserToTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID, relationType string) error {
+	query, err := repo.Query().Get(featAuth, resTeamMember, "AddUserToTeam")
+	if err != nil {
+		return err
+	}
+	id := uuid.New().String()
+	exec := repo.getExec(ctx)
+	_, err = exec.ExecContext(ctx, query, id, teamID.String(), userID.String(), relationType)
+	return err
+}
+
+func (repo *AuthRepo) RemoveUserFromTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) error {
+	query, err := repo.Query().Get(featAuth, resTeamMember, "RemoveUserFromTeam")
+	if err != nil {
+		return err
+	}
+	exec := repo.getExec(ctx)
+	_, err = exec.ExecContext(ctx, query, teamID.String(), userID.String())
 	return err
 }

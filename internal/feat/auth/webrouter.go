@@ -75,6 +75,10 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Get("/edit-team", handler.EditTeam)
 	core.Post("/update-team", handler.UpdateTeam)
 	core.Post("/delete-team", handler.DeleteTeam)
+	// Team relationships
+	core.Get("/list-team-members", handler.ListTeamMembers)
+	core.Post("/assign-user-to-team", handler.AssignUserToTeam)
+	core.Post("/remove-user-from-team", handler.RemoveUserFromTeam)
 
 	return core
 }

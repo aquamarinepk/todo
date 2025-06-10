@@ -19,8 +19,10 @@ const (
 const (
 	ActionListUserRoles       = "list-user-roles"
 	ActionListUserPermissions = "list-user-permissions"
+	ActionListTeamMembers     = "list-team-members"
 	TextRoles                 = "Roles"
 	TextPermissions           = "Permissions"
+	TextMembers               = "Members"
 )
 
 type WebHandler struct {
@@ -1850,7 +1852,7 @@ func (h *WebHandler) ShowTeam(w http.ResponseWriter, r *http.Request) {
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(team)
 	menu.AddEditItem(team)
-	menu.AddDeleteItem(team)
+	menu.AddGenericItem(ActionListTeamMembers, team.ID().String(), TextMembers)
 	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-team")
@@ -1971,6 +1973,140 @@ func (h *WebHandler) DeleteTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, am.ListPath(authPath, "team"), http.StatusSeeOther)
+}
+
+func (h *WebHandler) ListTeamMembers(w http.ResponseWriter, r *http.Request) {
+	id, err := h.ID(w, r)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	ctx := r.Context()
+	team, err := h.service.GetTeam(ctx, id)
+	if err != nil {
+		h.Log().Error("Failed to get team", "id", id, "error", err)
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	members, err := h.service.GetTeamMembers(ctx, id)
+	if err != nil {
+		h.Log().Error("Failed to get team members", "team_id", id, "error", err)
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	unassigned, err := h.service.GetTeamUnassignedUsers(ctx, id)
+	if err != nil {
+		h.Log().Error("Failed to get unassigned users for team", "team_id", id, "error", err)
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	page := am.NewPage(struct {
+		Team       Team
+		Members    []User
+		Unassigned []User
+	}{
+		Team:       team,
+		Members:    members,
+		Unassigned: unassigned,
+	})
+
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddListItem(team)
+	page.Menu = *menu
+
+	tmpl, err := h.tm.Get("auth", "list-team-members")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) AssignUserToTeam(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	teamIDStr := r.FormValue("team_id")
+	teamID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	userIDStr := r.FormValue("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	// For now we'll use "member" as the default relation type
+	err = h.service.AddUserToTeam(ctx, teamID, userID, "member")
+	if err != nil {
+		h.Log().Error("Failed to assign user to team", "team_id", teamID, "user_id", userID, "error", err)
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
+
+	// Add success flash message
+	err = h.AddFlash(w, r, am.NotificationType.Success, "User assigned to team successfully")
+	if err != nil {
+		h.Log().Error("Failed to add flash message", err)
+	}
+
+	// Redirect back to team members page
+	http.Redirect(w, r, fmt.Sprintf("/auth/list-team-members?id=%s", teamID), http.StatusSeeOther)
+}
+
+func (h *WebHandler) RemoveUserFromTeam(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	teamIDStr := r.FormValue("team_id")
+	teamID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	userIDStr := r.FormValue("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.RemoveUserFromTeam(ctx, teamID, userID)
+	if err != nil {
+		h.Log().Error("Failed to remove user from team", "team_id", teamID, "user_id", userID, "error", err)
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		return
+	}
+
+	// Add success flash message
+	err = h.AddFlash(w, r, am.NotificationType.Success, "User removed from team successfully")
+	if err != nil {
+		h.Log().Error("Failed to add flash message", err)
+	}
+
+	// Redirect back to team members page
+	http.Redirect(w, r, fmt.Sprintf("/auth/list-team-members?id=%s", teamID), http.StatusSeeOther)
 }
 
 // WIP: The following flash-related functions were part of the initial experimentation

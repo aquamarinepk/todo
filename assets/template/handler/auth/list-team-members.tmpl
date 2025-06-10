@@ -1,0 +1,106 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+Team Members {{ end }} 
+
+{{ define "content" }}
+<div class="space-y-8">
+  <div>
+    <h1 class="text-2xl font-bold mb-4">Team Members - {{ .Data.Team.Name }}</h1>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+            Username
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+            Email
+          </th>
+          <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {{ $csrf := .Form.CSRF }}
+        {{ range .Data.Members }}
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            {{ .Username }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ .Email }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center space-x-2">
+            <form method="POST" action="/auth/remove-user-from-team" class="inline-block">
+              <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
+              <input type="hidden" name="team_id" value="{{ $.Data.Team.ID }}">
+              <input type="hidden" name="user_id" value="{{ .ID }}">
+              <button type="submit" class="bg-red-500 text-white px-6 py-2 rounded w-24">Unassign</button>
+            </form>
+            <a href="#" class="inline-block bg-yellow-500 text-white px-6 py-2 rounded w-24">Roles</a>
+          </td>
+        </tr>
+        {{ else }}
+        <tr>
+          <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+            No team members found.
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+
+  <div>
+    <h2 class="text-xl font-bold mb-4">Available Users</h2>
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+            Username
+          </th>
+          <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+            Email
+          </th>
+          <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-1/3">
+            Actions
+          </th>
+        </tr>
+      </thead>
+      <tbody class="bg-white divide-y divide-gray-200">
+        {{ range .Data.Unassigned }}
+        <tr>
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+            {{ .Username }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+            {{ .Email }}
+          </td>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+            <form method="POST" action="/auth/assign-user-to-team" class="inline-block">
+              <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
+              <input type="hidden" name="team_id" value="{{ $.Data.Team.ID }}">
+              <input type="hidden" name="user_id" value="{{ .ID }}">
+              <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded w-24">Assign</button>
+            </form>
+          </td>
+        </tr>
+        {{ else }}
+        <tr>
+          <td colspan="3" class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+            No available users found.
+          </td>
+        </tr>
+        {{ end }}
+      </tbody>
+    </table>
+  </div>
+</div>
+{{ end }}
+
+{{ define "submenu" }}
+{{ template "menu" . }}
+{{ end }}
