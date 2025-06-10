@@ -1011,6 +1011,16 @@ func (r *AuthRepo) AddOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid
 	return err
 }
 
+func (r *AuthRepo) RemoveOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error {
+    query, err := r.Query().Get(featAuth, resOrgOwner, "Remove")
+    if err != nil {
+        return err
+    }
+    exec := r.getExec(ctx)
+    _, err = exec.ExecContext(ctx, query, orgID.String(), userID.String())
+    return err
+}
+
 func (repo *AuthRepo) GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]auth.User, error) {
 	query, err := repo.Query().Get(featAuth, resTeamMember, "ListTeamMembers")
 	repo.Log().Debugf("GetTeamMembers query: %s", query)
@@ -1061,4 +1071,34 @@ func (repo *AuthRepo) RemoveUserFromTeam(ctx context.Context, teamID uuid.UUID, 
 	exec := repo.getExec(ctx)
 	_, err = exec.ExecContext(ctx, query, teamID.String(), userID.String())
 	return err
+}
+
+func (repo *AuthRepo) GetUserContextualRoles(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) ([]auth.Role, error) {
+	query, err := repo.Query().Get(featAuth, resUserRole, "GetContextualAssignedRoles")
+	if err != nil {
+		return nil, err
+	}
+
+	var rolesDA []auth.RoleDA
+	err = repo.db.SelectContext(ctx, &rolesDA, query,
+		userID.String(), "team", teamID.String())
+	if err != nil {
+		return nil, err
+	}
+	return auth.ToRoles(rolesDA), nil
+}
+
+func (repo *AuthRepo) GetUserContextualUnassignedRoles(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) ([]auth.Role, error) {
+	query, err := repo.Query().Get(featAuth, resUserRole, "GetContextualUnassignedRoles")
+	if err != nil {
+		return nil, err
+	}
+
+	var rolesDA []auth.RoleDA
+	err = repo.db.SelectContext(ctx, &rolesDA, query,
+		userID.String(), "team", teamID.String())
+	if err != nil {
+		return nil, err
+	}
+	return auth.ToRoles(rolesDA), nil
 }

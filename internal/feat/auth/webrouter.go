@@ -23,6 +23,9 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Post("/remove-role-from-user", handler.RemoveRoleFromUser)
 	core.Post("/add-permission-to-user", handler.AddPermissionToUser)
 	core.Post("/remove-permission-from-user", handler.RemovePermissionFromUser)
+	core.Get("/list-user-contextual-roles", handler.ListUserContextualRoles)
+	core.Post("/add-contextual-role", handler.AddContextualRole)
+	core.Post("/remove-contextual-role", handler.RemoveContextualRole)
 
 	// Role routes
 	core.Get("/list-roles", handler.ListRoles)
@@ -32,9 +35,9 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Get("/edit-role", handler.EditRole)
 	core.Post("/update-role", handler.UpdateRole)
 	core.Post("/delete-role", handler.DeleteRole)
-	// Role relationships
 	core.Post("/add-role", handler.AddRole)
 	core.Post("/remove-role", handler.RemoveRole)
+	// Role relationships
 	core.Get("/list-role-permissions", handler.ListRolePermissions)
 	core.Post("/add-permission-to-role", handler.AddPermissionToRole)
 	core.Post("/remove-permission-from-role", handler.RemovePermissionFromRole)
@@ -61,11 +64,8 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Post("/add-permission-to-resource", handler.AddPermissionToResource)
 	core.Post("/remove-permission-from-resource", handler.RemovePermissionFromResource)
 
-	// Org routes
+	// Organization routes
 	core.Get("/show-org", handler.ShowOrg)
-	// core.Get("/edit-org", handler.EditOrg)
-	// core.Post("/add-member-to-org", handler.AddMemberToOrg)
-	// core.Post("/remove-member-from-org", handler.RemoveMemberFromOrg)
 
 	// Team routes
 	core.Get("/list-teams", handler.ListTeams)

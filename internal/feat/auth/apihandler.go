@@ -46,7 +46,7 @@ func (h *APIHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	user, err := h.service.GetUser(r.Context(), id)
 	var res am.Response
 	if err != nil {
-		res = am.NewErrorResponse("User not found", am.ErrorCodeNotFound, err.Error())
+		res := am.NewErrorResponse("User not found", am.ErrorCodeNotFound, err.Error())
 		am.Respond(w, http.StatusNotFound, res)
 		return
 	}

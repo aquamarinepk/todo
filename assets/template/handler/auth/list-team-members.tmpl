@@ -33,14 +33,16 @@ Team Members {{ end }}
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
             {{ .Email }}
           </td>
-          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center space-x-2">
-            <form method="POST" action="/auth/remove-user-from-team" class="inline-block">
-              <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
-              <input type="hidden" name="team_id" value="{{ $.Data.Team.ID }}">
-              <input type="hidden" name="user_id" value="{{ .ID }}">
-              <button type="submit" class="bg-red-500 text-white px-6 py-2 rounded w-24">Unassign</button>
-            </form>
-            <a href="#" class="inline-block bg-yellow-500 text-white px-6 py-2 rounded w-24">Roles</a>
+          <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
+            <div class="flex justify-center items-center space-x-2">
+              <form method="POST" action="/auth/remove-user-from-team" class="inline-flex">
+                <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
+                <input type="hidden" name="team_id" value="{{ $.Data.Team.ID }}">
+                <input type="hidden" name="user_id" value="{{ .ID }}">
+                <button type="submit" class="inline-flex justify-center items-center bg-red-500 text-white px-6 py-2 rounded w-24 hover:bg-red-600">Unassign</button>
+              </form>
+              <a href="/auth/list-user-contextual-roles?team_id={{ $.Data.Team.ID }}&user_id={{ .ID }}" class="inline-flex justify-center items-center bg-yellow-500 text-white px-6 py-2 rounded w-24 hover:bg-yellow-600">Roles</a>
+            </div>
           </td>
         </tr>
         {{ else }}
@@ -80,11 +82,11 @@ Team Members {{ end }}
             {{ .Email }}
           </td>
           <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-            <form method="POST" action="/auth/assign-user-to-team" class="inline-block">
+            <form method="POST" action="/auth/assign-user-to-team" class="inline-flex justify-center">
               <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
               <input type="hidden" name="team_id" value="{{ $.Data.Team.ID }}">
               <input type="hidden" name="user_id" value="{{ .ID }}">
-              <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded w-24">Assign</button>
+              <button type="submit" class="inline-flex justify-center items-center bg-green-500 text-white px-6 py-2 rounded w-24 hover:bg-green-600">Assign</button>
             </form>
           </td>
         </tr>

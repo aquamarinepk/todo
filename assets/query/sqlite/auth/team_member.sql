@@ -31,3 +31,24 @@ FROM team t
 WHERE t.id NOT IN (
     SELECT team_id FROM team_member WHERE user_id = ?
 );
+
+-- ListTeamMemberRoles
+SELECT r.id, r.name, r.description, r.short_id, r.contextual, r.status, r.created_by, r.updated_by, r.created_at, r.updated_at
+FROM role r
+JOIN user_role ur ON r.id = ur.role_id
+WHERE ur.user_id = ?
+  AND ur.context_type = 'team'
+  AND ur.context_id = ?
+  AND r.contextual = true;
+
+-- ListTeamUnassignedRoles
+SELECT r.id, r.name, r.description, r.short_id, r.contextual, r.status, r.created_by, r.updated_by, r.created_at, r.updated_at
+FROM role r
+WHERE r.contextual = true
+  AND r.id NOT IN (
+    SELECT role_id
+    FROM user_role
+    WHERE user_id = ?
+      AND context_type = 'team'
+      AND context_id = ?
+);
