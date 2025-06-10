@@ -1,0 +1,118 @@
+{{ define "page" }}
+{{ template "layout" . }}
+{{ end }}
+
+{{ define "title" }}
+User Contextual Roles {{ end }}
+
+{{ define "content" }}
+<div class="container mx-auto px-4 sm:px-8">
+  <div class="py-8">
+    <div class="flex justify-between">
+      <h2 class="text-2xl font-semibold leading-tight">Roles for {{ .Data.User.Name }} in Team {{ .Data.Team.Name }}</h2>
+    </div>
+    
+    <div class="my-4">
+      <h3 class="text-xl font-semibold mb-2">Assigned Roles</h3>
+      <div class="bg-white shadow-md rounded my-6">
+        <table class="min-w-full leading-normal">
+          <thead>
+            <tr>
+              <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Name
+              </th>
+              <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Description
+              </th>
+              <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range .Data.AssignedRoles }}
+            <tr>
+              <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-gray-900 whitespace-no-wrap">{{ .Name }}</p>
+              </td>
+              <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-gray-900 whitespace-no-wrap">{{ .Description }}</p>
+              </td>
+              <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                <form method="POST" action="/auth/remove-role-from-user" class="inline-block">
+                  <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
+                  <input type="hidden" name="user_id" value="{{ $.Data.User.ID }}">
+                  <input type="hidden" name="role_id" value="{{ .ID }}">
+                  <input type="hidden" name="context_type" value="team">
+                  <input type="hidden" name="context_id" value="{{ $.Data.Team.ID }}">
+                  <button type="submit" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Remove</button>
+                </form>
+              </td>
+            </tr>
+            {{ else }}
+            <tr>
+              <td colspan="3" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                <p class="text-gray-900 whitespace-no-wrap">No roles assigned</p>
+              </td>
+            </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="my-4">
+      <h3 class="text-xl font-semibold mb-2">Available Roles</h3>
+      <div class="bg-white shadow-md rounded my-6">
+        <table class="min-w-full leading-normal">
+          <thead>
+            <tr>
+              <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Name
+              </th>
+              <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Description
+              </th>
+              <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-100 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {{ range .Data.UnassignedRoles }}
+            <tr>
+              <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-gray-900 whitespace-no-wrap">{{ .Name }}</p>
+              </td>
+              <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm">
+                <p class="text-gray-900 whitespace-no-wrap">{{ .Description }}</p>
+              </td>
+              <td class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                <form method="POST" action="/auth/add-role-to-user" class="inline-block">
+                  <input type="hidden" name="aquamarine.csrf.token" value="{{ $.Form.CSRF }}">
+                  <input type="hidden" name="user_id" value="{{ $.Data.User.ID }}">
+                  <input type="hidden" name="role_id" value="{{ .ID }}">
+                  <input type="hidden" name="context_type" value="team">
+                  <input type="hidden" name="context_id" value="{{ $.Data.Team.ID }}">
+                  <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Add</button>
+                </form>
+              </td>
+            </tr>
+            {{ else }}
+            <tr>
+              <td colspan="3" class="px-5 py-5 border-b border-gray-200 bg-white text-sm text-center">
+                <p class="text-gray-900 whitespace-no-wrap">No roles available</p>
+              </td>
+            </tr>
+            {{ end }}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+{{ define "submenu" }}
+{{ template "menu" . }}
+{{ end }}

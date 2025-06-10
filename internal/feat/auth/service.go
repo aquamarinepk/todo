@@ -64,6 +64,8 @@ type Service interface {
 	GetDefaultOrg(ctx context.Context) (Org, error)
 	GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
 	GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
+	AddOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error
+	RemoveOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error
 
 	// Team methods
 	GetAllTeams(ctx context.Context, orgID uuid.UUID) ([]Team, error)
@@ -71,12 +73,16 @@ type Service interface {
 	CreateTeam(ctx context.Context, team Team) error
 	UpdateTeam(ctx context.Context, team Team) error
 	DeleteTeam(ctx context.Context, id uuid.UUID) error
-
-	// Team membership
 	GetTeamMembers(ctx context.Context, teamID uuid.UUID) ([]User, error)
 	GetTeamUnassignedUsers(ctx context.Context, teamID uuid.UUID) ([]User, error)
 	AddUserToTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID, relationType string) error
 	RemoveUserFromTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) error
+
+	// Contextual role methods
+	GetUserContextualRoles(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) ([]Role, error)
+	GetUserContextualUnassignedRoles(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) ([]Role, error)
+	AddContextualRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID, contextType string, contextID string) error
+	RemoveContextualRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID, contextType string, contextID string) error
 }
 
 var (
@@ -218,6 +224,14 @@ func (svc *BaseService) RemoveRole(ctx context.Context, userID uuid.UUID, roleID
 	return svc.repo.RemoveRole(ctx, userID, roleID, "", "")
 }
 
+func (svc *BaseService) AddContextualRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID, contextType string, contextID string) error {
+	return svc.repo.AddRole(ctx, userID, roleID, contextType, contextID)
+}
+
+func (svc *BaseService) RemoveContextualRole(ctx context.Context, userID uuid.UUID, roleID uuid.UUID, contextType string, contextID string) error {
+	return svc.repo.RemoveRole(ctx, userID, roleID, contextType, contextID)
+}
+
 func (svc *BaseService) GetAllPermissions(ctx context.Context) ([]Permission, error) {
 	return svc.repo.GetAllPermissions(ctx)
 }
@@ -322,6 +336,14 @@ func (svc *BaseService) GetOrgUnassignedOwners(ctx context.Context, orgID uuid.U
 	return svc.repo.GetOrgUnassignedOwners(ctx, orgID)
 }
 
+func (svc *BaseService) AddOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error {
+    return svc.repo.AddOrgOwner(ctx, orgID, userID)
+}
+
+func (svc *BaseService) RemoveOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error {
+    return svc.repo.RemoveOrgOwner(ctx, orgID, userID)
+}
+
 func (svc *BaseService) GetAllTeams(ctx context.Context, orgID uuid.UUID) ([]Team, error) {
 	return svc.repo.GetAllTeams(ctx, orgID)
 }
@@ -356,4 +378,12 @@ func (svc *BaseService) AddUserToTeam(ctx context.Context, teamID uuid.UUID, use
 
 func (svc *BaseService) RemoveUserFromTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) error {
 	return svc.repo.RemoveUserFromTeam(ctx, teamID, userID)
+}
+
+func (svc *BaseService) GetUserContextualRoles(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) ([]Role, error) {
+	return svc.repo.GetUserContextualRoles(ctx, teamID, userID)
+}
+
+func (svc *BaseService) GetUserContextualUnassignedRoles(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) ([]Role, error) {
+	return svc.repo.GetUserContextualUnassignedRoles(ctx, teamID, userID)
 }

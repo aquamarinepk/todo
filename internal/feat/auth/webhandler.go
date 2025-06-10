@@ -552,317 +552,6 @@ func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, fmt.Sprintf("list-user-roles?id=%s", userID), http.StatusSeeOther)
 }
 
-func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Add permission to user")
-	ctx := r.Context()
-
-	userIDStr := r.FormValue("user_id")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
-		return
-	}
-
-	permissionIDStr := r.FormValue("permission_id")
-	permissionID, err := uuid.Parse(permissionIDStr)
-	if err != nil {
-		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
-		return
-	}
-
-	permission, err := h.service.GetPermission(ctx, permissionID)
-	if err != nil {
-		h.Err(w, err, am.ErrResourceNotFound, http.StatusInternalServerError)
-		return
-	}
-
-	err = h.service.AddPermissionToUser(ctx, userID, permission)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("%s/list-user-permissions?id=%s", authPath, userID), http.StatusSeeOther)
-}
-
-func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Remove permission from user")
-	ctx := r.Context()
-
-	userIDStr := r.FormValue("user_id")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-
-	permissionIDStr := r.FormValue("permission_id")
-	permissionID, err := uuid.Parse(permissionIDStr)
-	if err != nil {
-		h.Err(w, err, "Invalid permission ID", http.StatusBadRequest)
-		return
-	}
-
-	err = h.service.RemovePermissionFromUser(ctx, userID, permissionID)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("%s/list-user-permissions?id=%s", authPath, userID), http.StatusSeeOther)
-}
-
-// Role handlers
-func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("List roles")
-	ctx := r.Context()
-
-	roles, err := h.service.GetAllRoles(ctx)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
-		return
-	}
-
-	page := am.NewPage(roles)
-	page.SetFormAction(authPath)
-	page.GenCSRFToken(r)
-
-	page.SetFlash(GetFlash(r))
-
-	menu := am.NewMenu(authPath)
-	menu.AddNewItem(roleType)
-
-	page.Menu = *menu
-
-	tmpl, err := h.tm.Get("auth", "list-roles")
-	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, page)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
-		return
-	}
-
-	_, err = buf.WriteTo(w)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
-	}
-}
-
-func (h *WebHandler) NewRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("New role form")
-
-	role := NewRole("", "", "active")
-
-	page := am.NewPage(role)
-	page.SetFormAction(fmt.Sprintf("%s/create-role", authPath))
-	page.SetFormButtonText("Create")
-	page.GenCSRFToken(r)
-
-	menu := am.NewMenu(authPath)
-	menu.AddListItem(role)
-
-	page.Menu = *menu
-
-	tmpl, err := h.tm.Get("auth", "new-role")
-	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, page)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
-		return
-	}
-
-	_, err = buf.WriteTo(w)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
-	}
-}
-
-func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Create role")
-	ctx := r.Context()
-
-	if err := r.ParseForm(); err != nil {
-		h.Err(w, err, "Invalid form data", http.StatusBadRequest)
-		return
-	}
-
-	name := r.Form.Get("name")
-	description := r.Form.Get("description")
-	status := r.Form.Get("status")
-	if status == "" {
-		status = "active"
-	}
-
-	if name == "" {
-		h.Err(w, nil, "Name is required", http.StatusBadRequest)
-		return
-	}
-
-	role := NewRole(name, description, status)
-
-	err := h.service.CreateRole(ctx, role)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
-}
-
-func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
-	id, err := h.ID(w, r)
-	if err != nil {
-		return
-	}
-
-	h.Log().Info("Show role ", id)
-	ctx := r.Context()
-
-	role, err := h.service.GetRole(ctx, id)
-	if err != nil {
-		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
-		return
-	}
-
-	page := am.NewPage(role)
-	page.GenCSRFToken(r)
-
-	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
-	menu.AddListItem(role)
-	menu.AddEditItem(role)
-	menu.AddDeleteItem(role)
-	menu.AddGenericItem("list-role-permissions", role.ID().String(), "Permissions")
-
-	page.Menu = *menu
-
-	tmpl, err := h.tm.Get("auth", "show-role")
-	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, page)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
-		return
-	}
-
-	_, err = buf.WriteTo(w)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
-	}
-}
-
-func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
-	id, err := h.ID(w, r)
-	if err != nil {
-		return
-	}
-
-	h.Log().Info("Edit role ", id)
-	ctx := r.Context()
-
-	role, err := h.service.GetRole(ctx, id)
-	if err != nil {
-		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
-		return
-	}
-
-	page := am.NewPage(role)
-	page.SetFormAction(fmt.Sprintf("%s/update-role", authPath))
-	page.SetFormButtonText("Update")
-	page.GenCSRFToken(r)
-
-	menu := am.NewMenu(authPath)
-	menu.AddListItem(role)
-
-	page.Menu = *menu
-
-	tmpl, err := h.tm.Get("auth", "edit-role")
-	if err != nil {
-		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
-		return
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, page)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
-		return
-	}
-
-	_, err = buf.WriteTo(w)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
-	}
-}
-
-func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		h.Err(w, err, "Invalid form data", http.StatusBadRequest)
-		return
-	}
-
-	idStr := r.Form.Get("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		h.Err(w, err, "Invalid role ID", http.StatusBadRequest)
-		return
-	}
-
-	h.Log().Info("Update role ", id)
-	ctx := r.Context()
-
-	role, err := h.service.GetRole(ctx, id)
-	if err != nil {
-		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
-		return
-	}
-
-	role.Name = r.Form.Get("name")
-	role.Description = r.Form.Get("description")
-
-	err = h.service.UpdateRole(ctx, role)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotUpdateResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
-}
-
-func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
-	idStr := r.FormValue("id")
-	id, err := uuid.Parse(idStr)
-	if err != nil {
-		h.Err(w, err, "Invalid role ID", http.StatusBadRequest)
-		return
-	}
-
-	h.Log().Info("Delete role ", id)
-	ctx := r.Context()
-
-	err = h.service.DeleteRole(ctx, id)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
-}
-
 // Role relationships
 func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Add role to user")
@@ -877,7 +566,7 @@ func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	description := r.FormValue("description")
 	status := r.FormValue("status")
-	role := NewRole(name, description, status) // TODO: This should be obtained from the DB.
+	role := NewRole(name, description, status)
 
 	err = h.service.AddRole(ctx, userID, role.ID())
 	if err != nil {
@@ -2204,4 +1893,455 @@ func (h *WebHandler) GetResource(w http.ResponseWriter, r *http.Request) {
 		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
+}
+
+// Handler methods for contextual roles
+func (h *WebHandler) ListUserContextualRoles(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	teamIDStr := r.URL.Query().Get("team_id")
+	teamID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		h.Err(w, err, "Invalid team ID", http.StatusBadRequest)
+		return
+	}
+
+	userIDStr := r.URL.Query().Get("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.GetUser(ctx, userID)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	team, err := h.service.GetTeam(ctx, teamID)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	assignedRoles, err := h.service.GetUserContextualRoles(ctx, teamID, userID)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	unassignedRoles, err := h.service.GetUserContextualUnassignedRoles(ctx, teamID, userID)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	page := am.NewPage(struct {
+		User            User
+		Team            Team
+		AssignedRoles   []Role
+		UnassignedRoles []Role
+	}{
+		User:            user,
+		Team:            team,
+		AssignedRoles:   assignedRoles,
+		UnassignedRoles: unassignedRoles,
+	})
+
+	page.SetFormAction("/auth/add-contextual-role")
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddGenericItem("list-team-members", team.ID().String(), "Back")
+
+	page.Menu = *menu
+
+	tmpl, err := h.tm.Get("auth", "list-user-contextual-roles")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) AddContextualRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Add contextual role to user")
+	ctx := r.Context()
+
+	userIDStr := r.FormValue("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+	roleIDStr := r.FormValue("role_id")
+	roleID, err := uuid.Parse(roleIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+	teamIDStr := r.FormValue("team_id")
+	teamID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.AddContextualRole(ctx, userID, roleID, "team", teamID.String())
+	if err != nil {
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("list-user-contextual-roles?team_id=%s&user_id=%s", teamID, userID), http.StatusSeeOther)
+}
+
+func (h *WebHandler) RemoveContextualRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Remove contextual role from user")
+	ctx := r.Context()
+
+	userIDStr := r.FormValue("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+	roleIDStr := r.FormValue("role_id")
+	roleID, err := uuid.Parse(roleIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+	teamIDStr := r.FormValue("team_id")
+	teamID, err := uuid.Parse(teamIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.RemoveContextualRole(ctx, userID, roleID, "team", teamID.String())
+	if err != nil {
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("list-user-contextual-roles?team_id=%s&user_id=%s", teamID, userID), http.StatusSeeOther)
+}
+
+// Role handlers
+func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("List roles")
+	ctx := r.Context()
+
+	roles, err := h.service.GetAllRoles(ctx)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	page := am.NewPage(roles)
+	page.SetFormAction(authPath)
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.AddNewItem("role")
+
+	page.Menu = *menu
+
+	tmpl, err := h.tm.Get("auth", "list-roles")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) NewRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("New role form")
+
+	role := NewRole("", "", "active")
+
+	page := am.NewPage(role)
+	page.SetFormAction(fmt.Sprintf("%s/create-role", authPath))
+	page.SetFormButtonText("Create")
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(role)
+
+	page.Menu = *menu
+
+	tmpl, err := h.tm.Get("auth", "new-role")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Create role")
+	ctx := r.Context()
+
+	if err := r.ParseForm(); err != nil {
+		h.Err(w, err, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	name := r.Form.Get("name")
+	description := r.Form.Get("description")
+	status := r.Form.Get("status")
+	if status == "" {
+		status = "active"
+	}
+
+	role := NewRole(name, description, status)
+	role.GenCreateValues()
+
+	err := h.service.CreateRole(ctx, role)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
+}
+
+func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
+	id, err := h.ID(w, r)
+	if err != nil {
+		return
+	}
+
+	h.Log().Info("Show role ", id)
+	ctx := r.Context()
+
+	role, err := h.service.GetRole(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	page := am.NewPage(role)
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.SetCSRFToken(page.Form.CSRF)
+	menu.AddListItem(role)
+	menu.AddEditItem(role)
+	menu.AddDeleteItem(role)
+	menu.AddGenericItem("list-role-permissions", role.ID().String(), "Permissions")
+
+	page.Menu = *menu
+
+	tmpl, err := h.tm.Get("auth", "show-role")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
+	id, err := h.ID(w, r)
+	if err != nil {
+		return
+	}
+
+	h.Log().Info("Edit role ", id)
+	ctx := r.Context()
+
+	role, err := h.service.GetRole(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	page := am.NewPage(role)
+	page.SetFormAction(fmt.Sprintf("%s/update-role", authPath))
+	page.SetFormButtonText("Update")
+	page.GenCSRFToken(r)
+
+	menu := am.NewMenu(authPath)
+	menu.AddListItem(role)
+
+	page.Menu = *menu
+
+	tmpl, err := h.tm.Get("auth", "edit-role")
+	if err != nil {
+		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
+		return
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, page)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotRenderTemplate, http.StatusInternalServerError)
+		return
+	}
+
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
+	}
+}
+
+func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		h.Err(w, err, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	idStr := r.Form.Get("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		h.Err(w, err, "Invalid role ID", http.StatusBadRequest)
+		return
+	}
+
+	h.Log().Info("Update role ", id)
+	ctx := r.Context()
+
+	role, err := h.service.GetRole(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	role.Name = r.Form.Get("name")
+	role.Description = r.Form.Get("description")
+
+	err = h.service.UpdateRole(ctx, role)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotUpdateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
+}
+
+func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
+	idStr := r.FormValue("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		h.Err(w, err, "Invalid role ID", http.StatusBadRequest)
+		return
+	}
+
+	h.Log().Info("Delete role ", id)
+	ctx := r.Context()
+
+	err = h.service.DeleteRole(ctx, id)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
+}
+
+func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Add permission to user")
+	ctx := r.Context()
+
+	userIDStr := r.FormValue("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	permissionIDStr := r.FormValue("permission_id")
+	permissionID, err := uuid.Parse(permissionIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	permission, err := h.service.GetPermission(ctx, permissionID)
+	if err != nil {
+		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
+		return
+	}
+
+	err = h.service.AddPermissionToUser(ctx, userID, permission)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("list-user-permissions?id=%s", userID), http.StatusSeeOther)
+}
+
+func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
+	h.Log().Info("Remove permission from user")
+	ctx := r.Context()
+
+	userIDStr := r.FormValue("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	permissionIDStr := r.FormValue("permission_id")
+	permissionID, err := uuid.Parse(permissionIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.RemovePermissionFromUser(ctx, userID, permissionID)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("list-user-permissions?id=%s", userID), http.StatusSeeOther)
 }

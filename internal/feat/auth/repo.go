@@ -66,6 +66,7 @@ type Repo interface {
 	// SECTION: Organization-related methods
 	CreateOrg(ctx context.Context, org Org) error
 	AddOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error
+	RemoveOrgOwner(ctx context.Context, orgID uuid.UUID, userID uuid.UUID) error
 	GetDefaultOrg(ctx context.Context) (Org, error)
 	GetOrgOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
 	GetOrgUnassignedOwners(ctx context.Context, orgID uuid.UUID) ([]User, error)
@@ -78,4 +79,8 @@ type Repo interface {
 	GetTeamUnassignedUsers(ctx context.Context, teamID uuid.UUID) ([]User, error)
 	AddUserToTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID, relationType string) error
 	RemoveUserFromTeam(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) error
+
+	// Team member roles methods
+	GetUserContextualRoles(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) ([]Role, error)
+	GetUserContextualUnassignedRoles(ctx context.Context, teamID uuid.UUID, userID uuid.UUID) ([]Role, error)
 }
