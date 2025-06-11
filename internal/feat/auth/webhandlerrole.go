@@ -255,6 +255,7 @@ func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
 }
 
+// Role relationships
 func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request) {
 	id, err := h.ID(w, r)
 	if err != nil {

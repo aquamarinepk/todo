@@ -14,9 +14,9 @@ func NewAPIRouter(handler *APIHandler, opts ...am.Option) *am.Router {
 	r.Post("/create-user", handler.CreateUser)
 	r.Post("/update-user", handler.UpdateUser)
 	r.Post("/delete-user", handler.DeleteUser)
-	r.Post("/add-role", handler.AddRole)
-	r.Post("/update-role", handler.UpdateRole)
-	r.Post("/delete-role", handler.DeleteRole)
+	r.Post("/roles", handler.CreateRole)
+	r.Put("/roles", handler.UpdateRole)
+	r.Delete("/roles", handler.DeleteRole)
 
 	return r
 }
