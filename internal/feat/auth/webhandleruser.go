@@ -516,57 +516,6 @@ func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) 
 	http.Redirect(w, r, fmt.Sprintf("list-user-roles?id=%s", userID), http.StatusSeeOther)
 }
 
-// Role relationships
-func (h *WebHandler) AddRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Add role to user")
-	ctx := r.Context()
-
-	userIDStr := r.FormValue("user_id")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-	name := r.FormValue("name")
-	description := r.FormValue("description")
-	status := r.FormValue("status")
-	role := NewRole(name, description, status)
-
-	err = h.service.AddRole(ctx, userID, role.ID())
-	if err != nil {
-		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("%s/%s", authPath, userID), http.StatusSeeOther)
-}
-
-func (h *WebHandler) RemoveRole(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Remove role from user")
-	ctx := r.Context()
-
-	userIDStr := r.FormValue("user_id")
-	userID, err := uuid.Parse(userIDStr)
-	if err != nil {
-		h.Err(w, err, "Invalid user ID", http.StatusBadRequest)
-		return
-	}
-	roleIDStr := r.FormValue("role_id")
-	roleID, err := uuid.Parse(roleIDStr)
-	if err != nil {
-		h.Err(w, err, "Invalid role ID", http.StatusBadRequest)
-		return
-	}
-
-	err = h.service.RemoveRole(ctx, userID, roleID)
-	if err != nil {
-		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
-		return
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("list-user-roles?id=%s", userID), http.StatusSeeOther)
-}
-
 func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("Add permission to user")
 	ctx := r.Context()

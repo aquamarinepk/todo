@@ -35,8 +35,6 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 	core.Get("/edit-role", handler.EditRole)
 	core.Post("/update-role", handler.UpdateRole)
 	core.Post("/delete-role", handler.DeleteRole)
-	core.Post("/add-role", handler.AddRole)
-	core.Post("/remove-role", handler.RemoveRole)
 	// Role relationships
 	core.Get("/list-role-permissions", handler.ListRolePermissions)
 	core.Post("/add-permission-to-role", handler.AddPermissionToRole)
