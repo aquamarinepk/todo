@@ -119,7 +119,7 @@ func (h *WebHandler) ShowPermission(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddListItem(permission)
 	menu.AddEditItem(permission)
 	menu.AddDeleteItem(permission)

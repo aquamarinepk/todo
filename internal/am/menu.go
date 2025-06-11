@@ -106,11 +106,6 @@ func NewMenu(path string) *Menu {
 	}
 }
 
-// SetCSRFToken sets the CSRF token for the menu.
-func (m *Menu) SetCSRFToken(csrfToken string) {
-	m.CSRFToken = csrfToken
-}
-
 // AddListItem adds a new MenuItem for listing resources.
 func (m *Menu) AddListItem(resource Resource, text ...string) {
 	// TODO: Use a pluralization library to get the plural form of the resource type.

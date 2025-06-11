@@ -182,7 +182,6 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
 	menu.AddListItem(user)
 	menu.AddEditItem(user)
 	menu.AddDeleteItem(user)
@@ -362,7 +361,7 @@ func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddShowItem(user, "Back")
 
 	page.Menu = *menu
@@ -440,7 +439,7 @@ func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request)
 
 	// Create the menu
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddShowItem(user, "Back")
 
 	page.Menu = *menu

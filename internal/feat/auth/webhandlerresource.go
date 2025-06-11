@@ -128,7 +128,7 @@ func (h *WebHandler) ShowResource(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddListItem(resource)
 	menu.AddEditItem(resource)
 	menu.AddDeleteItem(resource)
@@ -175,7 +175,7 @@ func (h *WebHandler) EditResource(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddListItem(resource)
 	menu.AddShowItem(resource)
 	menu.AddDeleteItem(resource)
@@ -298,7 +298,7 @@ func (h *WebHandler) ListResourcePermissions(w http.ResponseWriter, r *http.Requ
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddListItem(resource)
 	menu.AddEditItem(resource)
 	menu.AddDeleteItem(resource)

@@ -130,7 +130,7 @@ func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddListItem(role)
 	menu.AddEditItem(role)
 	menu.AddDeleteItem(role)
@@ -299,7 +299,7 @@ func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request)
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddListItem(role)
 	menu.AddEditItem(role)
 	menu.AddDeleteItem(role)
@@ -444,7 +444,7 @@ func (h *WebHandler) ListUserContextualRoles(w http.ResponseWriter, r *http.Requ
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddGenericItem("list-team-members", team.ID().String(), "Back")
 
 	page.Menu = *menu

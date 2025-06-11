@@ -315,7 +315,7 @@ func (h *WebHandler) ListTeamMembers(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddListItem(team)
 	page.Menu = *menu
 

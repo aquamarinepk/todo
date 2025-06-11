@@ -45,7 +45,7 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(todoResPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddResNewItem("todo")
 
 	page.Menu = *menu
@@ -135,7 +135,7 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(todoResPath)
-	menu.SetCSRFToken(page.Form.CSRF)
+
 	menu.AddResListItem(list)
 	menu.AddResEditItem(list)
 	menu.AddResDeleteItem(list)
