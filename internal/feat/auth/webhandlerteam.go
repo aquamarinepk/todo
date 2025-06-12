@@ -33,9 +33,8 @@ func (h *WebHandler) ListTeams(w http.ResponseWriter, r *http.Request) {
 		Teams: teams,
 	})
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddNewItem("team")
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-teams")
 	if err != nil {
@@ -69,9 +68,8 @@ func (h *WebHandler) NewTeam(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction("/auth/create-team")
 	page.SetFormButtonText("Create")
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(team)
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "new-team")
 	if err != nil {
@@ -144,11 +142,10 @@ func (h *WebHandler) ShowTeam(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(r, team)
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(team)
 	menu.AddEditItem(team)
 	menu.AddGenericItem(ActionListTeamMembers, team.ID().String(), TextMembers)
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-team")
 	if err != nil {
@@ -187,9 +184,8 @@ func (h *WebHandler) EditTeam(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction("/auth/update-team")
 	page.SetFormButtonText("Update")
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(team)
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "edit-team")
 	if err != nil {
@@ -309,10 +305,8 @@ func (h *WebHandler) ListTeamMembers(w http.ResponseWriter, r *http.Request) {
 		Unassigned: unassigned,
 	})
 
-	menu := am.NewMenu(authPath)
-
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(team)
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-team-members")
 	if err != nil {

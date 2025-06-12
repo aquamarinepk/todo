@@ -24,10 +24,8 @@ func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(r, roles)
 	page.SetFormAction(authPath)
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddNewItem("role")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-roles")
 	if err != nil {
@@ -57,10 +55,8 @@ func (h *WebHandler) NewRole(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(fmt.Sprintf("%s/create-role", authPath))
 	page.SetFormButtonText("Create")
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(role)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "new-role")
 	if err != nil {
@@ -126,14 +122,11 @@ func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(r, role)
 
-	menu := am.NewMenu(authPath)
-
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(role)
 	menu.AddEditItem(role)
 	menu.AddDeleteItem(role)
 	menu.AddGenericItem("list-role-permissions", role.ID().String(), "Permissions")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-role")
 	if err != nil {
@@ -173,10 +166,8 @@ func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(fmt.Sprintf("%s/update-role", authPath))
 	page.SetFormButtonText("Update")
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(role)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "edit-role")
 	if err != nil {
@@ -294,14 +285,11 @@ func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request)
 		AvailablePermissions: unassigned,
 	})
 
-	menu := am.NewMenu(authPath)
-
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(role)
 	menu.AddEditItem(role)
 	menu.AddDeleteItem(role)
 	menu.AddGenericItem("list-role-permissions", role.ID().String(), "Permissions")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-role-permissions")
 	if err != nil {
@@ -441,8 +429,6 @@ func (h *WebHandler) ListUserContextualRoles(w http.ResponseWriter, r *http.Requ
 	menu := am.NewMenu(authPath)
 
 	menu.AddGenericItem("list-team-members", team.ID().String(), "Back")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-user-contextual-roles")
 	if err != nil {

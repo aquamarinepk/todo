@@ -22,12 +22,9 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(r, users)
 	page.SetFormAction(authPath)
-	//
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddNewItem(userType)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-users")
 	if err != nil {
@@ -91,10 +88,8 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	}
 	page.SetFlash(amFlash)
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(user)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "new-user")
 	if err != nil {
@@ -179,14 +174,12 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(r, user)
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(user)
 	menu.AddEditItem(user)
 	menu.AddDeleteItem(user)
 	menu.AddGenericItem(ActionListUserRoles, user.ID().String(), TextRoles)
 	menu.AddGenericItem(ActionListUserPermissions, user.ID().String(), TextPermissions)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-user")
 	if err != nil {
@@ -226,10 +219,8 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "update", am.NoSlug))
 	page.SetFormButtonText("Update")
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(user)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "edit-user")
 	if err != nil {
@@ -356,11 +347,8 @@ func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
 
 	page.SetFormAction("/auth/add-role-to-user")
 
-	menu := am.NewMenu(authPath)
-
+	menu := page.NewMenu(authPath)
 	menu.AddShowItem(user, "Back")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-user-roles")
 	if err != nil {
@@ -433,11 +421,8 @@ func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request)
 	})
 
 	// Create the menu
-	menu := am.NewMenu(authPath)
-
+	menu := page.NewMenu(authPath)
 	menu.AddShowItem(user, "Back")
-
-	page.Menu = *menu
 
 	// Render the template
 	tmpl, err := h.tm.Get("auth", "list-user-permissions")
