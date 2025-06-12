@@ -33,6 +33,11 @@ func (h *Handler) Render(w http.ResponseWriter, r *http.Request, template string
 	return nil // Default implementation does nothing
 }
 
+// Redir redirects to the specified path with http.StatusSeeOther
+func (h *Handler) Redir(w http.ResponseWriter, r *http.Request, path string) {
+	http.Redirect(w, r, path, http.StatusSeeOther)
+}
+
 // ID returns the ID from the request query parameters.
 // If the ID is missing or invalid, it writes an error response and returns an error.
 func (h *Handler) ID(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
