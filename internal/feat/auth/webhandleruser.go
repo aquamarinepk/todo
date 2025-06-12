@@ -144,7 +144,7 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		h.Log().Error("Failed to add flash message", err)
 	}
 
-	http.Redirect(w, r, am.ListPath(authPath, "user"), http.StatusSeeOther)
+	h.Redir(w, r, am.ListPath(authPath, "user"))
 }
 
 func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
@@ -270,7 +270,8 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, am.ListPath(authPath, "user"), http.StatusSeeOther)
+	path := am.ListPath(authPath, "user")
+	h.Redir(w, r, path)
 }
 
 func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -290,7 +291,8 @@ func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, am.ListPath(authPath, "user"), http.StatusSeeOther)
+	path := am.ListPath(authPath, "user")
+	h.Redir(w, r, path)
 }
 
 func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
@@ -446,7 +448,8 @@ func (h *WebHandler) AddRoleToUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, am.ListRelatedPath(authPath, "user", "role", userID), http.StatusSeeOther)
+	path := am.ListRelatedPath(authPath, "user", "role", userID)
+	h.Redir(w, r, path)
 }
 
 func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) {
@@ -471,7 +474,8 @@ func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	http.Redirect(w, r, am.ListRelatedPath(authPath, "user", "role", userID), http.StatusSeeOther)
+	path := am.ListRelatedPath(authPath, "user", "role", userID)
+	h.Redir(w, r, path)
 }
 
 func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request) {
@@ -503,7 +507,8 @@ func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	http.Redirect(w, r, am.ListRelatedPath(authPath, "user", "permission", userID), http.StatusSeeOther)
+	path := am.ListRelatedPath(authPath, "user", "permission", userID)
+	h.Redir(w, r, path)
 }
 
 func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
@@ -529,5 +534,6 @@ func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	http.Redirect(w, r, am.ListRelatedPath(authPath, "user", "permission", userID), http.StatusSeeOther)
+	path := am.ListRelatedPath(authPath, "user", "permission", userID)
+	h.Redir(w, r, path)
 }
