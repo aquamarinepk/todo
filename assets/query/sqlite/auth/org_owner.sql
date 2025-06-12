@@ -1,16 +1,19 @@
--- Res: Org
+-- Res: OrgOwner
 -- Table: org_owner
 
 -- Add
-INSERT INTO org_owner (id, org_id, user_id, created_at, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+INSERT INTO org_owner (id, org_id, user_id) VALUES (?, ?, ?);
+
+-- Remove
+DELETE FROM org_owner WHERE org_id = ? AND user_id = ?;
 
 -- GetOrgOwners
-SELECT u.id, u.short_id, u.username, u.email_enc, u.name, u.password_enc, u.created_by, u.updated_by, u.created_at, u.updated_at, u.last_login_at, u.last_login_ip, u.is_active
-FROM user u
-JOIN org_owner oo ON u.id = oo.user_id
-WHERE oo.org_id = ?;
+SELECT u.* FROM "user" u
+INNER JOIN org_owner o ON u.id = o.user_id
+WHERE o.org_id = ?;
 
 -- GetOrgUnassignedOwners
-SELECT u.id, u.short_id, u.username, u.email_enc, u.name, u.password_enc, u.created_by, u.updated_by, u.created_at, u.updated_at, u.last_login_at, u.last_login_ip, u.is_active
-FROM user u
-WHERE u.id NOT IN (SELECT user_id FROM org_owner WHERE org_id = ?);
+SELECT u.* FROM "user" u
+WHERE u.id NOT IN (
+    SELECT user_id FROM org_owner WHERE org_id = ?
+);

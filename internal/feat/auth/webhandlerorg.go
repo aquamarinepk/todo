@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aquamarinepk/todo/internal/am"
+	"github.com/google/uuid"
 )
 
 // Org handlers
@@ -113,4 +114,56 @@ func (h *WebHandler) ListOrgOwners(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		h.Err(w, err, am.ErrCannotWriteResponse, http.StatusInternalServerError)
 	}
+}
+
+func (h *WebHandler) AddOrgOwner(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	orgIDStr := r.FormValue("org_id")
+	orgID, err := uuid.Parse(orgIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	userIDStr := r.FormValue("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.AddOrgOwner(ctx, orgID, userID)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/auth/list-org-owners?id="+orgID.String(), http.StatusSeeOther)
+}
+
+func (h *WebHandler) RemoveOrgOwner(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	orgIDStr := r.FormValue("org_id")
+	orgID, err := uuid.Parse(orgIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	userIDStr := r.FormValue("user_id")
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Err(w, err, am.ErrInvalidID, http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.RemoveOrgOwner(ctx, orgID, userID)
+	if err != nil {
+		h.Err(w, err, am.ErrCannotDeleteResource, http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, "/auth/list-org-owners?id="+orgID.String(), http.StatusSeeOther)
 }

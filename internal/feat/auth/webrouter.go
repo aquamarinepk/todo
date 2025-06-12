@@ -64,6 +64,9 @@ func NewWebRouter(handler *WebHandler, opts ...am.Option) *am.Router {
 
 	// Organization routes
 	core.Get("/show-org", handler.ShowOrg)
+	core.Get("/list-org-owners", handler.ListOrgOwners)
+	core.Post("/add-org-owner", handler.AddOrgOwner)
+	core.Post("/remove-org-owner", handler.RemoveOrgOwner)
 
 	// Team routes
 	core.Get("/list-teams", handler.ListTeams)
