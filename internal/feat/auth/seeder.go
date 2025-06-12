@@ -51,8 +51,17 @@ func (s *Seeder) SeedAll(ctx context.Context) error {
 	}
 	for feature, seeds := range byFeature {
 		for _, seed := range seeds {
+			applied, err := s.JSONSeeder.SeedApplied(seed.Datetime, seed.Name, feature)
+			if err != nil {
+				return fmt.Errorf("failed to check if seed was applied: %w", err)
+			}
+			if applied {
+				s.Log().Debugf("Seed already applied: %s-%s [%s]", seed.Datetime, seed.Name, feature)
+				continue
+			}
+
 			var data SeedData
-			err := json.Unmarshal([]byte(seed.Content), &data)
+			err = json.Unmarshal([]byte(seed.Content), &data)
 			if err != nil {
 				return fmt.Errorf("failed to unmarshal %s seed: %w", feature, err)
 			}
