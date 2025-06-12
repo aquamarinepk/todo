@@ -273,6 +273,7 @@ func (h *WebHandler) DeleteTeam(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, am.ListPath(authPath, "team"), http.StatusSeeOther)
 }
 
+// Team relationships
 func (h *WebHandler) ListTeamMembers(w http.ResponseWriter, r *http.Request) {
 	id, err := h.ID(w, r)
 	if err != nil {
