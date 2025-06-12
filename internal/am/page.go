@@ -13,7 +13,7 @@ type Page struct {
 	Data  interface{}
 	Flash Flash
 	Form  Form
-	Menu  Menu
+	Menu  *Menu
 	Feat  Feat
 }
 
@@ -53,7 +53,7 @@ func NewPage(r *http.Request, data interface{}) *Page {
 				Style: "",
 			},
 		},
-		Menu: Menu{
+		Menu: &Menu{
 			Items: []MenuItem{},
 		},
 	}
@@ -120,9 +120,10 @@ func (p *Page) Path(feat Feat, item MenuItem) string {
 	return basePath + "?" + query.Encode()
 }
 
-// NewMenu returns a new menu associated with this page, configured with the given path
+// NewMenu returns a new menu associated with this page, configured with the
+// given path
 func (p *Page) NewMenu(path string) *Menu {
 	menu := NewMenu(path)
-	p.Menu = *menu
+	p.Menu = menu
 	return menu
 }
