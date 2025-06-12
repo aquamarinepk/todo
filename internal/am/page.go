@@ -119,3 +119,10 @@ func (p *Page) Path(feat Feat, item MenuItem) string {
 
 	return basePath + "?" + query.Encode()
 }
+
+// NewMenu returns a new menu associated with this page, configured with the given path
+func (p *Page) NewMenu(path string) *Menu {
+	menu := NewMenu(path)
+	p.Menu = *menu
+	return menu
+}

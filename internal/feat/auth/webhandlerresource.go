@@ -24,10 +24,8 @@ func (h *WebHandler) ListResources(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(r, resources)
 	page.SetFormAction(authPath)
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddNewItem("resource")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-resources")
 	if err != nil {
@@ -57,10 +55,8 @@ func (h *WebHandler) NewResource(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(am.CreatePath(authPath, "resource"))
 	page.SetFormButtonText("Create")
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(resource)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "new-resource")
 	if err != nil {
@@ -124,14 +120,12 @@ func (h *WebHandler) ShowResource(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(r, resource)
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 
 	menu.AddListItem(resource)
 	menu.AddEditItem(resource)
 	menu.AddDeleteItem(resource)
 	menu.AddGenericItem("list-resource-permissions", resource.ID().String(), "Permissions")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-resource")
 	if err != nil {
@@ -170,13 +164,11 @@ func (h *WebHandler) EditResource(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(r, resource)
 	page.SetFormAction(am.UpdatePath(authPath, "resource"))
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 
 	menu.AddListItem(resource)
 	menu.AddShowItem(resource)
 	menu.AddDeleteItem(resource)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "edit-resource")
 	if err != nil {
@@ -292,14 +284,12 @@ func (h *WebHandler) ListResourcePermissions(w http.ResponseWriter, r *http.Requ
 		AvailablePermissions: unassigned,
 	})
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 
 	menu.AddListItem(resource)
 	menu.AddEditItem(resource)
 	menu.AddDeleteItem(resource)
 	menu.AddGenericItem("list-resource-permissions", resource.ID().String(), "Permissions")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-resource-permissions")
 	if err != nil {

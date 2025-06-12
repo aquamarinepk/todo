@@ -47,8 +47,6 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 
 	menu.AddResNewItem("todo")
 
-	page.Menu = *menu
-
 	tmpl, err := h.tm.Get("todo", "list")
 	if err != nil {
 		http.Error(w, am.ErrTemplateNotFound, http.StatusInternalServerError)
@@ -136,8 +134,6 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 	menu.AddResListItem(list)
 	menu.AddResEditItem(list)
 	menu.AddResDeleteItem(list)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("todo", "show")
 	if err != nil {

@@ -23,10 +23,8 @@ func (h *WebHandler) ListPermissions(w http.ResponseWriter, r *http.Request) {
 	page := am.NewPage(r, permissions)
 	page.SetFormAction(authPath)
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddNewItem("permission")
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "list-permissions")
 	if err != nil {
@@ -56,10 +54,8 @@ func (h *WebHandler) NewPermission(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(am.CreatePath(authPath, "permission"))
 	page.SetFormButtonText("Create")
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(permission)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "new-permission")
 	if err != nil {
@@ -115,13 +111,10 @@ func (h *WebHandler) ShowPermission(w http.ResponseWriter, r *http.Request) {
 
 	page := am.NewPage(r, permission)
 
-	menu := am.NewMenu(authPath)
-
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(permission)
 	menu.AddEditItem(permission)
 	menu.AddDeleteItem(permission)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "show-permission")
 	if err != nil {
@@ -161,10 +154,8 @@ func (h *WebHandler) EditPermission(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(am.UpdatePath(authPath, "permission"))
 	page.SetFormButtonText("Update")
 
-	menu := am.NewMenu(authPath)
+	menu := page.NewMenu(authPath)
 	menu.AddListItem(permission)
-
-	page.Menu = *menu
 
 	tmpl, err := h.tm.Get("auth", "edit-permission")
 	if err != nil {
