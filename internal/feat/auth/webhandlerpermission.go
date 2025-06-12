@@ -20,9 +20,8 @@ func (h *WebHandler) ListPermissions(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(permissions)
+	page := am.NewPage(r, permissions)
 	page.SetFormAction(authPath)
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddNewItem("permission")
@@ -53,10 +52,9 @@ func (h *WebHandler) NewPermission(w http.ResponseWriter, r *http.Request) {
 
 	permission := NewPermission("", "")
 
-	page := am.NewPage(permission)
+	page := am.NewPage(r, permission)
 	page.SetFormAction(am.CreatePath(authPath, "permission"))
 	page.SetFormButtonText("Create")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(permission)
@@ -115,8 +113,7 @@ func (h *WebHandler) ShowPermission(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(permission)
-	page.GenCSRFToken(r)
+	page := am.NewPage(r, permission)
 
 	menu := am.NewMenu(authPath)
 
@@ -160,10 +157,9 @@ func (h *WebHandler) EditPermission(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(permission)
+	page := am.NewPage(r, permission)
 	page.SetFormAction(am.UpdatePath(authPath, "permission"))
 	page.SetFormButtonText("Update")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(permission)

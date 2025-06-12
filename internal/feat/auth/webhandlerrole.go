@@ -21,9 +21,8 @@ func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(roles)
+	page := am.NewPage(r, roles)
 	page.SetFormAction(authPath)
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddNewItem("role")
@@ -54,10 +53,9 @@ func (h *WebHandler) NewRole(w http.ResponseWriter, r *http.Request) {
 
 	role := NewRole("", "", "active")
 
-	page := am.NewPage(role)
+	page := am.NewPage(r, role)
 	page.SetFormAction(fmt.Sprintf("%s/create-role", authPath))
 	page.SetFormButtonText("Create")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(role)
@@ -126,8 +124,7 @@ func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(role)
-	page.GenCSRFToken(r)
+	page := am.NewPage(r, role)
 
 	menu := am.NewMenu(authPath)
 
@@ -172,10 +169,9 @@ func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(role)
+	page := am.NewPage(r, role)
 	page.SetFormAction(fmt.Sprintf("%s/update-role", authPath))
 	page.SetFormButtonText("Update")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(role)
@@ -284,7 +280,7 @@ func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	page := am.NewPage(struct {
+	page := am.NewPage(r, struct {
 		ID                   uuid.UUID
 		Name                 string
 		Description          string
@@ -297,7 +293,6 @@ func (h *WebHandler) ListRolePermissions(w http.ResponseWriter, r *http.Request)
 		Permissions:          assigned,
 		AvailablePermissions: unassigned,
 	})
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 
@@ -429,7 +424,7 @@ func (h *WebHandler) ListUserContextualRoles(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	page := am.NewPage(struct {
+	page := am.NewPage(r, struct {
 		User            User
 		Team            Team
 		AssignedRoles   []Role
@@ -442,7 +437,6 @@ func (h *WebHandler) ListUserContextualRoles(w http.ResponseWriter, r *http.Requ
 	})
 
 	page.SetFormAction("/auth/add-contextual-role")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 

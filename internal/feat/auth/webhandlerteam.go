@@ -25,14 +25,13 @@ func (h *WebHandler) ListTeams(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(struct {
+	page := am.NewPage(r, struct {
 		Org   Org
 		Teams []Team
 	}{
 		Org:   org,
 		Teams: teams,
 	})
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddNewItem("team")
@@ -66,10 +65,9 @@ func (h *WebHandler) NewTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	team := NewTeam(org.ID(), "", "", "")
-	page := am.NewPage(team)
+	page := am.NewPage(r, team)
 	page.SetFormAction("/auth/create-team")
 	page.SetFormButtonText("Create")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(team)
@@ -144,8 +142,7 @@ func (h *WebHandler) ShowTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(team)
-	page.GenCSRFToken(r)
+	page := am.NewPage(r, team)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(team)
@@ -186,10 +183,9 @@ func (h *WebHandler) EditTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(team)
+	page := am.NewPage(r, team)
 	page.SetFormAction("/auth/update-team")
 	page.SetFormButtonText("Update")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(team)
@@ -303,7 +299,7 @@ func (h *WebHandler) ListTeamMembers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(struct {
+	page := am.NewPage(r, struct {
 		Team       Team
 		Members    []User
 		Unassigned []User
@@ -312,8 +308,6 @@ func (h *WebHandler) ListTeamMembers(w http.ResponseWriter, r *http.Request) {
 		Members:    members,
 		Unassigned: unassigned,
 	})
-
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 

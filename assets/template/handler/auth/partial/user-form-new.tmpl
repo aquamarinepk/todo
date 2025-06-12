@@ -1,6 +1,7 @@
 {{ define "user-form-new" }}
 <form action="{{ .Form.Action }}" method="post" class="space-y-4" onsubmit="return validatePassword()">
   <input type="hidden" name="_method" value="{{ .Form.Method }}" />
+  AAA
   <input type="hidden" name="aquamarine.csrf.token" value="{{ .Form.CSRF }}" />
   <input type="hidden" name="id" value="{{ .Data.ID }}" />
   <div>
@@ -85,4 +86,4 @@ function validatePassword() {
   return true;
 }
 </script>
-{{ end }} 
+{{ end }}
