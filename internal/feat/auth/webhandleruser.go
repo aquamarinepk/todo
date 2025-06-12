@@ -2,14 +2,12 @@ package auth
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 
 	"github.com/aquamarinepk/todo/internal/am"
 	"github.com/google/uuid"
 )
 
-// User handlers
 func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("List of users")
 	ctx := r.Context()
@@ -45,15 +43,9 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// NewUser handles the creation of a new user.
-// WIP: This is a work in progress. The flash message system is still not available
-// to deliver notifications. Some tweaking is still needed to properly display
-// flash messages in the template.
 func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New user")
 
-	// WIPT: Just testing the flash mesages.
-	// Still not working
 	err := h.AddInfoFlash(w, r, "Welcome to the user creation page!")
 	if err != nil {
 		h.Log().Error("add info flash message error", err)
@@ -77,10 +69,9 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	user := NewUser("", "")
 
 	page := am.NewPage(r, user)
-	page.SetFormAction(fmt.Sprintf("%s/create-user", authPath))
+	page.SetFormAction(am.CreatePath(authPath, "user"))
 	page.SetFormButtonText("Create")
 
-	// Convert auth.Flash to am.Flash
 	authFlash := h.GetFlash(r)
 	amFlash := am.Flash{}
 	for _, n := range authFlash.Notifications {
@@ -148,7 +139,6 @@ func (h *WebHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Set success flash message
 	err = h.AddFlash(w, r, am.NotificationType.Success, "User created successfully")
 	if err != nil {
 		h.Log().Error("Failed to add flash message", err)
@@ -216,7 +206,7 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(r, &user)
-	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "update", am.NoSlug))
+	page.SetFormAction(am.UpdatePath(authPath, "user"))
 	page.SetFormButtonText("Update")
 
 	menu := page.NewMenu(authPath)
@@ -262,11 +252,9 @@ func (h *WebHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
 	password := r.FormValue("password")
 
-	// Update user fields
 	user.Username = username
 	user.Name = name
 
-	// Update password if provided
 	if password != "" {
 		passwordEnc, err := HashPassword(password)
 		if err != nil {
@@ -305,7 +293,6 @@ func (h *WebHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, am.ListPath(authPath, "user"), http.StatusSeeOther)
 }
 
-// User relationships
 func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
 	var err error
 	var userID uuid.UUID
@@ -379,35 +366,30 @@ func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request)
 	h.Log().Info("List permissions for user ", "id", id)
 	ctx := r.Context()
 
-	// Get user details
 	user, err := h.service.GetUser(ctx, id)
 	if err != nil {
 		h.Err(w, err, am.ErrResourceNotFound, http.StatusNotFound)
 		return
 	}
 
-	// Get permissions assigned to the user through roles
 	permissionsFromRoles, err := h.service.GetUserIndirectPermissions(ctx, id)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
 	}
 
-	// Get permissions directly assigned to the user
 	directPermissions, err := h.service.GetUserDirectPermissions(ctx, id)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
 	}
 
-	// Get permissions not assigned to the user (neither through roles nor directly)
 	unassignedPermissions, err := h.service.GetUserUnassignedPermissions(ctx, id)
 	if err != nil {
 		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
 		return
 	}
 
-	// Prepare the page data
 	page := am.NewPage(r, struct {
 		User                  User
 		PermissionsFromRoles  []Permission
@@ -420,11 +402,9 @@ func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request)
 		UnassignedPermissions: unassignedPermissions,
 	})
 
-	// Create the menu
 	menu := page.NewMenu(authPath)
 	menu.AddShowItem(user, "Back")
 
-	// Render the template
 	tmpl, err := h.tm.Get("auth", "list-user-permissions")
 	if err != nil {
 		h.Err(w, err, am.ErrTemplateNotFound, http.StatusInternalServerError)
@@ -445,7 +425,6 @@ func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request)
 }
 
 func (h *WebHandler) AddRoleToUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Add role to user")
 	ctx := r.Context()
 
 	userIDStr := r.FormValue("user_id")
@@ -467,11 +446,10 @@ func (h *WebHandler) AddRoleToUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-user-roles?id=%s", userID), http.StatusSeeOther)
+	http.Redirect(w, r, am.ListRelatedPath(authPath, "user", "role", userID), http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Remove role from user")
 	ctx := r.Context()
 
 	userIDStr := r.FormValue("user_id")
@@ -493,11 +471,10 @@ func (h *WebHandler) RemoveRoleFromUser(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-user-roles?id=%s", userID), http.StatusSeeOther)
+	http.Redirect(w, r, am.ListRelatedPath(authPath, "user", "role", userID), http.StatusSeeOther)
 }
 
 func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Add permission to user")
 	ctx := r.Context()
 
 	userIDStr := r.FormValue("user_id")
@@ -526,11 +503,10 @@ func (h *WebHandler) AddPermissionToUser(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-user-permissions?id=%s", userID), http.StatusSeeOther)
+	http.Redirect(w, r, am.ListRelatedPath(authPath, "user", "permission", userID), http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Request) {
-	h.Log().Info("Remove permission from user")
 	ctx := r.Context()
 
 	userIDStr := r.FormValue("user_id")
@@ -553,5 +529,5 @@ func (h *WebHandler) RemovePermissionFromUser(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-user-permissions?id=%s", userID), http.StatusSeeOther)
+	http.Redirect(w, r, am.ListRelatedPath(authPath, "user", "permission", userID), http.StatusSeeOther)
 }
