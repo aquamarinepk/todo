@@ -24,14 +24,13 @@ func (h *WebHandler) ShowOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(struct {
+	page := am.NewPage(r, struct {
 		Org    Org
 		Owners []User
 	}{
 		Org:    org,
 		Owners: owners,
 	})
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(org)

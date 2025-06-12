@@ -20,9 +20,9 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(users)
+	page := am.NewPage(r, users)
 	page.SetFormAction(authPath)
-	page.GenCSRFToken(r)
+	//
 
 	menu := am.NewMenu(authPath)
 	menu.AddNewItem(userType)
@@ -79,10 +79,9 @@ func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 
 	user := NewUser("", "")
 
-	page := am.NewPage(user)
+	page := am.NewPage(r, user)
 	page.SetFormAction(fmt.Sprintf("%s/create-user", authPath))
 	page.SetFormButtonText("Create")
-	page.GenCSRFToken(r)
 
 	// Convert auth.Flash to am.Flash
 	authFlash := h.GetFlash(r)
@@ -178,8 +177,7 @@ func (h *WebHandler) ShowUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(user)
-	page.GenCSRFToken(r)
+	page := am.NewPage(r, user)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(user)
@@ -224,10 +222,9 @@ func (h *WebHandler) EditUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(&user)
+	page := am.NewPage(r, &user)
 	page.SetFormAction(fmt.Sprintf(userPathFmt, authPath, "update", am.NoSlug))
 	page.SetFormButtonText("Update")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(user)
@@ -347,7 +344,7 @@ func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(struct {
+	page := am.NewPage(r, struct {
 		User            User
 		AssignedRoles   []Role
 		UnassignedRoles []Role
@@ -358,7 +355,6 @@ func (h *WebHandler) ListUserRoles(w http.ResponseWriter, r *http.Request) {
 	})
 
 	page.SetFormAction("/auth/add-role-to-user")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 
@@ -424,7 +420,7 @@ func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Prepare the page data
-	page := am.NewPage(struct {
+	page := am.NewPage(r, struct {
 		User                  User
 		PermissionsFromRoles  []Permission
 		DirectPermissions     []Permission
@@ -435,7 +431,6 @@ func (h *WebHandler) ListUserPermissions(w http.ResponseWriter, r *http.Request)
 		DirectPermissions:     directPermissions,
 		UnassignedPermissions: unassignedPermissions,
 	})
-	page.GenCSRFToken(r)
 
 	// Create the menu
 	menu := am.NewMenu(authPath)

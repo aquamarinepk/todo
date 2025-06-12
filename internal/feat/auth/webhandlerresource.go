@@ -21,9 +21,8 @@ func (h *WebHandler) ListResources(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(resources)
+	page := am.NewPage(r, resources)
 	page.SetFormAction(authPath)
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddNewItem("resource")
@@ -54,10 +53,9 @@ func (h *WebHandler) NewResource(w http.ResponseWriter, r *http.Request) {
 
 	resource := NewResource("", "", "entity")
 
-	page := am.NewPage(resource)
+	page := am.NewPage(r, resource)
 	page.SetFormAction(am.CreatePath(authPath, "resource"))
 	page.SetFormButtonText("Create")
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 	menu.AddListItem(resource)
@@ -124,8 +122,7 @@ func (h *WebHandler) ShowResource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(resource)
-	page.GenCSRFToken(r)
+	page := am.NewPage(r, resource)
 
 	menu := am.NewMenu(authPath)
 
@@ -170,9 +167,8 @@ func (h *WebHandler) EditResource(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(resource)
+	page := am.NewPage(r, resource)
 	page.SetFormAction(am.UpdatePath(authPath, "resource"))
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 
@@ -282,7 +278,7 @@ func (h *WebHandler) ListResourcePermissions(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	page := am.NewPage(struct {
+	page := am.NewPage(r, struct {
 		ID                   uuid.UUID
 		Name                 string
 		Description          string
@@ -295,7 +291,6 @@ func (h *WebHandler) ListResourcePermissions(w http.ResponseWriter, r *http.Requ
 		Permissions:          assigned,
 		AvailablePermissions: unassigned,
 	})
-	page.GenCSRFToken(r)
 
 	menu := am.NewMenu(authPath)
 

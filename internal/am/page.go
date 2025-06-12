@@ -39,7 +39,7 @@ type Feat struct {
 }
 
 // NewPage creates a new Page with the given data.
-func NewPage(data interface{}) *Page {
+func NewPage(r *http.Request, data interface{}) *Page {
 	return &Page{
 		Data: data,
 		Flash: Flash{
@@ -47,6 +47,7 @@ func NewPage(data interface{}) *Page {
 		},
 		Form: Form{
 			Action: "",
+			CSRF:   csrf.Token(r),
 			Button: Button{
 				Text:  "Submit",
 				Style: "",

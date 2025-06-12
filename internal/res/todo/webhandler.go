@@ -41,8 +41,7 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(lists)
-	page.GenCSRFToken(r)
+	page := am.NewPage(r, lists)
 
 	menu := am.NewMenu(todoResPath)
 
@@ -72,11 +71,10 @@ func (h *WebHandler) List(w http.ResponseWriter, r *http.Request) {
 func (h *WebHandler) New(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New todo form")
 
-	page := am.NewPage(List{})
+	page := am.NewPage(r, List{})
 	page.SetFormAction(todoResPath)
 	page.SetFormMethod(method.POST)
 	page.SetFormButtonText("Create")
-	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("todo", "new")
 	if err != nil {
@@ -131,8 +129,7 @@ func (h *WebHandler) Show(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(list)
-	page.GenCSRFToken(r)
+	page := am.NewPage(r, list)
 
 	menu := am.NewMenu(todoResPath)
 
@@ -178,11 +175,10 @@ func (h *WebHandler) Edit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(list)
+	page := am.NewPage(r, list)
 	page.SetFormAction(fmt.Sprintf("%s/%s", todoResPath, id))
 	page.SetFormMethod(method.PUT)
 	page.SetFormButtonText("Update")
-	page.GenCSRFToken(r)
 
 	tmpl, err := h.tm.Get("todo", "edit")
 	if err != nil {
