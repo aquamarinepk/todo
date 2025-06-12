@@ -18,7 +18,19 @@ func (h *WebHandler) ShowOrg(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	page := am.NewPage(r, org)
+	owners, err := h.service.GetOrgOwners(ctx, org.ID())
+	if err != nil {
+		h.Err(w, err, am.ErrCannotGetResources, http.StatusInternalServerError)
+		return
+	}
+
+	page := am.NewPage(r, struct {
+		Org    Org
+		Owners []User
+	}{
+		Org:    org,
+		Owners: owners,
+	})
 
 	menu := page.NewMenu(authPath)
 	menu.AddGenericItem("list-org-owners", org.ID().String(), "Owners")
