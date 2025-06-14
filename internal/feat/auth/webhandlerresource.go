@@ -2,7 +2,6 @@ package auth
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"time"
 
@@ -340,7 +339,8 @@ func (h *WebHandler) AddPermissionToResource(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-resource-permissions?id=%s", resourceID), http.StatusSeeOther)
+	path := am.ListPath(authPath, listResourcePermissionsPath) + "?id=" + resourceID.String()
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemovePermissionFromResource(w http.ResponseWriter, r *http.Request) {
@@ -367,5 +367,6 @@ func (h *WebHandler) RemovePermissionFromResource(w http.ResponseWriter, r *http
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-resource-permissions?id=%s", resourceID), http.StatusSeeOther)
+	path := am.ListPath(authPath, listResourcePermissionsPath) + "?id=" + resourceID.String()
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }

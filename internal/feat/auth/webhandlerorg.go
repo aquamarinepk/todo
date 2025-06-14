@@ -139,7 +139,8 @@ func (h *WebHandler) AddOrgOwner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/auth/list-org-owners?id="+orgID.String(), http.StatusSeeOther)
+	path := am.ListPath(authPath, listOrgOwnersPath) + "?id=" + orgID.String()
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemoveOrgOwner(w http.ResponseWriter, r *http.Request) {
@@ -165,5 +166,6 @@ func (h *WebHandler) RemoveOrgOwner(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/auth/list-org-owners?id="+orgID.String(), http.StatusSeeOther)
+	path := am.ListPath(authPath, listOrgOwnersPath) + "?id=" + orgID.String()
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }

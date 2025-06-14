@@ -8,7 +8,23 @@ import (
 )
 
 const (
-	authPath    = "/auth"
+	authPath       = "/auth"
+	rolePath       = "role"
+	userPath       = "user"
+	permissionPath = "permission"
+	resourcePath   = "resource"
+	orgPath        = "org"
+	teamPath       = "team"
+
+	// Role related paths
+	listRolePermissionsPath     = "list-role-permissions"
+	listUserContextualRolesPath = "list-user-contextual-roles"
+	addRoleToUserPath           = "add-role-to-user"
+	contextualRolePath          = "contextual-role"
+	listResourcePermissionsPath = "list-resource-permissions"
+	listOrgOwnersPath           = "list-org-owners"
+	listTeamsPath               = "list-teams"
+
 	userPathFmt = "%s/%s-user%s"
 )
 
