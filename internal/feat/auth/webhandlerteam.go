@@ -65,7 +65,7 @@ func (h *WebHandler) NewTeam(w http.ResponseWriter, r *http.Request) {
 
 	team := NewTeam(org.ID(), "", "", "")
 	page := am.NewPage(r, team)
-	page.SetFormAction("/auth/create-team")
+	page.SetFormAction(am.CreatePath(authPath, teamPath))
 	page.SetFormButtonText("Create")
 
 	menu := page.NewMenu(authPath)
@@ -122,7 +122,8 @@ func (h *WebHandler) CreateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/auth/list-teams", http.StatusSeeOther)
+	path := am.ListPath(authPath, listTeamsPath)
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 func (h *WebHandler) ShowTeam(w http.ResponseWriter, r *http.Request) {
@@ -181,7 +182,7 @@ func (h *WebHandler) EditTeam(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(r, team)
-	page.SetFormAction("/auth/update-team")
+	page.SetFormAction(am.UpdatePath(authPath, teamPath))
 	page.SetFormButtonText("Update")
 
 	menu := page.NewMenu(authPath)
@@ -245,7 +246,8 @@ func (h *WebHandler) UpdateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, am.ListPath(authPath, "team"), http.StatusSeeOther)
+	path := am.ListPath(authPath, listTeamsPath)
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 func (h *WebHandler) DeleteTeam(w http.ResponseWriter, r *http.Request) {
@@ -262,7 +264,8 @@ func (h *WebHandler) DeleteTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, am.ListPath(authPath, "team"), http.StatusSeeOther)
+	path := am.ListPath(authPath, listTeamsPath)
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 // Team relationships

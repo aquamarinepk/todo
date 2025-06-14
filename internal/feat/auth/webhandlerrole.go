@@ -2,7 +2,6 @@ package auth
 
 import (
 	"bytes"
-	"fmt"
 	"net/http"
 	"strings"
 
@@ -25,7 +24,7 @@ func (h *WebHandler) ListRoles(w http.ResponseWriter, r *http.Request) {
 	page.SetFormAction(authPath)
 
 	menu := page.NewMenu(authPath)
-	menu.AddNewItem("role")
+	menu.AddNewItem(rolePath)
 
 	tmpl, err := h.tm.Get("auth", "list-roles")
 	if err != nil {
@@ -52,7 +51,7 @@ func (h *WebHandler) NewRole(w http.ResponseWriter, r *http.Request) {
 	role := NewRole("", "", "active")
 
 	page := am.NewPage(r, role)
-	page.SetFormAction(fmt.Sprintf("%s/create-role", authPath))
+	page.SetFormAction(am.CreatePath(authPath, rolePath))
 	page.SetFormButtonText("Create")
 
 	menu := page.NewMenu(authPath)
@@ -102,7 +101,8 @@ func (h *WebHandler) CreateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
+	path := am.ListPath(authPath, rolePath)
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 func (h *WebHandler) ShowRole(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +163,7 @@ func (h *WebHandler) EditRole(w http.ResponseWriter, r *http.Request) {
 	}
 
 	page := am.NewPage(r, role)
-	page.SetFormAction(fmt.Sprintf("%s/update-role", authPath))
+	page.SetFormAction(am.UpdatePath(authPath, rolePath))
 	page.SetFormButtonText("Update")
 
 	menu := page.NewMenu(authPath)
@@ -219,7 +219,8 @@ func (h *WebHandler) UpdateRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
+	path := am.ListPath(authPath, rolePath)
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
@@ -239,7 +240,8 @@ func (h *WebHandler) DeleteRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, am.ListPath(authPath, "role"), http.StatusSeeOther)
+	path := am.ListPath(authPath, rolePath)
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 // Role relationships
@@ -332,15 +334,16 @@ func (h *WebHandler) AddPermissionToRole(w http.ResponseWriter, r *http.Request)
 	if err != nil {
 		// Check if the error is due to a unique constraint violation
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			// Permission is already assigned to the role, redirect back to the permissions page
-			http.Redirect(w, r, fmt.Sprintf("list-role-permissions?id=%s", roleID), http.StatusSeeOther)
+			path := am.ListPath(authPath, listRolePermissionsPath) + "?id=" + roleID.String()
+			http.Redirect(w, r, path, http.StatusSeeOther)
 			return
 		}
 		h.Err(w, err, am.ErrCannotCreateResource, http.StatusInternalServerError)
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-role-permissions?id=%s", roleID), http.StatusSeeOther)
+	path := am.ListPath(authPath, listRolePermissionsPath) + "?id=" + roleID.String()
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemovePermissionFromRole(w http.ResponseWriter, r *http.Request) {
@@ -367,7 +370,8 @@ func (h *WebHandler) RemovePermissionFromRole(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-role-permissions?id=%s", roleID), http.StatusSeeOther)
+	path := am.ListPath(authPath, listRolePermissionsPath) + "?id=" + roleID.String()
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 // Handler methods for contextual roles
@@ -424,10 +428,9 @@ func (h *WebHandler) ListUserContextualRoles(w http.ResponseWriter, r *http.Requ
 		UnassignedRoles: unassignedRoles,
 	})
 
-	page.SetFormAction("/auth/add-contextual-role")
+	page.SetFormAction(am.CreatePath(authPath, contextualRolePath))
 
 	menu := am.NewMenu(authPath)
-
 	menu.AddGenericItem("list-team-members", team.ID().String(), "Back")
 
 	tmpl, err := h.tm.Get("auth", "list-user-contextual-roles")
@@ -478,7 +481,8 @@ func (h *WebHandler) AddContextualRole(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-user-contextual-roles?team_id=%s&user_id=%s", teamID, userID), http.StatusSeeOther)
+	path := am.ListPath(authPath, listUserContextualRolesPath) + "?team_id=" + teamID.String() + "&user_id=" + userID.String()
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }
 
 func (h *WebHandler) RemoveContextualRole(w http.ResponseWriter, r *http.Request) {
@@ -510,5 +514,6 @@ func (h *WebHandler) RemoveContextualRole(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	http.Redirect(w, r, fmt.Sprintf("list-user-contextual-roles?team_id=%s&user_id=%s", teamID, userID), http.StatusSeeOther)
+	path := am.ListPath(authPath, listUserContextualRolesPath) + "?team_id=" + teamID.String() + "&user_id=" + userID.String()
+	http.Redirect(w, r, path, http.StatusSeeOther)
 }

@@ -46,26 +46,6 @@ func (h *WebHandler) ListUsers(w http.ResponseWriter, r *http.Request) {
 func (h *WebHandler) NewUser(w http.ResponseWriter, r *http.Request) {
 	h.Log().Info("New user")
 
-	err := h.AddInfoFlash(w, r, "Welcome to the user creation page!")
-	if err != nil {
-		h.Log().Error("add info flash message error", err)
-	}
-
-	err = h.AddSuccessFlash(w, r, "This is a success message!")
-	if err != nil {
-		h.Log().Error("add success flash message error", err)
-	}
-
-	err = h.AddWarningFlash(w, r, "Please fill in all required fields!")
-	if err != nil {
-		h.Log().Error("add warning flash message error", err)
-	}
-
-	err = h.AddErrorFlash(w, r, "This is an error message!")
-	if err != nil {
-		h.Log().Error("add error flash message error", err)
-	}
-
 	user := NewUser("", "")
 
 	page := am.NewPage(r, user)
