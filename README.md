@@ -6,6 +6,10 @@ This reference app is designed to showcase the features and patterns that the ki
 
 <img src="docs/img/todo-list-users.png" alt="TODO application screenshot" />
 
+
+> **Is development on this project halted? Not at all.**  
+> A more realistic use case has emerged, and any progress made on [Hermes](https://github.com/adrianpk/hermes) will be retrofitted back into here, and, in turn, into Aquamarine. Many fronts open, just one person executing.
+
 ## Overview
 This is a sample app using the common example of a todo list. The example is designed to express the desired outcome for the generator library.
 
@@ -18,18 +22,16 @@ Although we refer to command-query, it is not in the pure CQRS sense; commands w
 Additionally, the kit aims to address observability and monitoring concerns by providing hooks and eventually some implementations to facilitate these aspects.
 
 ## Expected Features
-- [ ] JSON API Support
-- [ ] Web support
+- [ ] Web
+- [ ] JSON API
 - [ ] RESTful support
-- [ ] CQRS support
+- [ ] Command-Query support
 - [ ] Sync and Async inter-feature communication (gRPC / NATS)
 - [ ] Server-Side Rendering (SSR) 
 - [ ] htmx 
 - [ ] Flag and environment variable configuration
 - [ ] Pub/Sub
 - [ ] SQL (SQLite3 / PostgreSQL)
-- [ ] NoSQL support (Mongo)
-- [ ] Unit testing
 - [ ] Assets processing pipeline
 - [ ] Containerization and orchestration ready
 - [ ] More to come...
